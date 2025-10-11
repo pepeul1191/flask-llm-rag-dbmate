@@ -1,0 +1,30 @@
+CREATE TABLE IF NOT EXISTS "schema_migrations" (version varchar(128) primary key);
+CREATE TABLE engines (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(20) NOT NULL,
+  image VARCHAR(30) NOT NULL
+);
+CREATE TABLE projects (
+  id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  title VARCHAR(30) NOT NULL,
+  description VARCHAR(180) NOT NULL,
+  connection_string VARCHAR(100) NOT NULL,
+  engine_id INTEGER NOT NULL,
+  FOREIGN KEY (engine_id) REFERENCES engines (id)
+);
+CREATE TABLE versions (
+  id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(50) NOT NULL,
+  model TEXT NOT NULL,
+  created_at DATETIME,
+  updated_at DATETIME,
+  project_id INTEGER NOT NULL,
+  FOREIGN KEY (project_id) REFERENCES projects (id)
+);
+-- Dbmate schema migrations
+INSERT INTO "schema_migrations" (version) VALUES
+  ('20251011191634'),
+  ('20251011191717'),
+  ('20251011192122'),
+  ('20251011192311'),
+  ('20251011192341');

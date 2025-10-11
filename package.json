@@ -8,7 +8,11 @@
     "svelte": "rollup -c -w",
     "python": "python app.py",
     "start": "sirv public --no-clear",
-    "dev": "concurrently -k -n \"SVELTE,FLASK\" -c \"cyan,magenta\" \"npm run svelte\" \"npm run python\""
+    "dev": "concurrently -k -n \"SVELTE,FLASK\" -c \"cyan,magenta\" \"npm run svelte\" \"npm run python\"",
+    "db:new": "npx dbmate -d \"db/migrations\" -e \"DB\" new ",
+    "db:up": "npx dbmate -d \"db/migrations\" -e \"DB\" up",
+    "db:rollback": "npx dbmate -d \"db/migrations\" -e \"DB\" rollback",
+    "db:dump": "npx dbmate -d \"db/migrations\" -e \"DB\" dump "
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^24.0.0",
@@ -23,7 +27,9 @@
     "rollup-plugin-livereload": "^2.0.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-svelte": "^7.2.3",
-    "svelte": "^4.1.0"
+    "svelte": "^4.1.0",
+    "dbmate": "^2.15.0",
+    "sqlite3": "^5.1.7"
   },
   "dependencies": {
     "sirv-cli": "^2.0.0",

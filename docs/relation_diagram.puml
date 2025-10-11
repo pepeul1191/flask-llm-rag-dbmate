@@ -1,0 +1,33 @@
+@startuml
+!theme plain
+
+entity "engines" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(20)
+  * image: VARCHAR(30)
+}
+
+entity "projects" {
+  * id : INTEGER
+  --
+  * title: VARCHAR(30)
+  * description: VARCHAR(180)
+  * connection_string: VARCHAR(100)
+  * engine_id (FK): INT
+}
+
+entity "versions" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(50)
+  * model: TEXT
+  * created_at: DATETIME
+  * updated_at: DATETIME
+  * project_id (FK): INT
+}
+
+projects }|--|| engines : engine_id
+versions }|--|| projects : project_id
+
+@enduml
