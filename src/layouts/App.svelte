@@ -28,9 +28,10 @@
     margin-top: auto;
     text-align: right;
     color: #6c757d;
+		padding-bottom: 0px;
   }
 
 	main{
-		padding: 1rem;
+		
 	}
 </style>
