@@ -5,3 +5,27 @@ body{
 a i {
   margin-right: 10px;
 }
+
+
+:root {
+  --bs-primary: #3498db; /* Naranja brillante */
+  --bs-secondary: #2c3e50; /* Gris muy oscuro */
+}
+
+.btn-primary {
+    background-color: var(--bs-primary);
+    color: #ffffff; /* Texto blanco para contraste */
+    border-color: var(--bs-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+.btn-primary:hover {
+    background-color: var(--bs-secondary); /* Tono más oscuro para hover */
+    color: #ffffff;
+    border-color: var(--bs-secondary);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.btn i {
+  margin-right: 5px;
+}
