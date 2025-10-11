@@ -1,30 +1,36 @@
 <script>
-	export let name;
+  import { Router, Route } from 'svelte-routing';
+  import Navbar from '../components/NavBar.svelte';
+
+  import HomePage from '../pages/HomePage.svelte';
+	import ProjectsPage from '../pages/ProjectsPage.svelte';
+  import AboutPage from '../pages/AboutPage.svelte';
 </script>
 
+<Navbar />
+
 <main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+	<Router>
+		<Route path="/" component={HomePage} />
+		<Route path="/projects" component={ProjectsPage} />
+		<Route path="/about" component={AboutPage} />
+	</Router>
 </main>
 
+<footer class="simple-footer">
+  <p>Desarrollado por <strong>José Valdivia Caballero</strong></p>
+</footer>
+
 <style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
+  .simple-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+    margin-top: auto;
+    text-align: right;
+    color: #6c757d;
+  }
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
+	main{
+		padding: 1rem;
 	}
 </style>

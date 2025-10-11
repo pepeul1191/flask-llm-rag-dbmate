@@ -23,11 +23,12 @@
     "rollup-plugin-livereload": "^2.0.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-svelte": "^7.2.3",
-    "svelte": "^4.0.0"
+    "svelte": "^4.1.0"
   },
   "dependencies": {
     "sirv-cli": "^2.0.0",
     "axios": "^1.6.0",
+    "svelte-routing": "^2.13.0",
     "bootstrap": "^5.3.3",
     "font-awesome": "^4.7.0",
     "simplemde": "^1.11.2"
