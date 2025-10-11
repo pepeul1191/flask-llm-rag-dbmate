@@ -1,22 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import { Modal } from 'bootstrap';
-
-  let createModal;
-
-  // Inicializar el modal cuando el componente esté montado
-  onMount(() => {
-    const modalEl = document.getElementById('createProjectModal');
-    createModal = new Modal(modalEl);
-  });
-
-  function createProject() {
-    if (createModal) {
-      createModal.show();
-    } else {
-      console.warn("Modal no inicializado.");
-    }
-  }
+  import ProjectCard from '../components/ProjectCard.svelte';
+  import ModalProjectForm from '../forms/ModalProjectForm.svelte';
 
   let projects = [
     {
@@ -25,23 +10,15 @@
       description: "El sistema RAG en nuestra aplicación funciona como el motor inteligente que asiste al LLM a convertir diagramas PlantUML en código SQL mediante un proceso contextualizado.",
       date: "20 jun 2025",
       versions: 44,
-      engine: {
-        id: 1,
-        name: 'SQLite3', 
-        image_url: '/img/sqlite.png'
-      }
+      engine: { id: 1, name: 'SQLite3', image_url: '/img/sqlite.png' }
     },
     {
       id: 2,
       title: "Innnova Rails", 
-      description: "La Aplicación Web recibe el diagrama PlantUML y parámetros del usuario, enviándolos al Operador de Embedding que genera representaciones vectoriales del modelo. ",
+      description: "La Aplicación Web recibe el diagrama PlantUML y parámetros del usuario, enviándolos al Operador de Embedding que genera representaciones vectoriales del modelo.",
       date: "15 jun 2025",
       versions: 32,
-      engine: {
-        id: 2,
-        name: 'MySQL', 
-        image_url: '/img/mysql.png'
-      }
+      engine: { id: 2, name: 'MySQL', image_url: '/img/mysql.png' }
     },
     {
       id: 3,
@@ -49,37 +26,57 @@
       description: "El Constructor de Prompt integra entonces el PlantUML original con el contexto enriquecido obtenido, creando un prompt ampliado que se envía al LLM.",
       date: "10 jun 2025",
       versions: 28,
-      engine: {
-        id: 3,
-        name: 'Postgres', 
-        image_url: '/img/postgres.png'
-      }
-
+      engine: { id: 3, name: 'Postgres', image_url: '/img/postgres.png' }
     }
   ];
+
+  let selectedProject = null;
+
+  let modalRef;
+
+  function createProject() {
+    selectedProject = null;
+    modalRef.show();
+  }
+
+  function editProject(project) {
+    console.log(project)
+    selectedProject = project;
+    modalRef.show();
+  }
+
+  function deleteProject(project) {
+    if (confirm(`¿Eliminar el proyecto "${project.title}"?`)) {
+      projects = projects.filter(p => p.id !== project.id);
+    }
+  }
+
+  function handleGuardar(event) {
+    const savedProject = event.detail;
+    // Si es nuevo proyecto (sin id), asignamos uno, sino actualizamos
+    if (!savedProject.id) {
+      savedProject.id = projects.length + 1;
+      savedProject.date = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+      savedProject.versions = 1;
+      projects = [savedProject, ...projects];
+    } else {
+      projects = projects.map(p => p.id === savedProject.id ? savedProject : p);
+    }
+  }
 </script>
 
-<svelte:head>
-  <title>Crear Proyecto</title>
-</svelte:head>
-
 <div class="projects-simple w-100">
-  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4 px-3">
     <h2 class="h4 fw-bold text-dark mb-0">Proyectos recientes</h2>
     <button class="btn btn-primary d-flex align-items-center" on:click={createProject}>
-      <i class="fa fa-plus"></i>
-      Crear proyecto
+      <i class="fa fa-plus"></i> Crear proyecto
     </button>
   </div>
 
-  <!-- Separador -->
   <hr class="my-4 mx-3" />
 
-  <!-- Tarjetas en flexbox -->
   <div class="projects-flex-container w-100 d-flex flex-wrap gap-3 px-3">
-    <!-- Tarjeta para crear nuevo -->
-    <div class="project-flex-card flex-fill" style="min-width: 300px; max-width: 400px;"  on:click={createProject}>
+    <div class="project-flex-card flex-fill" style="min-width: 300px; max-width: 400px;" on:click={createProject}>
       <div class="card h-100 border-2 border-dashed bg-light">
         <div class="card-body d-flex flex-column align-items-center justify-content-center text-center text-muted">
           <i class="fa fa-plus fa-2x mb-2"></i>
@@ -87,88 +84,22 @@
         </div>
       </div>
     </div>
-    {#each projects as project}
-      <div class="project-flex-card flex-fill" style="min-width: 300px; max-width: 400px;">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-body">
-            <!-- Fila 1: Icono y menú de 3 puntos -->
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <!-- Icono a la izquierda -->
-              <div class="project-icon bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center" 
-                  style="width: 50px; height: 50px;">
-                <img src="{project.engine.image_url}" alt="{project.engine.name}" height="60" width="60">
-              </div>
-              
-              <!-- Menú de 3 puntos a la derecha -->
-              <div class="dropdown">
-                <button class="btn btn-link text-muted p-0 border-0" type="button" 
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="fa fa-ellipsis-v fa-lg"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="#"><i class="fa fa-pencil me-2"></i>Editar</a></li>
-                  <li><a class="dropdown-item" href="#"><i class="fa fa-play me-2"></i>Continuar</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item text-danger" href="#"><i class="fa fa-trash me-2"></i>Eliminar</a></li>
-                </ul>
-              </div>
-            </div>
 
-            <!-- Fila 2: Título del proyecto -->
-            <h5 class="card-title fw-bold text-dark mb-3" style="min-height: 3rem;">
-              {project.title}
-            </h5>
-            <p>{project.description}</p>
-            <!-- Fila 3: Fecha y versiones -->
-            <div class="text-muted small d-flex justify-content-between align-items-center">
-              <span>{project.date}</span>
-              <span>{project.versions} versiones</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    {#each projects as project (project.id)}
+      <ProjectCard {project} 
+      on:edit={e => editProject(e.detail)}
+      on:delete={e => deleteProject(e.detail)} />
     {/each}
   </div>
 </div>
 
-<!-- Modal: Crear Proyecto -->
-<div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="createProjectModalLabel">Crear nuevo proyecto</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-        <form id="projectForm">
-          <div class="mb-3">
-            <label for="projectTitle" class="form-label">Título</label>
-            <input type="text" class="form-control" id="projectTitle" placeholder="Ingresa el título del proyecto" required>
-          </div>
+<ModalProjectForm
+  bind:this={modalRef}
+  {selectedProject}
+  project={selectedProject}
+  on:guardar={handleGuardar}
+/>
 
-          <div class="mb-3">
-            <label for="projectDescription" class="form-label">Descripción</label>
-            <textarea class="form-control" id="projectDescription" rows="3" placeholder="Descripción del proyecto" required></textarea>
-          </div>
-
-          <div class="mb-3">
-            <label for="projectEngine" class="form-label">Motor de Base de Datos</label>
-            <select class="form-select" id="projectEngine" required>
-              <option value="">Seleccionar motor</option>
-              <option value="1">SQLite3</option>
-              <option value="2">MySQL</option>
-              <option value="3">Postgres</option>
-            </select>
-          </div>
-
-          <div class="text-end">
-            <button type="submit" class="btn btn-primary"> <i class="fa fa-floppy-o" aria-hidden="true"></i> Guardar proyecto</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
 
 <style>
   .projects-simple {
