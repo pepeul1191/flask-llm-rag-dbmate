@@ -80,7 +80,7 @@
   }
 
   function goToProjects() {
-    //goTo('/projects');
+    navigate('/projects');
   }
 
   // Auto-play del slider

@@ -34,7 +34,7 @@
   });
 </script>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
   <div class="container-fluid">
     <a class="navbar-brand" role="button" on:click={() => navigateAndClose('/')}>
       <i class="fa fa-code" aria-hidden="true"></i> MDE LLM SQL Generator
