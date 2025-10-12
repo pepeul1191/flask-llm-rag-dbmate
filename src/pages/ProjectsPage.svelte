@@ -65,6 +65,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Lista de Proyectos</title>
+</svelte:head>
+
 <div class="projects-simple w-100">
   <div class="d-flex justify-content-between align-items-center mb-4 px-3">
     <h2 class="h4 fw-bold text-dark mb-0">Proyectos recientes</h2>
