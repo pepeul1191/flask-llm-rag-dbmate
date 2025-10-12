@@ -4,6 +4,7 @@
   import { fetchEngines } from '../services/engines_service.js';
   import { createProject, updateProject } from '../services/projects_service.js';
   import FlashAlert from '../components/FlashAlert.svelte';
+  import { navigate } from 'svelte-routing';
 
   export let project = null;
 
@@ -211,8 +212,8 @@
               type="button" 
               class="btn btn-outline-primary"
               on:click={() => {
-                dispatch('viewProject', { id });
                 modalInstance.hide();
+                navigate(`/projects/${id}/edit`);
               }}>
               <i class="fa fa-search me-2" aria-hidden="true"></i> 
               Ver Proyecto

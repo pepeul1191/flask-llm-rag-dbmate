@@ -13,7 +13,8 @@ view = Blueprint(
 @view.route('/', methods=['GET'])
 @view.route('/projects', methods=['GET'])
 @view.route('/about', methods=['GET'])
-def index():
+@view.route('/projects/<int:project_id>/edit', methods=['GET'])
+def index(project_id=None):
   locals = {
     'title': 'Home',
     'nav_active': 'home',

@@ -1,6 +1,7 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
   import { Dropdown } from 'bootstrap';
+    import { navigate } from 'svelte-routing';
 
   export let project;
 
@@ -58,7 +59,10 @@
               </a>
             </li>
             <li>
-              <a class="dropdown-item" href="#" >
+              <a class="dropdown-item" href="#" on:click={(e) => {
+                e.preventDefault();
+                navigate(`/projects/${project.id}/edit`);
+              }}>
                 <i class="fa fa-play me-2"></i>Continuar
               </a>
             </li>

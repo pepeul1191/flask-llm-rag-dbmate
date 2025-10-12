@@ -109,7 +109,6 @@
   on:refreshList={listProjects}
 />
 
-
 <style>
   .projects-simple {
     width: 100%;
