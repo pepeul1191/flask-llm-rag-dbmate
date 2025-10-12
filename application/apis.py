@@ -10,6 +10,7 @@ from application.services import (
   update_project as update_project_service,
   delete_project as delete_project_service,
   fetch_projects as fetch_projects_service,
+  generate_plantuml_image,
 )
 
 api = Blueprint(
@@ -48,4 +49,10 @@ def update_project(project_id):
 @api.route('/api/v1/projects/<int:project_id>', methods=['DELETE'])
 def delete_project(project_id):
   result, status = delete_project_service(project_id)
+  return jsonify(result), status
+
+@api.route('/api/v1/image', methods=['POST'])
+def create_image():
+  data = request.get_json()
+  result, status = generate_plantuml_image(data['description'])
   return jsonify(result), status

@@ -69,3 +69,18 @@ export const deleteProject = (id) => {
     });
   });
 }
+
+export const createImage = (project) => {
+  return new Promise((resolve, reject) => {
+    axios.post('/api/v1/image', project, {
+      headers: {
+        'Client-Origin': 'webapp',
+        'Content-Type': 'application/json',
+      }
+    }).then(response => {
+      resolve(response.data);
+    }).catch(error => {
+      reject(error.response);
+    });
+  });
+};

@@ -5,6 +5,7 @@
   import HomePage from '../pages/HomePage.svelte';
 	import ProjectsPage from '../pages/ProjectsPage.svelte';
   import AboutPage from '../pages/AboutPage.svelte';
+  import ProjectDetailPage from '../pages/ProjectDetailPage.svelte';
 </script>
 
 <Navbar />
@@ -14,6 +15,7 @@
 		<Route path="/" component={HomePage} />
 		<Route path="/projects" component={ProjectsPage} />
 		<Route path="/about" component={AboutPage} />
+    <Route path="/projects/:project_id/edit"let:params><ProjectDetailPage id={params.project_id} /></Route>
 	</Router>
 </main>
 

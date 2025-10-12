@@ -1,7 +1,11 @@
 # services/engine_service.py
 import traceback
+import os
+import time
+from plantuml import PlantUML  
 from application.models import Engine, Project
 from sqlalchemy import text
+from pathlib import Path
 from main.database import session
 
 def build_response(data=None, message="Operación exitosa", success=True):
@@ -80,7 +84,6 @@ def fetch_projects():
     """)
 
     result = session.execute(sql)
-    print('1 ++++++++++++++++++++++')
     rows = result.fetchall()
 
     data = [
@@ -175,3 +178,42 @@ def delete_project(project_id):
     session.rollback()
     tb = traceback.format_exc()
     return handle_error(f"Error al eliminar proyecto: {str(e)}", tb)
+
+def generate_plantuml_image(plantuml_code, output_dir="static/tmp"):
+  Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+  timestamp = int(time.time())
+  filename = f"diagram_{timestamp}.png"
+  filepath = os.path.join(output_dir, filename)
+
+  try:
+    server = PlantUML(url='http://www.plantuml.com/plantuml/img/')
+    
+    # Este método existe en plantuml3 (verifica tu versión)
+    image_data = server.processes(plantuml_code)
+    
+    with open(filepath, 'wb') as f:
+      f.write(image_data)
+
+    # Quitar "static/" del path para la URL
+    relative_url = os.path.relpath(filepath, "static")
+
+    return {
+      "data": {
+        "filepath": filepath,
+        "filename": filename,
+        "url": f"/{relative_url}"
+      },
+      "message": "Imagen generada correctamente",
+      "success": True,
+      "error": None
+    }, 200
+
+  except Exception as e:
+    tb = traceback.format_exc()
+    return {
+      "data": None,
+      "message": f"Error al generar UML: {str(e)}",
+      "success": False,
+      "error": tb
+    }, 500
