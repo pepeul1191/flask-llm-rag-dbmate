@@ -1,13 +1,14 @@
 # services/engine_service.py
 import traceback
 from application.models import Engine, Project
+from sqlalchemy import text
 from main.database import session
 
-def build_response(data=None, message="Operación exitosa"):
+def build_response(data=None, message="Operación exitosa", success=True):
   return {
     "data": data,
     "message": message,
-    "success": True,
+    "success": success,
     "error": None
   }
 
@@ -25,8 +26,8 @@ def handle_error(message, traceback=None):
 
 def fetch_engines():
   try:
-    engines = session.query(Engine).order_by(Engine.name.asc()).all()
-    message="Lista de motores de bases de datos obtenida exitosamente"
+    # Usar context manager para manejo de sesión
+    engines = session.query(Engine).all()
     data = [
       {
         "id": engine.id,
@@ -35,36 +36,77 @@ def fetch_engines():
       }
       for engine in engines
     ]
-    if data == []:
-      return build_response(data=[], message=message)
-    else:
-      return build_response(data=data, message=message)
+    message = (
+      f"Se encontraron {len(data)} motores de bases de datos" 
+      if data else 
+      "No hay motores de bases de datos configurados"
+    )
+    return build_response(
+      success=True,
+      data=data,
+      message=message
+    )
   except Exception as e:
-    tb = traceback.format_exc()
-    return handle_error(f"Error al obtener motores: {str(e)}", tb)
+    print(f"Error inesperado: {str(e)}")
+    return build_response(
+      success=False,
+      data=[],
+      message="Error del servicio",
+      error={"message": "Error interno del servidor"}
+    )
 
-def list_projects():
+def fetch_projects():
   try:
-    projects = session.query(Project).order_by(Project.title.asc()).all()
+    sql = text("""
+      SELECT 
+        P.id, 
+        P.title, 
+        P.description, 
+        P.connection_string, 
+        P.engine_id,
+        E.name AS engine_name, 
+        E.image AS engine_image,
+        COUNT(V.id) AS versions_count,
+        MAX(COALESCE(V.updated_at, V.created_at)) AS last_version_date
+
+      FROM projects P
+      JOIN engines E ON P.engine_id = E.id
+      LEFT JOIN versions V ON P.id = V.project_id
+
+      GROUP BY 
+        P.id, P.title, P.description, P.connection_string, P.engine_id, E.name, E.image
+
+      ORDER BY P.title ASC;
+    """)
+
+    result = session.execute(sql)
+    print('1 ++++++++++++++++++++++')
+    rows = result.fetchall()
+
     data = [
       {
-        "id": p.id,
-        "title": p.title,
-        "description": p.description,
-        "connection_string": p.connection_string,
-        "engine_id": p.engine_id,
+        "id": row.id,
+        "title": row.title,
+        "description": row.description,
+        "connection_string": row.connection_string,
+        "engine_id": row.engine_id,
         "engine": {
-          "id": p.engine.id,
-          "name": p.engine.name,
-          "image": p.engine.image
-        } if p.engine else None
+          "id": row.engine_id,
+          "name": row.engine_name,
+          "image": row.engine_image
+        },
+        "versions_count": row.versions_count,
+        "last_version_date": row.last_version_date if row.last_version_date else None
       }
-      for p in projects
+      for row in rows
     ]
+
     return build_response(data=data, message="Lista de proyectos obtenida exitosamente"), 200
+
   except Exception as e:
     tb = traceback.format_exc()
     return handle_error(f"Error al obtener proyectos: {str(e)}", tb)
+
 
 def create_project(data):
   try:

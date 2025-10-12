@@ -9,6 +9,7 @@ from application.services import (
   create_project as create_project_service,
   update_project as update_project_service,
   delete_project as delete_project_service,
+  fetch_projects as fetch_projects_service,
 )
 
 api = Blueprint(
@@ -23,17 +24,19 @@ def index():
 @api.route('/api/v1/engines', methods=['GET'])
 def list_engines():
   result = fetch_engines_service()
-  status = 200
-  if result['data'] == [] and result['success']:
-    status = 400 
-  elif result['success'] == False:
-    status = 500 
-  return jsonify(result), status
+  # Simplificar lógica de códigos de estado
+  status_code = 200 if result['success'] else 500
+  return jsonify(result), status_code
 
 @api.route('/api/v1/projects', methods=['POST'])
 def create_project():
   data = request.get_json()
   result, status = create_project_service(data)
+  return jsonify(result), status
+
+@api.route('/api/v1/projects', methods=['GET'])
+def list_projects():
+  result, status = fetch_projects_service()
   return jsonify(result), status
 
 @api.route('/api/v1/projects/<int:project_id>', methods=['PUT'])

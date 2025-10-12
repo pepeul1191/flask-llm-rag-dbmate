@@ -36,7 +36,7 @@
           class="project-icon bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center"
           style="width: 50px; height: 50px;"
         >
-          <img src={project.engine.image_url} alt={project.engine.name} height="60" width="60" />
+          <img src={project.engine.image} alt={project.engine.name} height="60" width="60" />
         </div>
 
         <!-- Dropdown menú -->
@@ -82,8 +82,12 @@
 
       <!-- Fecha y versiones -->
       <div class="text-muted small d-flex justify-content-between align-items-center">
-        <span>{project.date}</span>
-        <span>{project.versions} versiones</span>
+        {#if project.last_version_date}
+          <span>Último cambio <b>{project.last_version_date}</b></span>
+          <span><b>{project.versions_count} versiones</b></span>
+        {:else}
+          <span>Aún no hay actividad en el proyecto</span>
+        {/if}
       </div>
     </div>
   </div>

@@ -2,40 +2,37 @@
   import { onMount } from 'svelte';
   import ProjectCard from '../components/ProjectCard.svelte';
   import ModalProjectForm from '../forms/ModalProjectForm.svelte';
+  import { fetchProjects, deleteProject as deleteProjectService } from '../services/projects_service.js';
+  import FlashAlert from '../components/FlashAlert.svelte';
 
-  let projects = [
-    {
-      id: 1,
-      title: "COA Concurso de Fotografía",
-      description: "El sistema RAG en nuestra aplicación funciona como el motor inteligente que asiste al LLM a convertir diagramas PlantUML en código SQL mediante un proceso contextualizado.",
-      date: "20 jun 2025",
-      versions: 44,
-      engine: { id: 1, name: 'SQLite3', image_url: '/img/sqlite.png' }
-    },
-    {
-      id: 2,
-      title: "Innnova Rails", 
-      description: "La Aplicación Web recibe el diagrama PlantUML y parámetros del usuario, enviándolos al Operador de Embedding que genera representaciones vectoriales del modelo.",
-      date: "15 jun 2025",
-      versions: 32,
-      engine: { id: 2, name: 'MySQL', image_url: '/img/mysql.png' }
-    },
-    {
-      id: 3,
-      title: "Quinua Smart",
-      description: "El Constructor de Prompt integra entonces el PlantUML original con el contexto enriquecido obtenido, creando un prompt ampliado que se envía al LLM.",
-      date: "10 jun 2025",
-      versions: 28,
-      engine: { id: 3, name: 'Postgres', image_url: '/img/postgres.png' }
-    }
-  ];
+  let projects = []
+
+  onMount(() => {
+    listProjects();
+  })
 
   let selectedProject = null;
-
+  let showAlert = false;
+  let alertMessage = '';
+  let alertType = 'success';
   let modalRef;
+
+  function listProjects(){
+    fetchProjects().then((resp) => {
+      projects = resp.data;
+    }).catch((resp) => {
+      console.log(resp);
+    });
+  }
+
+  function handleAlertClose() {
+    showAlert = false;
+    alertMessage = '';
+  }
 
   function createProject() {
     selectedProject = null;
+    modalRef.clear();
     modalRef.show();
   }
 
@@ -45,22 +42,18 @@
     modalRef.show();
   }
 
-  function deleteProject(project) {
-    if (confirm(`¿Eliminar el proyecto "${project.title}"?`)) {
-      projects = projects.filter(p => p.id !== project.id);
-    }
+  function showFlashAlert(message, type = 'success') {
+    alertMessage = message;
+    alertType = type;
+    showAlert = true;
   }
 
-  function handleGuardar(event) {
-    const savedProject = event.detail;
-    // Si es nuevo proyecto (sin id), asignamos uno, sino actualizamos
-    if (!savedProject.id) {
-      savedProject.id = projects.length + 1;
-      savedProject.date = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-      savedProject.versions = 1;
-      projects = [savedProject, ...projects];
-    } else {
-      projects = projects.map(p => p.id === savedProject.id ? savedProject : p);
+  function deleteProject(project) {
+    if (confirm(`¿Eliminar el proyecto "${project.title}"?`)) {
+      deleteProjectService(project.id).then((resp) => {
+        listProjects();
+        showFlashAlert(resp.message, 'success' );
+      });
     }
   }
 </script>
@@ -78,6 +71,18 @@
   </div>
 
   <hr class="my-4 mx-3" />
+
+  {#if showAlert}
+    <div class="px-3">
+      <FlashAlert 
+        message="{alertMessage}"
+        type="{alertType}"
+        duration={5000}
+        position="absolute"
+        on:close={handleAlertClose}
+      />
+    </div>
+  {/if}
 
   <div class="projects-flex-container w-100 d-flex flex-wrap gap-3 px-3">
     <div class="project-flex-card flex-fill" style="min-width: 300px; max-width: 400px;" on:click={createProject}>
@@ -101,7 +106,7 @@
   bind:this={modalRef}
   {selectedProject}
   project={selectedProject}
-  on:guardar={handleGuardar}
+  on:refreshList={listProjects}
 />
 
 

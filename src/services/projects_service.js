@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const fetchProjects = () => {
   return new Promise((resolve, reject) => {
-    axios.get('/api/v1/engines', {
+    axios.get('/api/v1/projects', {
       params: {},
       headers:{
         'Client-Origin': 'webapp',
@@ -52,3 +52,20 @@ export const updateProject = (id, engine) => {
   });
 }
 
+export const deleteProject = (id) => {
+  return new Promise((resolve, reject) => {
+    axios.delete(`/api/v1/projects/${id}`, {
+      headers: {
+        'Client-Origin': 'webapp',
+        'Content-Type': 'application/json',
+      }
+    }).then(function (response) {
+      resolve(response.data);
+    }).catch(function (error) {
+      reject(error.response);
+    })
+    .then(function () {
+      // todo?
+    });
+  });
+}

@@ -59,6 +59,14 @@
     });
   });
 
+  export function clear() {
+    id = '';
+    title = '';
+    description = '';
+    engineId = '';
+    connectionString = '';
+  }
+
   export function show() {
     modalInstance.show();
   }
@@ -105,12 +113,12 @@
         
         showFlashAlert(resp.message, 'success');
         
-        dispatch('projectCreated', resp.data);
+        dispatch('refreshList', resp.data);
       } else {
         const resp = await updateProject(id, savedProject);
         showFlashAlert(resp.message, 'success');
         
-        dispatch('projectUpdated', resp.data);
+        dispatch('refreshList', resp.data);
       }
     } catch (resp) {
       console.log(resp);
@@ -205,8 +213,7 @@
               on:click={() => {
                 dispatch('viewProject', { id });
                 modalInstance.hide();
-              }}
-            >
+              }}>
               <i class="fa fa-search me-2" aria-hidden="true"></i> 
               Ver Proyecto
             </button>
