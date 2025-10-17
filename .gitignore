@@ -84,3 +84,5 @@ venv/
 flask_session
 fonts
 static/tmp
+articulo.pdf
+chroma_db

@@ -113,11 +113,13 @@ def main():
 
   chain = create_chain(retriever, llm)
 
-  question = "qué aporte tenemos?"
-
-  res = chain.invoke(input=question)
-  print("Response:")
-  print(res)
+  question = 'XD'
+  while question != '0':
+    question = input("Haz tu pregunta sobre el documento: ")
+    if question != '0':
+      res = chain.invoke(input=question)
+      print("Response:")
+      print(res)
 
 if __name__ == "__main__":
   main()
