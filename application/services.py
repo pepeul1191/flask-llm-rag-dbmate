@@ -80,7 +80,7 @@ def fetch_projects():
       GROUP BY 
         P.id, P.title, P.description, P.connection_string, P.engine_id, E.name, E.image
 
-      ORDER BY P.title ASC;
+      ORDER BY P.id ASC;
     """)
 
     result = session.execute(sql)

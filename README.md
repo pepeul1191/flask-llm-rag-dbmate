@@ -73,3 +73,30 @@ CREATE TABLE recurso_coleccion (
   FOREIGN KEY (recurso_id) REFERENCES recurso (id)
 );
 ```
+Listar árbol
+
+    $ tree -I 'node_modules|.git|__pycache__|venv|flask_session'
+
+### Ollama
+
+Instalación de OLLAMA:
+
+    $ sudo snap install ollama
+
+## Comandos:
+
+Iniciar el servicio de Ollama
+    
+    $ sudo systemctl start ollama
+
+Habilitar para que inicie automáticamente
+    
+    $ sudo systemctl enable ollama
+
+Verificar el estado del servicio
+    
+    $ sudo systemctl status ollama
+
+Instalar modelo
+
+    $ ollama pull llama3.2:3b

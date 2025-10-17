@@ -3,3 +3,4 @@ flask_session
 sqlalchemy
 plantuml
 six
+diff-match-patch

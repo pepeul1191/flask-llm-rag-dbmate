@@ -1,0 +1,73 @@
+After categorizing and sorting the programming languages, I present to you the following list:
+
+**Old (Pre-1970s)**
+
+• COBOL
+• Fortran
+• Perl
+• SAS
+• Shell Script
+
+Note: These languages were developed before the 1970s and are considered legacy or outdated.
+
+**Object-Oriented Programming (POO) Languages**
+
+• C#
+• C++
+• Java
+• JavaScript
+• Kotlin
+• Objective-C
+• Ruby
+• Swift
+
+Note: These languages support object-oriented programming paradigms and have features such as classes, objects, inheritance, and polymorphism.
+
+**Functional Programming Languages**
+
+• Erlang
+• Haskell
+• OCaml
+• Rust
+• Scala
+
+Note: These languages are designed with a focus on functional programming principles, such as immutability, recursion, and higher-order functions.
+
+**Scripting and Interpreted Languages**
+
+• ActionScript
+• Dart
+• Elixir
+• Lua
+• PHP
+• Python
+• Ruby
+• Tcl
+• Visual Basic
+
+Note: These languages are typically used for scripting, rapid prototyping, or as a first step in the development process.
+
+**Type-System languages with additional features**
+
+• F#
+• Go
+• Groovy
+• MATLAB
+• R
+• Rust
+
+Note: While not exclusively functional or object-oriented, these languages have additional features that set them apart from other programming languages.
+
+**Database Languages**
+
+• SQL
+
+Note: This language is specifically designed for managing and querying relational databases.
+
+**Embedded Systems and Embedded Languages**
+
+• VHDL (VHSIC Hardware Description Language)
+• Assembly
+• Fortran
+
+Note: These languages are used for designing and implementing software in embedded systems, such as microcontrollers or digital signal processors.
