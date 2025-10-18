@@ -185,7 +185,6 @@ def generate_sql_schema_with_rag(chain, db_type):
     - Constraints necesarios
     - Relaciones entre tablas
     - No incluir indices adicionales
-    - Luego de cada CREATE TABLE escribir su DROP TABLE
     """
     
     response = chain.invoke(query)
