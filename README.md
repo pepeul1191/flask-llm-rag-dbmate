@@ -100,3 +100,8 @@ Verificar el estado del servicio
 Instalar modelo
 
     $ ollama pull llama3.2:3b
+
+## .env
+
+    #### DBMATE
+    DB=sqlite:db/app.db
