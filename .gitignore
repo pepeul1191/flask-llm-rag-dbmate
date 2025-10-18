@@ -86,3 +86,6 @@ fonts
 static/tmp
 articulo.pdf
 chroma_db
+
+scripts/complete*
+scripts/migrations_*
