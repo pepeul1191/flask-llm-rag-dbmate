@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+
+title Proceso Simplificado: PUML a SQL con RAG
+
+actor Usuario
+participant "Sistema Principal" as Main
+participant "RAG Manager" as RAG
+participant "AI Generator" as AI
+participant "SQL Processor" as SQL
+participant "File System" as FS
+
+== Configuración Inicial ==
+
+Usuario -> Main: Proporciona tipo BD y archivo PUML
+Main -> RAG: Verificar/crear base vectorial
+RAG -> FS: Gestionar chroma_db
+FS --> RAG: Estado base vectorial
+RAG --> Main: Base vectorial lista
+
+== Generación con IA ==
+
+Main -> AI: Generar migraciones SQL
+AI -> RAG: Obtener contexto relevante
+RAG --> AI: Chunks PUML similares
+AI -> AI: Combinar con prompt
+AI --> AI: LLM genera SQL
+AI --> Main: Migraciones en texto
+
+== Procesamiento SQL ==
+
+Main -> SQL: Procesar migraciones
+SQL -> SQL: Extraer tablas y validar
+SQL -> FS: Verificar entidades PUML
+FS --> SQL: Contenido original
+SQL --> Main: Diccionario estructurado
+
+== Persistencia ==
+
+Main -> Usuario: Mostrar resultados
+Usuario -> Main: Confirmar guardado
+Main -> FS: Guardar archivos SQL
+FS --> Main: Archivos creados
+
+Main --> Usuario: Proceso completado (JSON)
+
+@enduml

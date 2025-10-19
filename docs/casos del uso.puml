@@ -1,0 +1,66 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Usuario
+actor LLM
+
+rectangle "Aplicación Web de Generación de BD" {
+  usecase "Ingresar código PlantUML" as UC1
+  usecase "Convertir código a imagen" as UC2
+  usecase "Seleccionar motor de BD" as UC3
+  usecase "Definir tipo de salida" as UC4
+  usecase "Generar prompt enriquecido" as UC6
+  usecase "Enviar a LLM" as UC7
+  usecase "Recibir respuesta LLM" as UC8
+  usecase "Generar migraciones DBMate" as UC9
+  usecase "Descargar scripts SQL" as UC10
+  usecase "Desplegar en BD destino" as UC11
+}
+
+Usuario --> UC1
+Usuario --> UC2
+Usuario --> UC3
+Usuario --> UC4
+Usuario --> UC10
+Usuario --> UC11
+
+UC1 --> UC6
+UC3 --> UC6
+UC4 --> UC6
+
+UC6 --> UC7
+UC9 --> UC10
+UC9 --> UC11
+
+LLM --> UC11
+
+note right of UC1
+  Usuario ingresa código
+  PlantUML en textarea
+end note
+
+note right of UC3
+  Selección entre SQLite,
+  MySQL o PostgreSQL
+end note
+
+note right of UC4
+  Elegir entre descargar
+  scripts o desplegar
+  directamente
+end note
+
+note right of UC6
+  Sistema construye prompt
+  con PlantUML + reglas RAG
+  + configuración de BD
+end note
+
+note right of UC9
+  DBMate genera archivos
+  de migración versionados
+  a partir del SQL del LLM
+end note
+
+@enduml

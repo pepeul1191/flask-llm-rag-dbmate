@@ -1,0 +1,35 @@
+@startuml
+!theme plain
+
+actor Desarrollador as Dev
+participant "DBMate CLI" as DBMate
+participant "Sistema de Archivos" as FS
+participant "Base de Datos" as DB
+
+== Proceso dbmate up ==
+
+Dev -> DBMate: dbmate up
+
+DBMate -> FS: Escanea directorio migrations/
+FS --> DBMate: Lista archivos .sql encontrados
+
+DBMate -> DB: SELECT version FROM schema_migrations
+DB --> DBMate: Versiones aplicadas [001, 002]
+
+DBMate -> DBMate: Filtra migraciones pendientes\n(no presentes en DB)
+
+loop Para cada migración pendiente
+    DBMate -> FS: Lee archivo migración
+    FS --> DBMate: Contenido SQL (secciones UP/DOWN)
+    
+    DBMate -> DB: BEGIN TRANSACTION
+    DBMate -> DB: Ejecuta sección UP del SQL
+    DB -> DB: Aplica cambios de esquema\n(CREATE/ALTER TABLE, etc.)
+    DBMate -> DB: INSERT INTO schema_migrations\nVALUES ('nueva_version')
+    DBMate -> DB: COMMIT
+    DB --> DBMate: ✅ Migración aplicada
+end
+
+DBMate --> Dev: ✅ Applied X migrations
+
+@enduml

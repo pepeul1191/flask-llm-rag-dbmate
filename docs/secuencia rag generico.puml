@@ -1,0 +1,39 @@
+@startuml
+title Secuencia: Sistema RAG para Generación de SQL desde PlantUML
+
+actor "Aplicación Web" as AW
+participant "Sistema RAG" as RAG
+participant "Generador de\nEmbeddings" as EmbedGen
+participant "Base de Vector" as VectorDB
+participant "Constructor de\nPrompt" as PromptBuilder
+participant "LLM Local" as LLM
+
+AW -> RAG: 1. Diagrama PlantUML + parámetros
+activate RAG
+
+RAG -> EmbedGen: 2. Generar embeddings para consulta
+activate EmbedGen
+
+EmbedGen -> VectorDB: 2.1 Guardar/Recuperar embeddings
+activate VectorDB
+VectorDB --> EmbedGen: 2.2 Embeddings relevantes
+deactivate VectorDB
+
+EmbedGen --> RAG: 2.3 Contexto enriquecido
+deactivate EmbedGen
+
+RAG -> PromptBuilder: 3. Consulta + contexto enriquecido
+activate PromptBuilder
+
+PromptBuilder -> PromptBuilder: 3.1 Construir prompt enriquecido
+PromptBuilder --> LLM: 4. Prompt enriquecido con contexto
+deactivate PromptBuilder
+
+activate LLM
+LLM -> LLM: 4.1 Procesar con contexto
+LLM --> AW: 5. Retornar código SQL generado
+deactivate LLM
+
+deactivate RAG
+
+@enduml

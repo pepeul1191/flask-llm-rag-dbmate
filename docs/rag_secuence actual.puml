@@ -1,0 +1,170 @@
+@startuml
+!theme plain
+
+title Proceso de Transformación PUML a SQL - Diagrama de Secuencia
+
+actor Usuario as User
+participant "main.py" as Main
+participant "RAGServices" as RAG
+participant "MigrationGenerator" as MG
+participant "ChainServices" as CS
+participant "LLMServices" as LLM
+participant "PromptTemplates" as PT
+participant "DataProcessor" as DP
+participant "QueryAnalyzer" as QA
+participant "TextProcessing" as TP
+participant "Validation" as VAL
+participant "VectorDB\n(Chroma)" as VDB
+participant "Ollama LLM" as OLLAMA
+participant "Sistema de Archivos" as FS
+
+== Inicialización ==
+
+User -> Main: Ejecuta script
+Main -> Main: Solicita tipo BD y archivo PUML
+User -> Main: Proporciona parámetros
+
+== Gestión de Base Vectorial RAG ==
+
+Main -> RAG: check_existing_vector_db()
+RAG -> FS: Verifica directorio chroma_db
+FS --> RAG: Existe/No existe
+
+alt Base vectorial no existe o necesita recrearse
+  RAG --> Main: None o necesita recreación
+  Main -> RAG: create_vector_db_from_puml(puml_file)
+  
+  RAG -> RAG: clear_vector_db()
+  RAG -> FS: Elimina directorio chroma_db
+  FS --> RAG: Confirmación
+  
+  RAG -> FS: Lee archivo PUML
+  FS --> RAG: Contenido PUML
+  
+  RAG -> DP: split_puml_content(content, puml_file)
+  DP -> DP: Procesa entidades y relaciones
+  DP --> RAG: Lista de chunks/documentos
+  
+  RAG -> LLM: get_embedding_model()
+  LLM --> RAG: Modelo de embeddings
+  
+  RAG -> VDB: Chroma.from_documents(chunks, embedding)
+  VDB -> VDB: Crea base vectorial
+  VDB --> RAG: VectorDB instance
+  
+  RAG -> VDB: persist()
+  VDB --> RAG: Confirmación
+  
+else Base vectorial existe y es válida
+  RAG --> Main: VectorDB instance
+  Main -> RAG: load_vector_db()
+  RAG --> Main: VectorDB cargada
+end
+
+RAG --> Main: VectorDB configurada
+
+== Generación de Migraciones con RAG ==
+
+Main -> MG: MigrationGenerator(vector_db)
+MG -> CS: create_retriever(vector_db)
+CS -> LLM: get_chat_model()
+LLM --> CS: Modelo de chat
+CS -> PT: get_multi_query_prompt()
+PT --> CS: Prompt template
+CS --> MG: Retriever configurado
+
+MG -> CS: create_sql_generation_chain(retriever)
+CS -> PT: get_sql_generation_prompt()
+PT --> CS: Prompt template SQL
+CS --> MG: Chain configurada
+
+Main -> MG: generate_sql_migrations_with_rag(db_type, puml_file)
+
+MG -> FS: Lee archivo PUML
+FS --> MG: Contenido PUML
+
+MG -> DP: extract_entities_info(puml_content)
+DP -> DP: Analiza entidades y atributos
+DP --> MG: Información estructurada de entidades
+
+MG -> PT: get_migration_generation_prompt(db_type, puml_file, entities_summary)
+PT --> MG: Prompt específico para migraciones
+
+MG -> MG: chain.invoke(query)
+
+MG -> CS: Ejecuta cadena RAG
+CS -> VDB: Búsqueda por similitud (retrieval)
+VDB --> CS: Documentos relevantes
+
+CS -> OLLAMA: Envía prompt + contexto
+OLLAMA --> CS: Respuesta generada
+CS --> MG: Migraciones SQL en texto
+
+MG --> Main: Migraciones SQL completas
+
+== Procesamiento y Validación ==
+
+Main -> MG: process_migrations(complete_migrations, puml_file, db_type)
+
+MG -> VAL: is_model_refusal(complete_migrations)
+VAL --> MG: Resultado validación
+
+alt Modelo rechazó generación
+  MG -> MG: generate_direct_migrations(puml_file, db_type)
+  MG -> FS: Lee archivo PUML
+  FS --> MG: Contenido PUML
+  MG -> DP: extract_entities_info(content)
+  DP --> MG: Información de entidades
+  MG -> TP: map_puml_to_sql() para cada atributo
+  TP --> MG: Tipos SQL mapeados
+  MG --> MG: Genera migraciones directas
+end
+
+MG -> QA: parse_migration_blocks(complete_migrations)
+QA -> QA: Extrae CREATE/DROP TABLE statements
+QA --> MG: Diccionario de tablas
+
+MG -> QA: validate_entity_count(puml_file, tables_dict)
+QA -> FS: Lee archivo PUML
+FS --> QA: Contenido PUML
+QA -> DP: count_entities(content)
+DP --> QA: Número de entidades
+QA --> MG: Conteo esperado vs real
+
+MG -> TP: enforce_original_names(puml_file, tables_dict)
+TP -> FS: Lee archivo PUML
+FS --> TP: Contenido PUML
+TP -> TP: Corrige nombres si es necesario
+TP --> MG: Diccionario corregido
+
+MG --> Main: Resultado procesado con tablas_dict
+
+== Presentación y Guardado ==
+
+Main -> Main: Muestra resumen de tablas generadas
+
+alt Usuario elige guardar
+  User -> Main: Confirma guardado
+  Main -> Main: save_migration_files(tables_dict, puml_basename, db_type, complete_migrations)
+  
+  Main -> FS: Crea archivo SQL completo
+  FS --> Main: Confirmación
+  
+  Main -> FS: Crea directorio de migraciones
+  FS --> Main: Confirmación
+  
+  loop Para cada tabla en tables_dict
+    Main -> FS: Crea archivo de migración individual
+    FS --> Main: Confirmación
+  end
+  
+  alt Usuario elige guardar JSON
+    User -> Main: Confirma guardado JSON
+    Main -> FS: Crea archivo JSON con diccionario
+    FS --> Main: Confirmación
+  end
+end
+
+Main --> User: Proceso completado
+
+@enduml

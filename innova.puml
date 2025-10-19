@@ -1,0 +1,175 @@
+@startuml
+!theme plain
+
+entity "document_types" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(22)
+}
+
+entity "industries" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(30)
+}
+
+entity "specialisms" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(70)
+}
+
+entity "carrere_grades" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(40)
+}
+
+entity "carreres" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(40)
+  * carrere_grade_id (FK): INT
+}
+
+entity "program_types" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(30)
+}
+
+entity "dni_types" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(30)
+}
+
+entity "nations" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(30)
+}
+
+entity "periods" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(10)
+  * init_date: DATE
+  * end_date: DATE
+}
+
+entity "programs" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(30)
+  * description: TEXT
+  * image_url: VARCHAR(60)
+  * pdf_url: VARCHAR(60)
+  * max_participant_team: INT
+  * created_at: DATETIME
+  * updated_at: DATETIME
+  * program_type_id (FK): INT
+  * period_id (FK): INT
+}
+
+entity "phases" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(30)
+  * description: TEXT
+  * init_date: DATE
+  * end_date: DATE
+  * delivery_deadline: DATE
+  * evaluation_deadline: DATE
+  * revaluation_deadline: DATE
+  * created_at: DATETIME
+  * updated_at: DATETIME
+  * program_id (FK): INT
+}
+
+entity "participants" {
+  * id : INTEGER
+  --
+  * names: VARCHAR(50)
+  * last_names: VARCHAR(50)
+  * email: VARCHAR(40)
+  * phone: VARCHAR(40)
+  * dni: VARCHAR(20)
+  * created_at: DATETIME
+  * updated_at: DATETIME
+  * dni_type_id (FK): INT
+  * nation_id (FK): INT
+  * user_id (FK): INT
+}
+
+entity "internals" {
+  * id : INTEGER
+  --
+  * code: INT
+  * participant_id (FK): INT
+  * period_id (FK): INT
+  * carrere_id (FK): INT
+}
+
+entity "externals" {
+  * id : INTEGER
+  --
+  * participant_id (FK): INT
+}
+
+entity "workers" {
+  * id : INTEGER
+  --
+  * names: VARCHAR(50)
+  * last_names: VARCHAR(50)
+  * email: VARCHAR(40)
+  * phone: VARCHAR(40)
+  * created_at: DATETIME
+  * updated_at: DATETIME
+  * user_id (FK): INT
+}
+
+entity "external_workers" {
+  * id : INTEGER
+  --
+  * worker_id (FK): INT
+}
+
+entity "internal_workers" {
+  * id : INTEGER
+  --
+  * worker_id (FK): INT
+  * code: INT
+}
+
+entity "mentors" {
+  * id : INTEGER
+  --
+  * worker_id (FK): INT
+}
+
+entity "mentors_spcialisms"{
+  * id : INTEGER
+  --
+  * mentor_id (FK): INT
+  * specialism_id (FK): INT
+}
+
+programs }|--|| periods : period_id
+programs }|--|| program_types : program_type_id
+phase }|--|| programs : program_id
+participants }|--|| dni_types : dni_type_id
+participants }|--|| nations : nation_id
+carreres }|--|| carrere_grades : carrere_grade_id
+internals }|--|| carreres : carrere_id
+internals }|--|| periods : period_id
+internals ||--|| participants : participant_id
+externals ||--|| participants : participant_id
+workers ||--|| internal_workers : worker_id
+workers ||--|| external_workers : worker_id
+workers ||--|| mentors : worker_id
+mentors ||--|{ mentors_spcialisms : mentor_id
+specialisms ||--|{ mentors_spcialisms : specialism_id
+}
+
+@enduml
