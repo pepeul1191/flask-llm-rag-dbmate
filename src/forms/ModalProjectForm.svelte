@@ -7,6 +7,7 @@
   import { navigate } from 'svelte-routing';
 
   export let project = null;
+  export let showContinue = true;
 
   let modalEl;
   let modalInstance;
@@ -207,7 +208,7 @@
         </div>
         
         <div class="modal-footer">
-          {#if id}
+          {#if id && showContinue}
             <button 
               type="button" 
               class="btn btn-outline-primary"

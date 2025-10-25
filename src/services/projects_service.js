@@ -19,6 +19,25 @@ export const fetchProjects = () => {
   });
 }
 
+export const fetchProject = (id) => {
+  return new Promise((resolve, reject) => {
+    axios.get('/api/v1/projects/' + id, {
+      params: {},
+      headers:{
+        'Client-Origin': 'webapp',
+        'Content-Type': 'application/json',
+      }
+    }).then(function (response) {
+      resolve(response.data);
+    }).catch(function (error) {
+      reject(error.response);
+    })
+    .then(function () {
+      // todo?
+    });
+  });
+}
+
 export const createProject = (engine) => {
   return new Promise((resolve, reject) => {
     axios.post('/api/v1/projects', engine, {
@@ -70,9 +89,9 @@ export const deleteProject = (id) => {
   });
 }
 
-export const createImage = (project) => {
+export const createImage = (model) => {
   return new Promise((resolve, reject) => {
-    axios.post('/api/v1/image', project, {
+    axios.post('/api/v1/image', model, {
       headers: {
         'Client-Origin': 'webapp',
         'Content-Type': 'application/json',

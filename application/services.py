@@ -110,6 +110,19 @@ def fetch_projects():
     tb = traceback.format_exc()
     return handle_error(f"Error al obtener proyectos: {str(e)}", tb)
 
+def fetch_project(project_id):
+  try:
+    project = session.query(Project).get(project_id)
+    if not project:
+      return build_response(success=False, message="Proyecto no encontrado"), 404
+
+    session.commit()
+    return build_response(data=project.to_json(), message="Proyecto actualizado exitosamente"), 200
+
+  except Exception as e:
+    session.rollback()
+    tb = traceback.format_exc()
+    return handle_error(f"Error al actualizar proyecto: {str(e)}", tb)
 
 def create_project(data):
   try:

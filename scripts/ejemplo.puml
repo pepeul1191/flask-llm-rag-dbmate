@@ -1,65 +1,78 @@
 @startuml
 
-entity "users" as u {
-  +id : INTEGER
-  +username : VARCHAR(20)
-  +password : VARCHAR(100)
-  +activation_key : VARCHAR(30)
-  +reset_key : VARCHAR(30)
-  +email : VARCHAR(50)
-  +activated : BOOLEAN
-  +created : DATETIME
-  +updated : DATETIME
+entity users {
+  * id : INTEGER
+  --
+  * username : VARCHAR(20)
+  * password : VARCHAR(100)
+  * activation_key : VARCHAR(30)
+  * reset_key : VARCHAR(30)
+  * email : VARCHAR(50)
+  * activated : BOOLEAN
+  * created : DATETIME
+  * updated : DATETIME
 }
 
-entity "systems" as s {
-  +id : INTEGER
-  +name : VARCHAR(40)
-  +description : TEXT
-  +repository : VARCHAR(100)
-  +created : DATETIME
-  +updated : DATETIME
+entity systems {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+  * description : TEXT
+  * repository : VARCHAR(100)
+  * created : DATETIME
+  * updated : DATETIME
 }
 
-entity "roles" as r {
-  +id : INTEGER
-  +name : VARCHAR(40)
-  +created : DATETIME
-  +updated : DATETIME
-  +system_id : INTEGER
+entity roles {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+  * created : DATETIME
+  * updated : DATETIME
+  * system_id : INTEGER
 }
 
-entity "permissions" as p {
-  +id : INTEGER
-  +name : VARCHAR(40)
-  +created : DATETIME
-  +updated : DATETIME
-  +role_id : INTEGER
+entity permissions {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+  * created : DATETIME
+  * updated : DATETIME
+  * role_id : INTEGER
 }
 
-entity "systems_users" as su {
-  +id : INTEGER
-  +system_id : INTEGER
-  +user_id : INTEGER
-  +created : DATETIME
+entity systems_users {
+  * id : INTEGER
+  --
+  * system_id : INTEGER
+  * user_id : INTEGER
+  * created : DATETIME
 }
 
-entity "systems_users_permissions" as sup {
-  +id : INTEGER
-  +system_id : INTEGER
-  +user_id : INTEGER
-  +permission_id : INTEGER
-  +created : DATETIME
+entity systems_users_permissions {
+  * id : INTEGER
+  --
+  * system_id : INTEGER
+  * user_id : INTEGER
+  * permission_id : INTEGER
+  * created : DATETIME
 }
 
-u -- su : "has many"
-su -- s : "belongs to"
-su -- u : "belongs to"
-r -- p : "has many"
-p -- r : "belongs to"
-r -- s : "belongs to"
-sup -- s : "belongs to"
-sup -- u : "belongs to"
-sup -- p : "belongs to"
+entity carrere_grades {
+  * id : INTEGER
+  --
+  * name: VARCHAR(40)
+}
+
+' Relaciones
+users -- systems_users : "has many"
+systems_users -- systems : "belongs to"
+systems_users -- users : "belongs to"
+roles -- permissions : "has many"
+permissions -- roles : "belongs to"
+roles -- systems : "belongs to"
+systems_users_permissions -- systems : "belongs to"
+systems_users_permissions -- users : "belongs to"
+systems_users_permissions -- permissions : "belongs to"
 
 @enduml
