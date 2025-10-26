@@ -12,6 +12,7 @@ from application.services import (
   fetch_projects as fetch_projects_service,
   fetch_project as fetch_project_service,
   create_migrations as create_migrations_service,
+  execute_migrations as execute_migrations_service,
   generate_plantuml_image,
 )
 
@@ -93,4 +94,12 @@ def create_migrations():
 def create_migrations_v2():
   data = request.get_json()
   result, status = create_migrations_service(data['model'], data['project'])
+  return jsonify(result), status
+
+@api.route('/api/v1/migrations/execute', methods=['POST'])
+def execute_migrations():
+  data = request.get_json()
+  migrations = data['migrations']
+  project = data['project']
+  result, status = execute_migrations_service(project, migrations)
   return jsonify(result), status

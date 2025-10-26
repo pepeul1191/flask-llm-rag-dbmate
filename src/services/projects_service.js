@@ -124,9 +124,13 @@ export const createMigrations = (model, project) => {
   });
 }
 
-export const executeMigrations = (migrations) => {
+export const executeMigrations = (project, migrations) => {
+  const data = {
+    project, migrations
+  }
+
   return new Promise((resolve, reject) => {
-    axios.post('/api/v1/migrations/execute', migrations, {
+    axios.post('/api/v1/migrations/execute', data, {
       headers: {
         'Client-Origin': 'webapp',
         'Content-Type': 'application/json',

@@ -157,7 +157,7 @@
   }
 
   async function runMigrations() {
-    const resp = await executeMigrations(migrations);
+    const resp = await executeMigrations(project, migrations);
     console.log(resp.data);
   }
 

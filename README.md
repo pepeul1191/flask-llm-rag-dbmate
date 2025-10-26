@@ -105,3 +105,11 @@ Instalar modelo
 
     #### DBMATE
     DB=sqlite:db/app.db
+
+## DBMATE
+
+    npm install -g dbmate
+    sudo apt update
+    sudo apt install sqlite3
+    sudo apt install mysql-client
+    sudo apt install postgresql-client
