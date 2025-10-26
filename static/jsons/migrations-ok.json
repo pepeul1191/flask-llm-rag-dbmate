@@ -1,0 +1,49 @@
+{
+    "data": [
+        {
+            "complete_block": "-- migrate:up\n\nCREATE TABLE users (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT,\n  username VARCHAR(20) NOT NULL,\n  password VARCHAR(100) NOT NULL,\n  activation_key VARCHAR(30) NOT NULL,\n  reset_key VARCHAR(30) NOT NULL,\n  email VARCHAR(50) NOT NULL,\n  activated BOOLEAN NOT NULL DEFAULT FALSE,\n  created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);\n\n-- migrate:down\n\nDROP TABLE users;",
+            "down": "DROP TABLE users;",
+            "table_name": "users",
+            "up": "CREATE TABLE users ( id INTEGER PRIMARY KEY AUTO_INCREMENT, username VARCHAR(20) NOT NULL, password VARCHAR(100) NOT NULL, activation_key VARCHAR(30) NOT NULL, reset_key VARCHAR(30) NOT NULL, email VARCHAR(50) NOT NULL, activated BOOLEAN NOT NULL DEFAULT FALSE, created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP );"
+        },
+        {
+            "complete_block": "-- migrate:up\n\nCREATE TABLE systems (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT,\n  name VARCHAR(40) NOT NULL,\n  description TEXT NOT NULL,\n  repository VARCHAR(100) NOT NULL,\n  created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);\n\n-- migrate:down\n\nDROP TABLE systems;",
+            "down": "DROP TABLE systems;",
+            "table_name": "systems",
+            "up": "CREATE TABLE systems ( id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(40) NOT NULL, description TEXT NOT NULL, repository VARCHAR(100) NOT NULL, created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP );"
+        },
+        {
+            "complete_block": "-- migrate:up\n\nCREATE TABLE roles (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT,\n  name VARCHAR(40) NOT NULL,\n  created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  system_id INTEGER NOT NULL,\n  FOREIGN KEY (system_id) REFERENCES systems(id)\n);\n\n-- migrate:down\n\nDROP TABLE roles;",
+            "down": "DROP TABLE roles;",
+            "table_name": "roles",
+            "up": "CREATE TABLE roles ( id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(40) NOT NULL, created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, system_id INTEGER NOT NULL, FOREIGN KEY (system_id) REFERENCES systems(id) );"
+        },
+        {
+            "complete_block": "-- migrate:up\n\nCREATE TABLE permissions (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT,\n  name VARCHAR(40) NOT NULL,\n  created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  role_id INTEGER NOT NULL,\n  FOREIGN KEY (role_id) REFERENCES roles(id)\n);\n\n-- migrate:down\n\nDROP TABLE permissions;",
+            "down": "DROP TABLE permissions;",
+            "table_name": "permissions",
+            "up": "CREATE TABLE permissions ( id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(40) NOT NULL, created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, role_id INTEGER NOT NULL, FOREIGN KEY (role_id) REFERENCES roles(id) );"
+        },
+        {
+            "complete_block": "-- migrate:up\n\nCREATE TABLE systems_users (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT,\n  system_id INTEGER NOT NULL,\n  user_id INTEGER NOT NULL,\n  created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (system_id) REFERENCES systems(id),\n  FOREIGN KEY (user_id) REFERENCES users(id)\n);\n\n-- migrate:down\n\nDROP TABLE systems_users;",
+            "down": "DROP TABLE systems_users;",
+            "table_name": "systems_users",
+            "up": "CREATE TABLE systems_users ( id INTEGER PRIMARY KEY AUTO_INCREMENT, system_id INTEGER NOT NULL, user_id INTEGER NOT NULL, created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (system_id) REFERENCES systems(id), FOREIGN KEY (user_id) REFERENCES users(id) );"
+        },
+        {
+            "complete_block": "-- migrate:up\n\nCREATE TABLE systems_users_permissions (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT,\n  system_id INTEGER NOT NULL,\n  user_id INTEGER NOT NULL,\n  permission_id INTEGER NOT NULL,\n  created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (system_id) REFERENCES systems(id),\n  FOREIGN KEY (user_id) REFERENCES users(id),\n  FOREIGN KEY (permission_id) REFERENCES permissions(id)\n);\n\n-- migrate:down\n\nDROP TABLE systems_users_permissions;",
+            "down": "DROP TABLE systems_users_permissions;",
+            "table_name": "systems_users_permissions",
+            "up": "CREATE TABLE systems_users_permissions ( id INTEGER PRIMARY KEY AUTO_INCREMENT, system_id INTEGER NOT NULL, user_id INTEGER NOT NULL, permission_id INTEGER NOT NULL, created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (system_id) REFERENCES systems(id), FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (permission_id) REFERENCES permissions(id) );"
+        },
+        {
+            "complete_block": "-- migrate:up\n\nCREATE TABLE carrere_grades (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT,\n  name VARCHAR(40) NOT NULL\n);\n\n-- migrate:down\n\nDROP TABLE carrere_grades;",
+            "down": "DROP TABLE carrere_grades;",
+            "table_name": "carrere_grades",
+            "up": "CREATE TABLE carrere_grades ( id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(40) NOT NULL );"
+        }
+    ],
+    "error": null,
+    "message": "Migraciones generadas correctamente",
+    "success": true
+}

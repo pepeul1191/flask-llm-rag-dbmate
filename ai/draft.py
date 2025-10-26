@@ -716,6 +716,8 @@ def demo(folder_path, db_type):
     # Forzar nombres originales
     tables_dict = enforce_original_names(puml_file, tables_dict)
 
+    resp = []
+
     if tables_dict:
         print(f"\n✅ Se procesaron {len(tables_dict)} tablas ÚNICAS:\n")
         
@@ -725,11 +727,12 @@ def demo(folder_path, db_type):
             print(f"  UP:   {table_data['up']}")
             print(f"  DOWN: {table_data['down']}")
             print("-" * 80)
+            resp.append(table_data)
     else:
         print("❌ No se pudieron procesar las migraciones.")
         return "❌ No se pudieron procesar las migraciones.", False
 
-    return tables_dict, True
+    return resp, True
 
     # Paso 6: Guardar archivos
     save_file = input("\n¿Guardar las migraciones en archivos? (s/n): ").strip().lower()

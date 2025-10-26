@@ -82,6 +82,15 @@ def create_image():
 
 @api.route('/api/v1/migrations/generate', methods=['POST'])
 def create_migrations():
+  import json
+  file_path = '/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/static/jsons/migrations-ok.json'
+  with open(file_path, 'r') as file:
+    data = json.load(file)
+  # Retorna el contenido del archivo .json como respuesta JSON
+  return jsonify(data), 200
+
+@api.route('/api/v2/migrations/generate', methods=['POST'])
+def create_migrations_v2():
   data = request.get_json()
   result, status = create_migrations_service(data['model'], data['project'])
   return jsonify(result), status

@@ -199,8 +199,13 @@
       const resp = await createMigrations(model.content, project);
       console.log('Respuesta del servicio:', resp.data);
       
-      showFlashAlert('Migraciones generadas exitosamente', 'success');
-      
+      if(resp.status){
+        //showFlashAlert('Migraciones generadas exitosamente', 'success');
+        dispatch('refreshList', resp.data);
+        hide();
+      }else{
+        showFlashAlert(resp.error, 'danger');
+      }
     } catch (error) {
       console.error('Error al generar migraciones:', error);
       showFlashAlert('Error al generar las migraciones', 'danger');

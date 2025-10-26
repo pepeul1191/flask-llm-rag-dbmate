@@ -305,7 +305,7 @@ def create_migrations(model, project):
     if sucess:
       return {
         "data": data,
-        "message": "Imagen generada correctamente",
+        "message": "Migraciones generadas correctamente",
         "success": True,
         "error": None
       }, 200
