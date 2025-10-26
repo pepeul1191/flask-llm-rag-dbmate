@@ -1,7 +1,7 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
   import { Dropdown } from 'bootstrap';
-    import { navigate } from 'svelte-routing';
+  import { navigate } from 'svelte-routing';
 
   export let project;
 
@@ -86,9 +86,9 @@
 
       <!-- Fecha y versiones -->
       <div class="text-muted small d-flex justify-content-between align-items-center">
-        {#if project.last_version_date}
-          <span>Último cambio <b>{project.last_version_date}</b></span>
-          <span><b>{project.versions_count} versiones</b></span>
+        {#if project.migrations.length != 0}
+          <span>Último cambio <b>{project.migrations.at(-1).created}</b></span>
+          <span><b>{project.migrations.length}</b> migraciones</span>
         {:else}
           <span>Aún no hay actividad en el proyecto</span>
         {/if}

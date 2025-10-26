@@ -6,6 +6,7 @@ from plantuml import PlantUML
 from application.models import Engine, Project
 from sqlalchemy import text
 from pathlib import Path
+from sqlalchemy.orm import joinedload
 from main.database import session
 
 def build_response(data=None, message="Operación exitosa", success=True):
@@ -58,71 +59,89 @@ def fetch_engines():
       message="Error del servicio",
       error={"message": "Error interno del servidor"}
     )
+  
+def fetch_project(project_id):
+  try:
+    project = session.query(Project)\
+      .options(
+        joinedload(Project.engine),
+        joinedload(Project.migrations)
+      )\
+      .filter(Project.id == project_id)\
+      .first()
+    
+    if not project:
+      return build_response(success=False, message="Proyecto no encontrado"), 400
+    
+    project_data = {
+      "id": project.id,
+      "connection_string": project.connection_string,
+      "description": project.description,
+      "title": project.title,
+      "engine": {
+        "id": project.engine.id,
+        "image": project.engine.image,
+        "name": project.engine.name
+      },
+      "migrations": [
+        {
+          "id": migration.id,
+          "name": migration.name,
+          "timestamp": migration.timestamp,
+          "up": migration.up,
+          "executed": migration.executed,
+          "created": migration.created_at.strftime("%Y-%m-%d %H:%M:%S") if migration.created_at else None
+        }
+        for migration in project.migrations
+      ]
+    }
+    
+    return build_response(data=project_data, message="Proyecto obtenido exitosamente"), 200
+  except Exception as e:
+    tb = traceback.format_exc()
+    return handle_error(f"Error al obtener proyecto: {str(e)}", tb)
 
 def fetch_projects():
   try:
-    sql = text("""
-      SELECT 
-        P.id, 
-        P.title, 
-        P.description, 
-        P.connection_string, 
-        P.engine_id,
-        E.name AS engine_name, 
-        E.image AS engine_image,
-        COUNT(V.id) AS versions_count,
-        MAX(COALESCE(V.updated_at, V.created_at)) AS last_version_date
-
-      FROM projects P
-      JOIN engines E ON P.engine_id = E.id
-      LEFT JOIN versions V ON P.id = V.project_id
-
-      GROUP BY 
-        P.id, P.title, P.description, P.connection_string, P.engine_id, E.name, E.image
-
-      ORDER BY P.id ASC;
-    """)
-
-    result = session.execute(sql)
-    rows = result.fetchall()
-
-    data = [
-      {
-        "id": row.id,
-        "title": row.title,
-        "description": row.description,
-        "connection_string": row.connection_string,
-        "engine_id": row.engine_id,
+    projects = session.query(Project)\
+      .options(
+        joinedload(Project.engine),
+        joinedload(Project.migrations)
+      )\
+      .all()
+    
+    result = []
+    for project in projects:
+      project_data = {
+        "id": project.id,
+        "connection_string": project.connection_string,
+        "description": project.description,
+        "title": project.title,
         "engine": {
-          "id": row.engine_id,
-          "name": row.engine_name,
-          "image": row.engine_image
+          "id": project.engine.id,
+          "image": project.engine.image,
+          "name": project.engine.name
         },
-        "versions_count": row.versions_count,
-        "last_version_date": row.last_version_date if row.last_version_date else None
+        "migrations": [
+          {
+            "id": migration.id,
+            "name": migration.name,
+            "timestamp": migration.timestamp,
+            "up": migration.up,
+            "executed": migration.executed,
+            "created": migration.created_at.strftime("%Y-%m-%d %H:%M:%S") if migration.created_at else None
+          }
+          for migration in project.migrations
+        ]
       }
-      for row in rows
-    ]
-
-    return build_response(data=data, message="Lista de proyectos obtenida exitosamente"), 200
+      
+      result.append(project_data)
+    
+    return build_response(data=result, message="Lista de proyectos obtenida exitosamente"), 200
 
   except Exception as e:
     tb = traceback.format_exc()
     return handle_error(f"Error al obtener proyectos: {str(e)}", tb)
-
-def fetch_project(project_id):
-  try:
-    project = session.query(Project).get(project_id)
-    if not project:
-      return build_response(success=False, message="Proyecto no encontrado"), 404
-
-    session.commit()
-    return build_response(data=project.to_json(), message="Proyecto actualizado exitosamente"), 200
-
-  except Exception as e:
-    session.rollback()
-    tb = traceback.format_exc()
-    return handle_error(f"Error al actualizar proyecto: {str(e)}", tb)
 
 def create_project(data):
   try:

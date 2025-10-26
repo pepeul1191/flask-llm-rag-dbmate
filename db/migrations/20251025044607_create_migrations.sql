@@ -1,0 +1,17 @@
+-- migrate:up
+
+CREATE TABLE IF NOT EXISTS migrations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(70) NOT NULL,
+  timestamp INTEGER NOT NULL,
+  up TEXT NOT NULL,
+  down TEXT NOT NULL,
+  executed BOOLEAN DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  project_id INTEGER NOT NULL,
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+-- migrate:down
+
+DROP TABLE migrations;

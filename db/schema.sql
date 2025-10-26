@@ -21,6 +21,17 @@ CREATE TABLE versions (
   project_id INTEGER NOT NULL,
   FOREIGN KEY (project_id) REFERENCES projects (id)
 );
+CREATE TABLE migrations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(70) NOT NULL,
+  timestamp INTEGER NOT NULL,
+  up TEXT NOT NULL,
+  down TEXT NOT NULL,
+  executed BOOLEAN DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  project_id INTEGER NOT NULL,
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20251011191634'),
@@ -28,4 +39,6 @@ INSERT INTO "schema_migrations" (version) VALUES
   ('20251011192122'),
   ('20251011192311'),
   ('20251011192341'),
-  ('20251012013720');
+  ('20251012013720'),
+  ('20251025044607'),
+  ('20251025045910');

@@ -27,7 +27,20 @@ entity "versions" {
   * project_id (FK): INT
 }
 
+entity "migrations" {
+  * id : INTEGER
+  --
+  * name: VARCHAR(70)
+  * timestamp: INTEGER
+  * up: TEXT
+  * down: TEXT
+  * executed: BOOLEAN
+  * created_at: DATETIME
+  * project_id (FK): INT
+}
+
 projects }|--|| engines : engine_id
 versions }|--|| projects : project_id
+migrations }|--|| projects : project_id
 
 @enduml
