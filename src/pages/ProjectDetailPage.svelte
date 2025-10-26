@@ -1,28 +1,30 @@
 <!-- src/pages/ProjectDetailPage.svelte -->
 <script>
-  import { createImage, fetchProject } from '../services/projects_service.js';
-  import { onMount } from 'svelte';
-  import ModalProjectForm from '../forms/ModalProjectForm.svelte';
-  import UploadPUMLForm from '../forms/UploadPUMLForm.svelte';
-  import FlashAlert from '../components/FlashAlert.svelte';
+  import { createImage, fetchProject, executeMigrations } from "../services/projects_service.js";
+  import { onMount } from "svelte";
+  import ModalProjectForm from "../forms/ModalProjectForm.svelte";
+  import UploadPUMLForm from "../forms/UploadPUMLForm.svelte";
+  import FlashAlert from "../components/FlashAlert.svelte";
 
   export let id;
   let showAlert = false;
-  let alertMessage = '';
-  let alertType = 'success';
+  let alertMessage = "";
+  let alertType = "success";
   let modalRef;
   let modalUMLRef;
   let migrations = [];
   let selectedMigration = null;
-  let editUp = '';
-  let editDown = '';
+  let editUp = "";
+  let editDown = "";
 
   onMount(() => {
-    fetchProject(id).then((resp) => {
-      project = resp.data;
-    }).catch((resp) => {
-      console.log(resp);
-    });
+    fetchProject(id)
+      .then((resp) => {
+        project = resp.data;
+      })
+      .catch((resp) => {
+        console.log(resp);
+      });
   });
 
   // Datos de ejemplo para el proyecto
@@ -30,21 +32,31 @@
     id: id,
     title: "Mi Proyecto",
     description: ``,
-    connection_string: '',
+    connection_string: "",
     imageUrl: "",
     engine: {
-      name:'',
-      id: '',
-      image: '',
-    }
+      name: "",
+      id: "",
+      image: "",
+    },
   };
 
   // Función para generar el nombre de la migración
-  function getMigrationName(migration) {
+  function generateMigrationName(migration, timestamp) {
     if (migration.up && migration.up.startsWith('CREATE')) {
-      return `${migration.timestamp}_create_${migration.table_name}`;
+      return `${timestamp}_create_${migration.table_name}`;
     }
-    return `${migration.timestamp}_migration_${migration.table_name}`;
+    return `${timestamp}_migration_${migration.table_name}`;
+  }
+
+  // Función para actualizar todos los nombres de las migraciones
+  function updateMigrationNames() {
+    migrations = migrations.map(migration => {
+      return {
+        ...migration,
+        name: generateMigrationName(migration, migration.timestamp)
+      };
+    });
   }
 
   // Mover migración hacia arriba
@@ -54,14 +66,14 @@
       const temp = migrations[index];
       migrations[index] = migrations[index - 1];
       migrations[index - 1] = temp;
-      
+
       // Intercambiar timestamps
       const tempTimestamp = migrations[index].timestamp;
       migrations[index].timestamp = migrations[index - 1].timestamp;
       migrations[index - 1].timestamp = tempTimestamp;
-      
-      // Actualizar la referencia para reactividad
-      migrations = migrations;
+
+      // Actualizar los nombres
+      updateMigrationNames();
     }
   }
 
@@ -72,14 +84,14 @@
       const temp = migrations[index];
       migrations[index] = migrations[index + 1];
       migrations[index + 1] = temp;
-      
+
       // Intercambiar timestamps
       const tempTimestamp = migrations[index].timestamp;
       migrations[index].timestamp = migrations[index + 1].timestamp;
       migrations[index + 1].timestamp = tempTimestamp;
-      
-      // Actualizar la referencia para reactividad
-      migrations = migrations;
+
+      // Actualizar los nombres
+      updateMigrationNames();
     }
   }
 
@@ -95,11 +107,15 @@
     if (selectedMigration) {
       selectedMigration.up = editUp;
       selectedMigration.down = editDown;
+      
+      // Actualizar el nombre si cambió el tipo de operación
+      selectedMigration.name = generateMigrationName(selectedMigration, selectedMigration.timestamp);
+      
       // Actualizar la referencia para reactividad
       migrations = migrations;
       selectedMigration = null;
-      editUp = '';
-      editDown = '';
+      editUp = "";
+      editDown = "";
     }
   }
 
@@ -107,15 +123,18 @@
   function deleteMigration(index) {
     // Eliminar la migración
     migrations.splice(index, 1);
-    
+
     // Actualizar la referencia para reactividad
     migrations = migrations;
-    
+
+    // Actualizar nombres después de eliminar
+    updateMigrationNames();
+
     // Limpiar selección si se eliminó la migración seleccionada
     if (selectedMigration && migrations.indexOf(selectedMigration) === -1) {
       selectedMigration = null;
-      editUp = '';
-      editDown = '';
+      editUp = "";
+      editDown = "";
     }
   }
 
@@ -128,38 +147,44 @@
     modalRef.show();
   }
 
-  function addMigrations(){
+  function addMigrations() {
     modalUMLRef.show();
   }
 
   function handleAlertClose() {
     showAlert = false;
-    alertMessage = '';
+    alertMessage = "";
   }
 
-  function showFlashAlert(message, type = 'success') {
+  async function runMigrations() {
+    const resp = await executeMigrations(migrations);
+    console.log(resp.data);
+  }
+
+  function showFlashAlert(message, type = "success") {
     alertMessage = message;
     alertType = type;
     showAlert = true;
   }
 
-  function updateMigrationsList(event){
+  function updateMigrationsList(event) {
     var detail = event.detail;
     showFlashAlert(detail.message);
 
-    const actualTimestamp = Date.now();
-    
-    migrations = detail.data.map(json => {
+    let counter = 1;
+    const baseTimestamp = Date.now();
+
+    migrations = detail.data.map((json) => {
+      const timestamp = baseTimestamp + counter++;
       return {
         ...json,
-        timestamp: actualTimestamp + 1
+        timestamp: timestamp,
+        name: generateMigrationName(json, timestamp)
       };
     });
 
     // Ordenar por timestamp
     migrations.sort((a, b) => a.timestamp - b.timestamp);
-    
-    console.log(migrations)
   }
 </script>
 
@@ -167,24 +192,20 @@
   <title>Editar Proyecto</title>
 </svelte:head>
 
-<ModalProjectForm
-  bind:this={modalRef}
-  showContinue={false} 
-  {project}
-/>
+<ModalProjectForm bind:this={modalRef} showContinue={false} {project} />
 
 <UploadPUMLForm
   bind:this={modalUMLRef}
   {project}
-  on:refreshList={e => updateMigrationsList(e)}
+  on:refreshList={(e) => updateMigrationsList(e)}
 />
 
 <div class="project w-100">
   {#if showAlert}
     <div class="px-3">
-      <FlashAlert 
-        message="{alertMessage}"
-        type="{alertType}"
+      <FlashAlert
+        message={alertMessage}
+        type={alertType}
         duration={5000}
         position="absolute"
         on:close={handleAlertClose}
@@ -200,8 +221,11 @@
       <button class="btn btn-primary" on:click={editProject}>
         <i class="fa fa-pencil"></i>Editar Proyecto
       </button>
-      <button class="btn btn-success" on:click={addMigrations}>
+      <button class="btn btn-primary" on:click={addMigrations}>
         <i class="fa fa-plus"></i>Agregar Migraciones
+      </button>
+      <button class="btn btn-success" on:click={runMigrations}>
+        <i class="fa fa-check"></i>Ejecutar Migraciones
       </button>
     </div>
   </div>
@@ -220,48 +244,48 @@
                 <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>Operaciones</th>  
+                    <th>Operaciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {#if migrations.length > 0}
                     {#each migrations as migration, index}
                       <tr>
-                        <td class="fw-bold">{getMigrationName(migration)}</td>
+                        <td class="fw-bold">{migration.name}</td>
                         <td>
                           <div class="btn-group btn-group-sm" role="group">
                             <!-- Flecha arriba -->
-                            <button 
-                              class="btn btn-outline-secondary" 
+                            <button
+                              class="btn btn-outline-secondary"
                               on:click={() => moveUp(index)}
                               disabled={index === 0}
                               title="Mover arriba"
                             >
                               <i class="fa fa-arrow-up"></i>
                             </button>
-                            
+
                             <!-- Flecha abajo -->
-                            <button 
-                              class="btn btn-outline-secondary" 
+                            <button
+                              class="btn btn-outline-secondary"
                               on:click={() => moveDown(index)}
                               disabled={index === migrations.length - 1}
                               title="Mover abajo"
                             >
                               <i class="fa fa-arrow-down"></i>
                             </button>
-                            
+
                             <!-- Editar -->
-                            <button 
-                              class="btn btn-outline-primary" 
+                            <button
+                              class="btn btn-outline-primary"
                               on:click={() => editMigration(migration)}
                               title="Editar migración"
                             >
                               <i class="fa fa-pencil"></i>
                             </button>
-                            
+
                             <!-- Eliminar -->
-                            <button 
-                              class="btn btn-outline-danger" 
+                            <button
+                              class="btn btn-outline-danger"
                               on:click={() => deleteMigration(index)}
                               title="Eliminar migración"
                             >
@@ -291,9 +315,9 @@
           <div class="card-header">
             <h5 class="card-title mb-0">
               {#if selectedMigration}
-                Editando: {getMigrationName(selectedMigration)}
+                Editando: {selectedMigration.name}
               {:else}
-                Detalles de la Migración
+                Detalles del Proyecto
               {/if}
             </h5>
           </div>
@@ -301,51 +325,76 @@
             {#if selectedMigration}
               <!-- Formulario de edición -->
               <div class="mb-3">
-                <label class="form-label fw-bold">UP (Creación/Modificación):</label>
-                <textarea 
-                  class="form-control" 
+                <label class="form-label fw-bold"
+                  >UP (Creación/Modificación):</label
+                >
+                <textarea
+                  class="form-control"
                   rows="6"
                   bind:value={editUp}
                   placeholder="SQL para crear o modificar la tabla..."
                 ></textarea>
               </div>
-              
+
               <div class="mb-3">
                 <label class="form-label fw-bold">DOWN (Reversión):</label>
-                <textarea 
-                  class="form-control" 
+                <textarea
+                  class="form-control"
                   rows="4"
                   bind:value={editDown}
                   placeholder="SQL para revertir los cambios..."
                 ></textarea>
               </div>
-              
+
               <div class="d-flex gap-2">
                 <button class="btn btn-success" on:click={updateMigration}>
                   <i class="fa fa-check"></i> Actualizar Migración
                 </button>
-                <button class="btn btn-secondary" on:click={() => { selectedMigration = null; editUp = ''; editDown = ''; }}>
+                <button
+                  class="btn btn-secondary"
+                  on:click={() => {
+                    selectedMigration = null;
+                    editUp = "";
+                    editDown = "";
+                  }}
+                >
                   <i class="fa fa-times"></i> Cancelar
                 </button>
               </div>
             {:else}
               <!-- Vista normal de detalles del proyecto -->
-              <p><strong>Título:</strong> {project.title}</p>
-              <p><strong>Motor:</strong> {project.engine.name}</p>
-              <p><strong>Cadena de Conexión:</strong> <br> {project.connection_string}</p>
-              <p><strong>Descripción:</strong></p>
-              <textarea 
-                class="form-control" 
-                rows="4"
-                value={project.description}
-                disabled
-                on:input={handleDescriptionChange}
-                placeholder="Agrega una descripción para tu proyecto..."
-              ></textarea>
-              
+              <div class="mb-4">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="flex-grow-1 me-3">
+                    <!-- Información básica del proyecto -->
+                    <p class="mb-2"><strong>Título:</strong> {project.title}</p>
+                    <p class="mb-2"><strong>Motor:</strong> {project.engine.name}</p>
+                    <p class="mb-2"><strong>Cadena de Conexión:</strong> <br>{project.connection_string}</p>
+                  </div>
+                </div>
+                
+                <!-- Descripción en fila separada -->
+                <div class="row">
+                  <div class="col-12">
+                    <p class="mb-2"><strong>Descripción:</strong></p>
+                    <textarea 
+                      class="form-control" 
+                      rows="4"
+                      value={project.description}
+                      disabled
+                      on:input={handleDescriptionChange}
+                      placeholder="Agrega una descripción para tu proyecto..."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
               {#if migrations.length > 0}
                 <div class="mt-3">
-                  <p><strong>Total de migraciones:</strong> {migrations.length}</p>
+                  <p>
+                    <strong>Total de migraciones:</strong>
+                    {migrations.length}
+                  </p>
                   <p class="text-muted small">
                     Selecciona una migración de la lista para editarla
                   </p>

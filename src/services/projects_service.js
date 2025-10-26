@@ -123,3 +123,18 @@ export const createMigrations = (model, project) => {
     });
   });
 }
+
+export const executeMigrations = (migrations) => {
+  return new Promise((resolve, reject) => {
+    axios.post('/api/v1/migrations/execute', migrations, {
+      headers: {
+        'Client-Origin': 'webapp',
+        'Content-Type': 'application/json',
+      }
+    }).then(response => {
+      resolve(response);
+    }).catch(error => {
+      reject(error.response);
+    });
+  });
+}
