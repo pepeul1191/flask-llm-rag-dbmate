@@ -1,44 +1,179 @@
-CREATE TABLE IF NOT EXISTS "schema_migrations" (version varchar(128) primary key);
-CREATE TABLE engines (
-  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  name VARCHAR(20) NOT NULL,
-  image VARCHAR(30) NOT NULL
-);
-CREATE TABLE projects (
-  id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  title VARCHAR(30) NOT NULL,
-  description VARCHAR(180) NOT NULL,
-  connection_string VARCHAR(100) NOT NULL,
-  engine_id INTEGER NOT NULL,
-  FOREIGN KEY (engine_id) REFERENCES engines (id)
-);
-CREATE TABLE versions (
-  id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  name VARCHAR(50) NOT NULL,
-  model TEXT NOT NULL,
-  created_at DATETIME,
-  updated_at DATETIME,
-  project_id INTEGER NOT NULL,
-  FOREIGN KEY (project_id) REFERENCES projects (id)
-);
-CREATE TABLE migrations (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name VARCHAR(70) NOT NULL,
-  timestamp INTEGER NOT NULL,
-  up TEXT NOT NULL,
-  down TEXT NOT NULL,
-  executed BOOLEAN DEFAULT FALSE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  project_id INTEGER NOT NULL,
-  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-);
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `carrere_grades`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `carrere_grades` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(40) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `permissions`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `permissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(40) NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `role_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `role_id` (`role_id`),
+  CONSTRAINT `permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `roles`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(40) NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `system_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `system_id` (`system_id`),
+  CONSTRAINT `roles_ibfk_1` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `schema_migrations`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `schema_migrations` (
+  `version` varchar(128) NOT NULL,
+  PRIMARY KEY (`version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `systems`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `systems` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(40) NOT NULL,
+  `description` text NOT NULL,
+  `repository` varchar(100) NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `systems_users`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `systems_users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `system_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `system_id` (`system_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `systems_users_ibfk_1` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`),
+  CONSTRAINT `systems_users_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `systems_users_permissions`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `systems_users_permissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `system_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `permission_id` int NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `system_id` (`system_id`),
+  KEY `user_id` (`user_id`),
+  KEY `permission_id` (`permission_id`),
+  CONSTRAINT `systems_users_permissions_ibfk_1` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`),
+  CONSTRAINT `systems_users_permissions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `systems_users_permissions_ibfk_3` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `users`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(20) NOT NULL,
+  `password` varchar(100) NOT NULL,
+  `activation_key` varchar(30) NOT NULL,
+  `reset_key` varchar(30) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `activated` tinyint(1) NOT NULL DEFAULT '0',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping routines for database 'demo01'
+--
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed
+
+--
 -- Dbmate schema migrations
-INSERT INTO "schema_migrations" (version) VALUES
-  ('20251011191634'),
-  ('20251011191717'),
-  ('20251011192122'),
-  ('20251011192311'),
-  ('20251011192341'),
-  ('20251012013720'),
-  ('20251025044607'),
-  ('20251025045910');
+--
+
+LOCK TABLES `schema_migrations` WRITE;
+INSERT INTO `schema_migrations` (version) VALUES
+  ('1761456284791'),
+  ('1761456284792'),
+  ('1761456284793'),
+  ('1761456284794'),
+  ('1761456284795'),
+  ('1761456284796'),
+  ('1761456284797');
+UNLOCK TABLES;

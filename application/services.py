@@ -341,7 +341,7 @@ def execute_migrations(project, migrations):
     # archivo .env
     env_path = os.path.join(folder_path, '.env')
     with open(env_path, "w") as archivo:
-      archivo.write('DB=' + project['connection_string'])
+      archivo.write('DATABASE_URL=' + project['connection_string'])
 
     # archivos de migraciones
     for migration in migrations:
@@ -358,7 +358,8 @@ def execute_migrations(project, migrations):
       ['dbmate', '--migrations-dir', folder_path, 'up'],
       capture_output=True,
       text=True,
-      check=True
+      check=True,
+      env={**os.environ, 'DATABASE_URL': project['connection_string']}
     )
     
     print("dbmate output:", result.stdout)
