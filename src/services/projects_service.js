@@ -104,10 +104,10 @@ export const createImage = (model) => {
   });
 };
 
-export const createMigrations = (model, proyect) => {
+export const createMigrations = (model, project) => {
   const data = {
     model: model,
-    proyect: proyect,
+    project: project,
   }
 
   return new Promise((resolve, reject) => {

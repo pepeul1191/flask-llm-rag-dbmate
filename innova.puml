@@ -157,7 +157,7 @@ entity "mentors_spcialisms"{
 
 programs }|--|| periods : period_id
 programs }|--|| program_types : program_type_id
-phase }|--|| programs : program_id
+phases }|--|| programs : program_id
 participants }|--|| dni_types : dni_type_id
 participants }|--|| nations : nation_id
 carreres }|--|| carrere_grades : carrere_grade_id

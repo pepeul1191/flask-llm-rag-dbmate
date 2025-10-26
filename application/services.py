@@ -2,12 +2,14 @@
 import traceback
 import os
 import time
+from datetime import datetime
 from plantuml import PlantUML  
 from application.models import Engine, Project
 from sqlalchemy import text
 from pathlib import Path
 from sqlalchemy.orm import joinedload
 from main.database import session
+from ai.draft import demo
 
 def build_response(data=None, message="Operación exitosa", success=True):
   return {
@@ -28,6 +30,10 @@ def handle_error(message, traceback=None):
     "data": None,
     "success": False
   }
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+# engines
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def fetch_engines():
   try:
@@ -59,6 +65,10 @@ def fetch_engines():
       message="Error del servicio",
       error={"message": "Error interno del servidor"}
     )
+  
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+# projects
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 def fetch_project(project_id):
   try:
@@ -211,6 +221,10 @@ def delete_project(project_id):
     tb = traceback.format_exc()
     return handle_error(f"Error al eliminar proyecto: {str(e)}", tb)
 
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+# image
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 def generate_plantuml_image(plantuml_code, output_dir="static/tmp"):
   Path(output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -242,6 +256,64 @@ def generate_plantuml_image(plantuml_code, output_dir="static/tmp"):
     }, 200
 
   except Exception as e:
+    tb = traceback.format_exc()
+    return {
+      "data": None,
+      "message": f"Error al generar UML: {str(e)}",
+      "success": False,
+      "error": tb
+    }, 500
+  
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+# migrations
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+def create_migrations(model, project):
+  # Crear timestamp actual
+  timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+  
+  # Obtener la ruta del directorio actual del proyecto
+  project_root = os.getcwd()  # O usa os.path.dirname(os.path.abspath(__file__))
+  
+  # Crear ruta de la carpeta en la raíz del proyecto
+  folder_path = os.path.join(project_root, "tmp", f"migrations_{timestamp}")
+
+  try:
+    # Crear la carpeta
+    os.makedirs(folder_path, exist_ok=True)
+    print(f"Carpeta creada: {folder_path}")
+    
+    # Ruta completa del archivo
+    file_path = os.path.join(folder_path, "modelo.puml")
+    
+    # Escribir el contenido del modelo en el archivo
+    with open(file_path, 'w', encoding='utf-8') as file:
+      file.write(model)
+    
+    print(f"Archivo creado: {file_path}")
+
+    db_type_dict = {
+      'SQLite3': 'sqlite',
+      'MySQL': 'mysql',
+      'Postgres': 'postgres'
+    }
+
+    db_type = db_type_dict[project['engine']['name']]
+
+    data, sucess = demo(folder_path, db_type)
+
+    if sucess:
+      return {
+        "data": data,
+        "message": "Imagen generada correctamente",
+        "success": True,
+        "error": None
+      }, 200
+    else:
+      return handle_error(f"Error al crear las migraciones: {str(data)}")
+    
+  except Exception as e:
+    print(f"Error al crear archivo: {str(e)}")
     tb = traceback.format_exc()
     return {
       "data": None,
