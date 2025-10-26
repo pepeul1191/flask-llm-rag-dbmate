@@ -2,12 +2,13 @@
   import { onMount, createEventDispatcher } from 'svelte';
   import { Modal } from 'bootstrap';
   import { fetchEngines } from '../services/engines_service.js';
-  import { createImage } from '../services/projects_service.js';
+  import { createImage, createMigrations } from '../services/projects_service.js';
   import FlashAlert from '../components/FlashAlert.svelte';
 
   export let project = null;
 
   let modalEl;
+  let isGenerating = false;
   let modalInstance;
   let engines = [];
   const dispatch = createEventDispatcher();
@@ -51,6 +52,10 @@
   let timeoutId = null;
   let lastContent = '';
 
+  // Variables para el drag and drop
+  let isDragging = false;
+  let dropZone;
+
   // Solo actualizar valores iniciales cuando se abre el modal o project cambia
   $: if (project && !isEditing) {
     id = project.id ?? '';
@@ -70,11 +75,13 @@
       model.content = '';
       model.image_url = '';
       lastContent = '';
+      isDragging = false;
     });
     
     modalEl.addEventListener('hide.bs.modal', () => {
       isEditing = false;
       isTextareaEnabled = false;
+      isDragging = false;
       // Limpiar timeout al cerrar el modal
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -98,6 +105,7 @@
     model.content = '';
     model.image_url = '';
     isTextareaEnabled = false;
+    isDragging = false;
     lastContent = '';
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -180,6 +188,28 @@
     fileInput.click();
   }
 
+  async function generateMigrations (){
+    try {
+      isGenerating = true;
+      console.log('Enviando modelo al servicio:', model);
+      
+      // Mostrar mensaje de carga
+      showFlashAlert('Generando migraciones, por favor espere...', 'info');
+      
+      const resp = await createMigrations(model.content, project);
+      console.log('Respuesta del servicio:', resp.data);
+      
+      showFlashAlert('Migraciones generadas exitosamente', 'success');
+      
+    } catch (error) {
+      console.error('Error al generar migraciones:', error);
+      showFlashAlert('Error al generar las migraciones', 'danger');
+    } finally {
+      isGenerating = false;
+      isGeneratingImage = false;
+    }
+  }
+
   // Función para manejar la selección de archivos
   function handleFileSelect(event) {
     const file = event.target.files[0];
@@ -191,6 +221,14 @@
       return;
     }
 
+    processFile(file);
+
+    // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
+    event.target.value = '';
+  }
+
+  // Función para procesar archivos (compartida para drag and drop y file input)
+  function processFile(file) {
     // Leer el contenido del archivo
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -205,9 +243,44 @@
       showFlashAlert('Error al leer el archivo', 'error');
     };
     reader.readAsText(file);
+  }
 
-    // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
-    event.target.value = '';
+  // Función para manejar el drag over
+  function handleDragOver(event) {
+    event.preventDefault();
+    if (!isTextareaEnabled) {
+      isDragging = true;
+    }
+  }
+
+  // Función para manejar el drag leave
+  function handleDragLeave(event) {
+    event.preventDefault();
+    isDragging = false;
+  }
+
+  // Función para manejar el drop
+  function handleDrop(event) {
+    event.preventDefault();
+    isDragging = false;
+    
+    if (!isTextareaEnabled) {
+      const files = event.dataTransfer.files;
+      if (files.length > 0) {
+        handleDroppedFile(files[0]);
+      }
+    }
+  }
+
+  // Función para manejar el archivo soltado
+  function handleDroppedFile(file) {
+    // Validar que sea un archivo .puml
+    if (!file.name.toLowerCase().endsWith('.puml')) {
+      showFlashAlert('Por favor, suelta un archivo con extensión .puml', 'error');
+      return;
+    }
+
+    processFile(file);
   }
 </script>
 
@@ -247,14 +320,26 @@
           <button 
             type="button" 
             class="btn btn-outline-primary me-2"
+            disabled={isGenerating}
             on:click={openFileSelector}>
             <i class="fa fa-search me-2" aria-hidden="true"></i> 
-            Seleccionar Modelo
+            {#if isGenerating}
+              Cargando...
+            {:else}
+              Seleccionar Modelo
+            {/if}
           </button>
           
-          <button type="submit" class="btn btn-success">
+          <button type="button" 
+            class="btn btn-success"
+            disabled={isGenerating || model.content == ''}
+            on:click={generateMigrations}>
             <i class="fa fa-gear me-2" aria-label="true"></i> 
-            Generar Migraciones
+            {#if isGenerating}
+              Generando...
+            {:else}
+              Generar Migraciones
+            {/if}
           </button>
         </div>
         
@@ -276,7 +361,12 @@
                     {/if}
                   </div>
                 </div>
-                <div class="card-body p-0 position-relative h-100">
+                <div class="card-body p-0 position-relative h-100"
+                  bind:this={dropZone}
+                  on:dragover={handleDragOver}
+                  on:dragleave={handleDragLeave}
+                  on:drop={handleDrop}>
+                  
                   <textarea
                     class="form-control border-0 h-100"
                     rows="30"
@@ -290,12 +380,19 @@
                   <!-- Overlay cuando está deshabilitado -->
                   {#if !isTextareaEnabled}
                     <div 
-                      class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                      style="background-color: rgba(248, 249, 250, 0.8); cursor: not-allowed;"
+                      class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center {isDragging ? 'bg-primary bg-opacity-10 border border-primary rounded' : ''}"
+                      style="background-color: {isDragging ? 'rgba(13, 110, 253, 0.1)' : 'rgba(248, 249, 250, 0.8)'}; cursor: {isDragging ? 'copy' : 'pointer'}; transition: all 0.2s ease;"
+                      on:click={openFileSelector}
                     >
                       <div class="text-center text-muted">
-                        <i class="fa fa-upload fa-2x mb-2"></i>
-                        <p class="mb-0">Selecciona un archivo .puml para comenzar</p>
+                        {#if isDragging}
+                          <i class="fa fa-file-text-o fa-2x mb-2 text-primary"></i>
+                          <p class="mb-0 text-primary fw-bold">Suelta el archivo .puml aquí</p>
+                        {:else}
+                          <i class="fa fa-upload fa-2x mb-2"></i>
+                          <p class="mb-0">Selecciona o arrastra un archivo .puml para comenzar</p>
+                          <small class="text-muted mt-1">Haz clic en "Seleccionar Modelo" o arrastra y suelta aquí</small>
+                        {/if}
                       </div>
                     </div>
                   {/if}
@@ -373,5 +470,11 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Estilos para la zona de drop */
+  .drop-zone-active {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    border: 2px dashed #0d6efd !important;
   }
 </style>

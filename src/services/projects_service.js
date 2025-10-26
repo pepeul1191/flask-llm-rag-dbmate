@@ -103,3 +103,23 @@ export const createImage = (model) => {
     });
   });
 };
+
+export const createMigrations = (model, proyect) => {
+  const data = {
+    model: model,
+    proyect: proyect,
+  }
+
+  return new Promise((resolve, reject) => {
+    axios.post('/api/v1/migrations/generate', data, {
+      headers: {
+        'Client-Origin': 'webapp',
+        'Content-Type': 'application/json',
+      }
+    }).then(response => {
+      resolve(response.data);
+    }).catch(error => {
+      reject(error.response);
+    });
+  });
+}
