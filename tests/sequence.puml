@@ -1,0 +1,101 @@
+@startuml
+title Diagrama de Secuencia - Sistema RAG para Generación de Migraciones SQL
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 20
+skinparam maxmessagesize 200
+skinparam participantPadding 20
+
+participant "Usuario" as User
+participant "demo2()" as Demo2
+participant "GestorVectores" as VectorManager
+participant "ProcesadorPUML" as PUMLProcessor
+participant "RetrieverRAG" as RAG
+participant "GeneradorSQL" as SQLGenerator
+participant "Validador" as Validator
+participant "Archivos" as FileSystem
+
+User -> Demo2 : demo2(folder_path, db_type)
+activate Demo2
+
+Demo2 -> PUMLProcessor : extract_entities_from_puml(puml_file)
+activate PUMLProcessor
+PUMLProcessor -> FileSystem : leer_archivo(puml_file)
+activate FileSystem
+FileSystem --> PUMLProcessor : contenido_PUML
+PUMLProcessor -> PUMLProcessor : analizar_participantes()
+PUMLProcessor --> Demo2 : lista_entidades
+deactivate PUMLProcessor
+
+Demo2 -> VectorManager : check_existing_vector_db()
+activate VectorManager
+VectorManager -> FileSystem : verificar_directorio_db()
+FileSystem --> VectorManager : existe_db?
+VectorManager --> Demo2 : vector_db_o_null
+deactivate VectorManager
+
+alt DB no existe o necesita_recrear
+    Demo2 -> VectorManager : crear_vector_db()
+    activate VectorManager
+    VectorManager -> PUMLProcessor : ingest_puml()
+    activate PUMLProcessor
+    PUMLProcessor -> FileSystem : leer_archivo()
+    FileSystem --> PUMLProcessor : contenido
+    PUMLProcessor -> PUMLProcessor : split_documents()
+    PUMLProcessor --> VectorManager : chunks
+    deactivate PUMLProcessor
+    
+    VectorManager -> VectorManager : crear_embeddings()
+    VectorManager -> FileSystem : persistir_db()
+    FileSystem --> VectorManager : confirmación
+    VectorManager --> Demo2 : vector_db
+    deactivate VectorManager
+else DB existe
+    Demo2 -> VectorManager : cargar_vector_db()
+    VectorManager --> Demo2 : vector_db
+end
+
+Demo2 -> RAG : create_retriever(vector_db)
+activate RAG
+RAG -> RAG : configurar_multiquery()
+RAG --> Demo2 : retriever
+deactivate RAG
+
+Demo2 -> SQLGenerator : improved_sql_generation_with_rag()
+activate SQLGenerator
+SQLGenerator -> RAG : consultar_contexto()
+activate RAG
+RAG -> VectorManager : buscar_similares()
+VectorManager --> RAG : chunks_relevantes
+RAG --> SQLGenerator : contexto
+deactivate RAG
+
+SQLGenerator -> SQLGenerator : generar_migraciones()
+SQLGenerator --> Demo2 : migraciones_completas
+deactivate SQLGenerator
+
+Demo2 -> Validator : validate_generated_tables()
+activate Validator
+Validator -> Validator : comparar_entidades_tablas()
+Validator --> Demo2 : resultado_validación
+deactivate Validator
+
+Demo2 -> Demo2 : parse_migration_blocks()
+Demo2 --> User : tables_dict, success
+deactivate Demo2
+
+User -> Demo2 : ¿guardar_archivos? (s/n)
+activate Demo2
+
+alt usuario dice "s"
+    Demo2 -> FileSystem : save_migration_files()
+    activate FileSystem
+    FileSystem -> FileSystem : crear_directorio()
+    FileSystem -> FileSystem : escribir_archivos()
+    FileSystem --> Demo2 : archivos_guardados
+    deactivate FileSystem
+end
+
+Demo2 --> User : confirmación
+deactivate Demo2
+
+@enduml

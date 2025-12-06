@@ -10,21 +10,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `carrere_grades`
---
-
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `carrere_grades` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(40) DEFAULT NULL,
-  `created` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `permissions`
 --
 
@@ -32,10 +17,10 @@ CREATE TABLE `carrere_grades` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `permissions` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(40) DEFAULT NULL,
-  `created` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  `role_id` int DEFAULT NULL,
+  `name` varchar(40) NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `role_id` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `role_id` (`role_id`),
   CONSTRAINT `permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`)
@@ -50,10 +35,10 @@ CREATE TABLE `permissions` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `roles` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(40) DEFAULT NULL,
-  `created` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  `system_id` int DEFAULT NULL,
+  `name` varchar(40) NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `system_id` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `system_id` (`system_id`),
   CONSTRAINT `roles_ibfk_1` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`)
@@ -80,11 +65,11 @@ CREATE TABLE `schema_migrations` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `systems` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(40) DEFAULT NULL,
+  `name` varchar(40) NOT NULL,
   `description` text,
   `repository` varchar(100) DEFAULT NULL,
-  `created` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -97,9 +82,9 @@ CREATE TABLE `systems` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `systems_users` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `system_id` int DEFAULT NULL,
-  `user_id` int DEFAULT NULL,
-  `created` datetime DEFAULT CURRENT_TIMESTAMP,
+  `system_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `system_id` (`system_id`),
   KEY `user_id` (`user_id`),
@@ -116,10 +101,10 @@ CREATE TABLE `systems_users` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `systems_users_permissions` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `system_id` int DEFAULT NULL,
-  `user_id` int DEFAULT NULL,
-  `permission_id` int DEFAULT NULL,
-  `created` datetime DEFAULT CURRENT_TIMESTAMP,
+  `system_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `permission_id` int NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `system_id` (`system_id`),
   KEY `user_id` (`user_id`),
@@ -138,14 +123,14 @@ CREATE TABLE `systems_users_permissions` (
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(20) DEFAULT NULL,
-  `password` varchar(100) DEFAULT NULL,
+  `username` varchar(20) NOT NULL,
+  `password` varchar(100) NOT NULL,
   `activation_key` varchar(30) DEFAULT NULL,
   `reset_key` varchar(30) DEFAULT NULL,
-  `email` varchar(50) DEFAULT NULL,
-  `activated` tinyint(1) DEFAULT '0',
-  `created` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `email` varchar(50) NOT NULL,
+  `activated` tinyint(1) NOT NULL DEFAULT '0',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -171,11 +156,10 @@ CREATE TABLE `users` (
 
 LOCK TABLES `schema_migrations` WRITE;
 INSERT INTO `schema_migrations` (version) VALUES
-  ('1761456918760'),
-  ('1761456918761'),
-  ('1761456918762'),
-  ('1761456918763'),
-  ('1761456918764'),
-  ('1761456918765'),
-  ('1761456918766');
+  ('1764900436061'),
+  ('1764900436062'),
+  ('1764900436063'),
+  ('1764900436064'),
+  ('1764900436065'),
+  ('1764900436066');
 UNLOCK TABLES;

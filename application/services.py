@@ -300,7 +300,7 @@ def create_migrations(model, project):
     }
 
     db_type = db_type_dict[project['engine']['name']]
-
+    print('XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
     data, sucess = demo(folder_path, db_type)
 
     if sucess:

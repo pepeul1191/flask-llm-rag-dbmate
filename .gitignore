@@ -90,3 +90,5 @@ chroma_db
 complete*
 migrations_*
 tmp
+
+tests/20*

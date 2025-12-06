@@ -19,3 +19,6 @@ sentence-transformers
 elevenlabs
 # others
 diff-match-patch
+matplotlib
+pynvml
+GPUtil

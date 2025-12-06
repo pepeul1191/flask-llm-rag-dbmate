@@ -654,6 +654,7 @@ def map_puml_to_sql(puml_type, db_type):
 # === FUNCIÓN MAIN MEJORADA ===
 
 def demo(folder_path, db_type):
+    print('DEMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
     # Paso 1: Ingresar el tipo de base de datos
     db_type = db_type
     # Paso 2: Ingresar el archivo PUML
