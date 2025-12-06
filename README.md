@@ -100,6 +100,7 @@ Verificar el estado del servicio
 Instalar modelo
 
     $ ollama pull llama3.2:3b
+    $ ollama pull qwen2.5:7b
 
 ## .env
 
