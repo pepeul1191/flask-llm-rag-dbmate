@@ -17,6 +17,11 @@ unstructured[all-docs]
 fastembed
 sentence-transformers
 elevenlabs
+torch
+langchain_openai
+langchain-huggingface 
+langchain-chroma
+gpt4all 
 # others
 diff-match-patch
 matplotlib

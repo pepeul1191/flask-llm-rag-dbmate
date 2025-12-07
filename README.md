@@ -101,6 +101,9 @@ Instalar modelo
 
     $ ollama pull llama3.2:3b
     $ ollama pull qwen2.5:7b
+    $ ollama pull deepseek-r1:7b
+    $ ollama pull gemma:2b
+    $ ollama pull mistral:7b
 
 ## .env
 

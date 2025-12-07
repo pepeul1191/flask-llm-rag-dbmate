@@ -736,7 +736,7 @@ def measuring(folder_path, db_type, archivo_puml, csv_file='measurements.csv'):
     from gpus_measures import detect_gpu_libraries, print_resumen_metricas, get_gpu_info
     
     # Modelo de LLM (Ollama) - ahora es una variable del método
-    modelo_llm = "llama3.2"  # O el modelo que estés usando
+    modelo_llm = "llama3.2:3b"  # O el modelo que estés usando
     
     # Detectar bibliotecas de GPU disponibles
     gpu_libs = detect_gpu_libraries()
