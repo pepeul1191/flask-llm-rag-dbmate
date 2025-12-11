@@ -27,3 +27,4 @@ diff-match-patch
 matplotlib
 pynvml
 GPUtil
+seaborn

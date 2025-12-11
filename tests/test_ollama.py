@@ -709,7 +709,7 @@ def demo(folder_path, db_type, modelo):
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     # Crear nombre de carpeta
-    nombre_carpeta = f"{timestamp}_{folder_path}"
+    nombre_carpeta = f"{timestamp}_{folder_path}_{db_type}"
     # Crear la carpeta
     os.makedirs(nombre_carpeta, exist_ok=True)
 
@@ -723,6 +723,8 @@ def demo(folder_path, db_type, modelo):
     with open(json_filename, 'w', encoding='utf-8') as f:
         json.dump(tables_dict, f, indent=2, ensure_ascii=False)
     print(f"✓ Diccionario guardado en: {json_filename}")
+
+    return nombre_carpeta
 
 def measuring(folder_path, db_type, archivo_puml, csv_file='measurements.csv'):
     """Ejecuta demo con mediciones de CPU, RAM y GPU."""
@@ -762,7 +764,7 @@ def measuring(folder_path, db_type, archivo_puml, csv_file='measurements.csv'):
     
     csv_columns.extend([
         'num_tables', 'expected_tables', 'success', 'error_message',
-        'timestamp'
+        'timestamp', 'migrations_status', 'migrations_error'
     ])
     
     if not os.path.exists(csv_file):
@@ -795,6 +797,9 @@ def measuring(folder_path, db_type, archivo_puml, csv_file='measurements.csv'):
     gpu_util_avg = 0
     gpu_mem_avg = 0
     gpu_temp_avg = 0
+    # dbmate
+    migrations_status = ''
+    migrations_error = 'error'
     
     try:
         print(f"\n{'='*60}")
@@ -1014,7 +1019,7 @@ def measuring(folder_path, db_type, archivo_puml, csv_file='measurements.csv'):
         print("\n💾 Guardando las migraciones en archivos...")
         
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        nombre_carpeta = f"{timestamp}_{folder_path}"
+        nombre_carpeta = f"{timestamp}_{folder_path}_{db_type}"
         os.makedirs(nombre_carpeta, exist_ok=True)
 
         puml_basename = os.path.splitext(os.path.basename(puml_file))[0]
@@ -1023,8 +1028,44 @@ def measuring(folder_path, db_type, archivo_puml, csv_file='measurements.csv'):
         json_filename = os.path.join(nombre_carpeta, f"migrations_dict_{puml_basename}_{db_type}.json")
         with open(json_filename, 'w', encoding='utf-8') as f:
             json.dump(tables_dict, f, indent=2, ensure_ascii=False)
-        
+
         print(f"✅ Archivos guardados en: {nombre_carpeta}")
+
+        # Migraciones DBMate
+        # .env de dbmate
+        url = ''
+        if db_type == 'mysql':
+            url = f"mysql://root:123@localhost:3306/{timestamp}"
+        elif db_type == 'sqlite':
+            current_dir = os.getcwd()
+            url = f"sqlite://{os.path.join(current_dir, nombre_carpeta, f'{timestamp}.db')}"
+        elif db_type == 'postgres':
+            url = f"postgres://root:123@localhost:5432/{timestamp}"
+        else:
+            pass
+
+        if url != '':
+            env_path = os.path.join(nombre_carpeta, '.env')
+            with open(env_path, "w") as archivo:
+                archivo.write('DATABASE_URL=' + url)
+        import subprocess
+        # Ejecutar dbmate up especificando el directorio de migraciones
+        print(f"Ejecutando dbmate up en: {nombre_carpeta + '/migrations'}")
+        result = subprocess.run(
+            ['dbmate', '--migrations-dir', nombre_carpeta + '/migrations', 'up'],
+            capture_output=True,
+            text=True,
+            check=True,
+            env={**os.environ, 'DATABASE_URL': url}
+        )
+        print("dbmate output:", result.stdout)
+        if result.stderr:
+            print("dbmate errors:", result.stderr)
+            migrations_error = result.stderr
+            migrations_status = 'error'
+        else:
+            migrations_status = 'success'
+            
         success = True
         
     except Exception as e:
@@ -1084,7 +1125,9 @@ def measuring(folder_path, db_type, archivo_puml, csv_file='measurements.csv'):
             expected_tables,
             success,
             error_message,
-            datetime.datetime.now().isoformat()
+            datetime.datetime.now().isoformat(),
+            migrations_status,
+            migrations_error,
         ])
         
         # Guardar en CSV
