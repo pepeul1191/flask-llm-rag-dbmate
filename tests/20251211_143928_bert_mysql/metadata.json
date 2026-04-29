@@ -1,0 +1,17 @@
+{
+  "puml_file": "biblio.puml",
+  "database_type": "mysql",
+  "generation_date": "2025-12-11T14:39:28.526213",
+  "total_tables": 8,
+  "saved_files": 8,
+  "tables": [
+    "roles",
+    "systems_users_permissions",
+    "users",
+    "countries",
+    "authors",
+    "permissions",
+    "publishers",
+    "devices"
+  ]
+}

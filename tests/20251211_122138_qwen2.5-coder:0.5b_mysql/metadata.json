@@ -1,0 +1,12 @@
+{
+  "puml_file": "basico.puml",
+  "database_type": "mysql",
+  "generation_date": "2025-12-11T12:21:38.958400",
+  "total_tables": 3,
+  "saved_files": 3,
+  "tables": [
+    "users",
+    "systems",
+    "roles"
+  ]
+}

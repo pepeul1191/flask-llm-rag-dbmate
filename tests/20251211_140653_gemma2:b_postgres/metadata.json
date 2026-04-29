@@ -1,0 +1,27 @@
+{
+  "puml_file": "innova.puml",
+  "database_type": "postgres",
+  "generation_date": "2025-12-11T14:06:53.882441",
+  "total_tables": 18,
+  "saved_files": 18,
+  "tables": [
+    "document_types",
+    "industries",
+    "specialisms",
+    "carreres",
+    "program_types",
+    "dni_types",
+    "nations",
+    "periods",
+    "programs",
+    "phases",
+    "participants",
+    "internals",
+    "externals",
+    "workers",
+    "external_workers",
+    "internal_workers",
+    "mentors",
+    "mentors_spcialisms"
+  ]
+}

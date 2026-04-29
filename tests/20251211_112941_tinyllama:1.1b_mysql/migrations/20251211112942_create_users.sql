@@ -1,0 +1,17 @@
+-- migrate:up
+
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(20) NOT NULL,
+    password VARCHAR(100),
+    activation_key VARCHAR(30),
+    reset_key VARCHAR(30),
+    email VARCHAR(50) UNIQUE NOT NULL,
+    activated BOOLEAN DEFAULT TRUE,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  );
+
+-- migrate:down
+
+DROP TABLE IF EXISTS users;

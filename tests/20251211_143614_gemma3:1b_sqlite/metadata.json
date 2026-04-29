@@ -1,0 +1,22 @@
+{
+  "puml_file": "innova.puml",
+  "database_type": "sqlite",
+  "generation_date": "2025-12-11T14:36:14.883763",
+  "total_tables": 13,
+  "saved_files": 13,
+  "tables": [
+    "users",
+    "documents",
+    "systems_users",
+    "systems_users_permissions",
+    "industries",
+    "specialisms",
+    "external_workers",
+    "internal_workers",
+    "mentors",
+    "mentors_specialisms",
+    "regions",
+    "programs",
+    "specialisms_count"
+  ]
+}

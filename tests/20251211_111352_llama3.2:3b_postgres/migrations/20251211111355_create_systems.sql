@@ -1,0 +1,14 @@
+-- migrate:up
+
+CREATE TABLE systems (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(40) NOT NULL,
+  description TEXT NOT NULL,
+  repository VARCHAR(100),
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- migrate:down
+
+DROP TABLE IF EXISTS systems;

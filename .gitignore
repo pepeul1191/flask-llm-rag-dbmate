@@ -91,5 +91,5 @@ complete*
 migrations_*
 tmp
 
-tests/20*
+
 tests/db

@@ -1,0 +1,10 @@
+{
+  "puml_file": "basico.puml",
+  "database_type": "postgres",
+  "generation_date": "2025-12-11T13:33:29.929220",
+  "total_tables": 1,
+  "saved_files": 1,
+  "tables": [
+    "users"
+  ]
+}

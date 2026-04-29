@@ -1,0 +1,7 @@
+-- migrate:up
+
+CREATE TABLE nations ( id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(30) NOT NULL );
+
+-- migrate:down
+
+DROP TABLE IF EXISTS NATIONS;

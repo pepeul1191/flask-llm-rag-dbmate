@@ -1,0 +1,14 @@
+-- migrate:up
+
+CREATE TABLE permissions (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(40) NOT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  role_id INTEGER NOT NULL,
+  FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+-- migrate:down
+
+DROP TABLE IF EXISTS permissions;

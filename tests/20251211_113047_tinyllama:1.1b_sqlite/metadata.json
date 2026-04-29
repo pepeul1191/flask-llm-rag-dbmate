@@ -1,0 +1,21 @@
+{
+  "puml_file": "basico.puml",
+  "database_type": "sqlite",
+  "generation_date": "2025-12-11T11:30:47.271714",
+  "total_tables": 12,
+  "saved_files": 12,
+  "tables": [
+    "usuarios",
+    "sistemas",
+    "roles",
+    "permissions",
+    "sistemas_users",
+    "sistemas_users_permissions",
+    "roles_users",
+    "users_diplomas",
+    "sistemas_users_diplomas",
+    "permissions_users",
+    "roles_users_diplomas",
+    "sistemas_users_diplomas_permissions"
+  ]
+}

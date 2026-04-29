@@ -1,0 +1,19 @@
+{
+  "puml_file": "basico.puml",
+  "database_type": "mysql",
+  "generation_date": "2025-12-11T14:07:35.081811",
+  "total_tables": 10,
+  "saved_files": 10,
+  "tables": [
+    "users",
+    "systems",
+    "roles",
+    "permissions",
+    "systems_users",
+    "systems_users_permissions",
+    "external_workers",
+    "carreres",
+    "specialisms",
+    "books_genres"
+  ]
+}

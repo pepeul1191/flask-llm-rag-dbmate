@@ -1,0 +1,16 @@
+-- migrate:up
+
+CREATE TABLE participants (
+  id SERIAL PRIMARY KEY,
+  names VARCHAR(50) NOT NULL,
+  last_names VARCHAR(50) NOT NULL,
+  email VARCHAR(40) NOT NULL,
+  phone VARCHAR(40) NOT NULL,
+  dni VARCHAR(20) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- migrate:down
+
+DROP TABLE IF EXISTS participants;

@@ -1,0 +1,14 @@
+-- migrate:up
+
+CREATE TABLE IF NOT EXISTS Users(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    activated BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP);
+
+-- migrate:down
+
+DROP TABLE IF EXISTS Users;

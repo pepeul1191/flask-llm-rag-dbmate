@@ -1,0 +1,7 @@
+-- migrate:up
+
+CREATE TABLE systems ( id SERIAL PRIMARY KEY, name VARCHAR(40), description TEXT, repository VARCHAR(100), created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, updated TIMESTAMP WITH TIME ZONE );
+
+-- migrate:down
+
+DROP TABLE IF EXISTS SYSTEMS;

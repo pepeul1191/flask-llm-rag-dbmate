@@ -1,0 +1,12 @@
+-- migrate:up
+
+CREATE TABLE workers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  names VARCHAR(50) y last_names VARCHAR(50),
+  email VARCHAR(40),
+  phone VARCHAR(40)
+);
+
+-- migrate:down
+
+DROP TABLE IF EXISTS workers;

@@ -1,0 +1,13 @@
+-- migrate:up
+
+CREATE TABLE  User (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  created DATETIME NOT NULL,
+  updated DATETIME NOT NULL
+);
+
+-- migrate:down
+
+DROP TABLE User;

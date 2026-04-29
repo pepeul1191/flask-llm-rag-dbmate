@@ -1,0 +1,15 @@
+-- migrate:up
+
+CREATE TABLE workers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  names VARCHAR(50),
+  last_names VARCHAR(50),
+  email VARCHAR(40),
+  phone VARCHAR(40),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- migrate:down
+
+DROP TABLE IF EXISTS workers;

@@ -1,0 +1,30 @@
+{
+  "puml_file": "innova.puml",
+  "database_type": "mysql",
+  "generation_date": "2025-12-11T11:22:38.023598",
+  "total_tables": 21,
+  "saved_files": 21,
+  "tables": [
+    "document_types",
+    "industries",
+    "specialisms",
+    "program_types",
+    "carrere_grades",
+    "carreres",
+    "dni_types",
+    "nations",
+    "periods",
+    "programs",
+    "phases",
+    "participants",
+    "interns",
+    "externals",
+    "workers",
+    "internal_workers",
+    "mentors",
+    "mentors_spcialisms",
+    "devices",
+    "books",
+    "systems_users"
+  ]
+}

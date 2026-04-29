@@ -1,0 +1,15 @@
+{
+  "puml_file": "basico.puml",
+  "database_type": "postgres",
+  "generation_date": "2025-12-11T13:54:26.017628",
+  "total_tables": 6,
+  "saved_files": 6,
+  "tables": [
+    "users",
+    "systems",
+    "roles",
+    "permissions",
+    "systems_users",
+    "systems_users_permissions"
+  ]
+}

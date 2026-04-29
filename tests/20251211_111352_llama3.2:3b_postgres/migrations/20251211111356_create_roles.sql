@@ -1,0 +1,14 @@
+-- migrate:up
+
+CREATE TABLE roles (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(40) NOT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  system_id INTEGER NOT NULL,
+  FOREIGN KEY (system_id) REFERENCES systems(id)
+);
+
+-- migrate:down
+
+DROP TABLE IF EXISTS roles;

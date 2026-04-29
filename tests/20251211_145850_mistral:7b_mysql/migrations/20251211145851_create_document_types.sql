@@ -1,0 +1,7 @@
+-- migrate:up
+
+CREATE TABLE document_types ( id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(22) NOT NULL );
+
+-- migrate:down
+
+DROP TABLE IF EXISTS DOCUMENT_TYPES;

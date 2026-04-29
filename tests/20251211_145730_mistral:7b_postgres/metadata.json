@@ -1,0 +1,13 @@
+{
+  "puml_file": "innova.puml",
+  "database_type": "postgres",
+  "generation_date": "2025-12-11T14:57:30.861476",
+  "total_tables": 4,
+  "saved_files": 4,
+  "tables": [
+    "document_types",
+    "carrere_grades",
+    "carreres",
+    "specialisms"
+  ]
+}

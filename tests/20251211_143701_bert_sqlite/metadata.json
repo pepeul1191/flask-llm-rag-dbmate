@@ -1,0 +1,14 @@
+{
+  "puml_file": "biblio.puml",
+  "database_type": "sqlite",
+  "generation_date": "2025-12-11T14:37:01.708267",
+  "total_tables": 5,
+  "saved_files": 5,
+  "tables": [
+    "books",
+    "permissions",
+    "authors",
+    "roles",
+    "countries"
+  ]
+}
