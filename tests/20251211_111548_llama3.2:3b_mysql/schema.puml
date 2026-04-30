@@ -1,0 +1,105 @@
+@startuml
+!theme plain
+
+entity users {
+  * id : INTEGER
+  --
+  * username: VARCHAR(30)
+  * password: VARCHAR(40)
+  * first_names : VARCHAR(50)
+  * last_names : VARCHAR(50)
+  * email : VARCHAR(30)
+  * birth_date : DATE
+  * profile_picture : VARCHAR(100)
+  * sex : BOOLEAN
+  * reset_key: VARCHAR(30)
+  * country_id : INTEGER
+}
+
+entity countries {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+  * male_demonym : VARCHAR(40)
+  * female_demonym : VARCHAR(40)
+  * flag_image : VARCHAR(100)
+}
+
+entity devices {
+  * id : INTEGER
+  --
+  * brand : VARCHAR(30)
+  * type : VARCHAR(30)
+  * user_id : INTEGER
+}
+
+entity books {
+  * id : INTEGER
+  --
+  * title : VARCHAR(60)
+  * isbn : VARCHAR(30)
+  * pages : INTEGER
+  * publication_year : INTEGER
+  * edition_year : INTEGER
+  * synopsis : TEXT
+  * cover_image : VARCHAR(100)
+  * pdf : VARCHAR(100)
+  * publisher_id : INTEGER
+}
+
+entity publishers {
+  * id : INTEGER
+  --
+  * name : VARCHAR(50)
+  * logo : VARCHAR(100)
+}
+
+entity authors {
+  * id : INTEGER
+  --
+  * full_name : VARCHAR(60)
+  * birth_date : DATE
+  * image : VARCHAR(100)
+}
+
+entity genres {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity reviews {
+  * id : INTEGER
+  --
+  * rating : INTEGER
+  * comment : TEXT
+  * review_date : DATETIME
+  * user_id : INTEGER
+  * book_id : INTEGER
+}
+
+entity books_authors {
+  * id : INTEGER
+  --
+  * book_id : INTEGER
+  * author_id : INTEGER
+}
+
+entity books_genres {
+  * id : INTEGER
+  --
+  * book_id : INTEGER
+  * genre_id : INTEGER
+}
+
+users }|--|| countries : country_id
+devices }|--|| users : user_id
+books }|--|| publishers : publisher_id
+reviews }|--|| users : user_id
+reviews }|--|| books : book_id
+books_authors }|--|| books : book_id
+books_authors }|--|| authors : author_id
+books_genres }|--|| books : book_id
+books_genres }|--|| genres : genre_id
+
+@enduml
