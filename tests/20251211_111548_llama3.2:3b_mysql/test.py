@@ -1,7 +1,8 @@
-# tests.py
+# test.py
 import os
 import json
 import re
+from datetime import datetime
 import numpy as np
 from typing import List, Tuple, Dict, Any
 import chromadb
@@ -18,6 +19,10 @@ CHROMA_PATH = os.path.join(BASE_PATH, "chroma_db")
 SCHEMA_PATH = os.path.join(RUN_DIR, "schema.puml")
 MIGRATIONS_PATH = os.path.join(RUN_DIR, "migrations")
 
+# Directorio para guardar resultados
+RESULTS_DIR = os.path.join(RUN_DIR, "evaluation_results")
+os.makedirs(RESULTS_DIR, exist_ok=True)
+
 # =========================================================
 # 2. CHROMA CLIENT
 # =========================================================
@@ -33,18 +38,53 @@ except:
 # 3. FUNCIÓN DE RELEVANCIA MEJORADA
 # =========================================================
 
-def is_relevant_chunk(chunk, required_tables, required_relationships):
+def is_relevant_chunk(
+    chunk: str, 
+    required_tables: set, 
+    required_relationships: set
+) -> bool:
+    """Determina si un chunk es relevante - VERSIÓN MEJORADA"""
     text = chunk.lower()
     
-    # Para queries negativas (required_tables vacío o tabla inexistente)
-    if required_tables and list(required_tables)[0] not in text:
-        # Si la tabla requerida NO está en el chunk, no es relevante
-        return False
-    
-    # Resto de la lógica...
+    # Para cada tabla requerida
     for table in required_tables:
+        # Búsqueda exacta de CREATE TABLE
         if re.search(rf'create\s+table\s+{re.escape(table)}\b', text):
             return True
+        
+        # Para reviews: buscar palabras clave
+        if table == 'reviews':
+            if 'create table reviews' in text:
+                return True
+            if ('rating' in text or 'comment' in text) and 'reviews' in text:
+                return True
+        
+        # Para books_authors: buscar columnas específicas
+        if table == 'books_authors':
+            if 'create table books_authors' in text:
+                return True
+            if 'book_id' in text and 'author_id' in text:
+                return True
+        
+        # Para books_genres
+        if table == 'books_genres':
+            if 'create table books_genres' in text:
+                return True
+            if 'book_id' in text and 'genre_id' in text:
+                return True
+        
+        # Fallback: el nombre de la tabla está presente y hay CREATE
+        if table in text and 'create table' in text:
+            return True
+    
+    # Para relaciones (foreign keys)
+    for a, b in required_relationships:
+        if re.search(rf'foreign\s+key.*references\s+{re.escape(a)}', text):
+            if b in text:
+                return True
+        if re.search(rf'foreign\s+key.*references\s+{re.escape(b)}', text):
+            if a in text:
+                return True
     
     return False
 
@@ -100,6 +140,36 @@ def hit_rate(relevance_list: List[List[int]], k: int = 1) -> float:
         return 0.0
     hits = sum(1 for rel in relevance_list if sum(rel[:k]) > 0)
     return hits / len(relevance_list)
+
+
+def ndcg_at_k(relevance: List[int], k: int) -> float:
+    """NDCG@K: Normalized Discounted Cumulative Gain"""
+    if k <= 0 or not relevance:
+        return 0.0
+    
+    # DCG
+    dcg = 0.0
+    for i in range(min(k, len(relevance))):
+        gain = relevance[i]
+        if gain > 0:
+            dcg += gain / np.log2(i + 2)
+    
+    # IDCG
+    ideal = sorted(relevance, reverse=True)
+    idcg = 0.0
+    for i in range(min(k, len(ideal))):
+        gain = ideal[i]
+        if gain > 0:
+            idcg += gain / np.log2(i + 2)
+    
+    return dcg / idcg if idcg > 0 else 0.0
+
+
+def f_beta_score(precision: float, recall: float, beta: float = 1.0) -> float:
+    """F-beta score"""
+    if precision + recall == 0:
+        return 0.0
+    return (1 + beta**2) * (precision * recall) / ((beta**2 * precision) + recall)
 
 
 # =========================================================
@@ -229,10 +299,15 @@ def evaluate_single_query(query: Dict[str, Any], k: int = 10) -> Dict[str, Any]:
     if not chunks:
         return {
             "query_name": query["name"],
+            "query_text": query["text"],
+            "difficulty": query.get("difficulty", "unknown"),
             "precision@k": 0.0,
             "recall@k": 0.0,
             "ap": 0.0,
             "mrr": 0.0,
+            "ndcg@k": 0.0,
+            "f1_score": 0.0,
+            "total_relevant": 0,
             "found_relevant": 0,
             "expected_min": query.get("expected_min_relevant", 0),
             "meets_expectation": False,
@@ -248,18 +323,24 @@ def evaluate_single_query(query: Dict[str, Any], k: int = 10) -> Dict[str, Any]:
     total_relevant = sum(relevance)
     found_relevant = sum(relevance[:k])
     
+    precision = precision_at_k(relevance, k)
+    recall = recall_at_k(relevance, total_relevant, k) if total_relevant > 0 else 1.0
+    
     return {
         "query_name": query["name"],
         "query_text": query["text"],
         "difficulty": query.get("difficulty", "unknown"),
-        "precision@k": precision_at_k(relevance, k),
-        "recall@k": recall_at_k(relevance, total_relevant, k) if total_relevant > 0 else 1.0,
+        "precision@k": precision,
+        "recall@k": recall,
         "ap": average_precision(relevance),
         "mrr": mean_reciprocal_rank(relevance),
+        "ndcg@k": ndcg_at_k(relevance, k),
+        "f1_score": f_beta_score(precision, recall, beta=1.0),
         "total_relevant": total_relevant,
         "found_relevant": found_relevant,
         "expected_min": query.get("expected_min_relevant", 0),
         "meets_expectation": found_relevant >= query.get("expected_min_relevant", 0),
+        "relevance_vector": relevance[:k]
     }
 
 
@@ -291,19 +372,109 @@ def evaluate_system(k: int = 10) -> Dict[str, Any]:
     positive_results = [r for r in results if r["expected_min"] > 0 and not r.get("error")]
     negative_results = [r for r in results if r["expected_min"] == 0 and not r.get("error")]
     
+    all_relevance_vectors = [r["relevance_vector"] for r in results if "relevance_vector" in r and not r.get("error")]
+    
     global_metrics = {
         "total_queries": len(results),
+        "queries_with_results": sum(1 for r in results if not r.get("error")),
+        
+        # Métricas generales
         "mean_ap": np.mean([r["ap"] for r in results if not r.get("error")]),
         "mean_precision": np.mean([r["precision@k"] for r in results if not r.get("error")]),
+        "mean_recall": np.mean([r["recall@k"] for r in results if not r.get("error")]),
+        "mean_ndcg": np.mean([r["ndcg@k"] for r in results if not r.get("error")]),
+        "mean_f1": np.mean([r["f1_score"] for r in results if not r.get("error")]),
         "mrr": np.mean([r["mrr"] for r in results if not r.get("error")]),
+        
+        # Queries positivas
         "positive_queries_count": len(positive_results),
         "positive_mean_ap": np.mean([r["ap"] for r in positive_results]) if positive_results else 0,
+        "positive_mean_precision": np.mean([r["precision@k"] for r in positive_results]) if positive_results else 0,
+        "positive_mean_recall": np.mean([r["recall@k"] for r in positive_results]) if positive_results else 0,
+        
+        # Queries negativas
+        "negative_queries_count": len(negative_results),
         "negative_false_positives": sum(1 for r in negative_results if r["found_relevant"] > 0),
-        "expectations_met": sum(1 for r in results if r.get("meets_expectation", False)),
-        "expectation_rate": sum(1 for r in results if r.get("meets_expectation", False)) / len(results) if results else 0,
+        "negative_specificity": 1.0 - (sum(1 for r in negative_results if r["found_relevant"] > 0) / len(negative_results)) if negative_results else 1.0,
+        
+        # Hit rates
+        "hit_rate_1": hit_rate(all_relevance_vectors, 1),
+        "hit_rate_3": hit_rate(all_relevance_vectors, 3),
+        "hit_rate_5": hit_rate(all_relevance_vectors, 5),
+        
+        # Expectativas
+        "expectations_met": sum(1 for r in results if r.get("meets_expectation", False) and not r.get("error")),
+        "expectation_rate": sum(1 for r in results if r.get("meets_expectation", False) and not r.get("error")) / len([r for r in results if not r.get("error")]) if results else 0,
     }
     
-    return {"global_metrics": global_metrics, "per_query_results": results}
+    return {
+        "k": k,
+        "global_metrics": global_metrics,
+        "per_query_results": results
+    }
+
+
+def save_results_to_json(all_evaluations: Dict[int, Dict], timestamp: str):
+    """Guarda todos los resultados en un archivo JSON"""
+    
+    # Preparar datos para JSON (convertir sets a listas)
+    output_data = {
+        "metadata": {
+            "timestamp": timestamp,
+            "test_date": datetime.now().isoformat(),
+            "chroma_path": CHROMA_PATH,
+            "migrations_path": MIGRATIONS_PATH,
+            "total_chunks": collection.count()
+        },
+        "evaluations": {}
+    }
+    
+    for k, evaluation in all_evaluations.items():
+        # Convertir sets en los resultados por query
+        eval_copy = evaluation.copy()
+        
+        # Convertir relevance_vector de numpy a lista
+        for query_result in eval_copy["per_query_results"]:
+            if "relevance_vector" in query_result:
+                query_result["relevance_vector"] = [int(x) for x in query_result["relevance_vector"]]
+        
+        eval_copy["global_metrics"] = {k: float(v) if isinstance(v, np.float64) else v 
+                                        for k, v in eval_copy["global_metrics"].items()}
+        
+        output_data["evaluations"][f"K={k}"] = eval_copy
+    
+    # Guardar archivo
+    filename = f"evaluation_report_{timestamp}.json"
+    filepath = os.path.join(RESULTS_DIR, filename)
+    
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(output_data, f, indent=2, ensure_ascii=False)
+    
+    print(f"\n💾 Resultados guardados en: {filepath}")
+    
+    # También guardar una versión resumida
+    summary_filename = f"evaluation_summary_{timestamp}.json"
+    summary_path = os.path.join(RESULTS_DIR, summary_filename)
+    
+    summary_data = {
+        "timestamp": timestamp,
+        "summary": {
+            k: {
+                "map": evaluation["global_metrics"]["mean_ap"],
+                "positive_map": evaluation["global_metrics"]["positive_mean_ap"],
+                "expectation_rate": evaluation["global_metrics"]["expectation_rate"],
+                "false_positives": evaluation["global_metrics"]["negative_false_positives"]
+            }
+            for k, evaluation in all_evaluations.items()
+        }
+    }
+    
+    with open(summary_path, 'w', encoding='utf-8') as f:
+        json.dump(summary_data, f, indent=2, ensure_ascii=False)
+    
+    print(f"💾 Resumen guardado en: {summary_path}")
+    
+    return filepath, summary_path
 
 
 def print_report(evaluation: Dict[str, Any], k: int):
@@ -317,20 +488,31 @@ def print_report(evaluation: Dict[str, Any], k: int):
     print("🎯 MÉTRICAS GLOBALES:")
     print(f"   Mean Average Precision (MAP): {metrics['mean_ap']:.4f}")
     print(f"   Mean Precision@{k}: {metrics['mean_precision']:.4f}")
+    print(f"   Mean Recall@{k}: {metrics['mean_recall']:.4f}")
+    print(f"   Mean NDCG@{k}: {metrics['mean_ndcg']:.4f}")
+    print(f"   Mean F1-Score: {metrics['mean_f1']:.4f}")
     print(f"   MRR: {metrics['mrr']:.4f}")
     print(f"   Expectation Rate: {metrics['expectation_rate']:.2%}")
     
     print(f"\n📊 POR TIPO DE QUERY:")
     print(f"   Positivas ({metrics['positive_queries_count']}):")
     print(f"     - MAP: {metrics['positive_mean_ap']:.4f}")
+    print(f"     - Precision@{k}: {metrics['positive_mean_precision']:.4f}")
+    print(f"     - Recall@{k}: {metrics['positive_mean_recall']:.4f}")
     
-    print(f"\n   Negativas:")
+    print(f"\n   Negativas ({metrics['negative_queries_count']}):")
     print(f"     - False Positives: {metrics['negative_false_positives']}")
+    print(f"     - Specificity: {metrics['negative_specificity']:.2%}")
+    
+    print(f"\n🎯 HIT RATES:")
+    print(f"   Hit Rate@1: {metrics['hit_rate_1']:.2%}")
+    print(f"   Hit Rate@3: {metrics['hit_rate_3']:.2%}")
+    print(f"   Hit Rate@5: {metrics['hit_rate_5']:.2%}")
     
     print(f"\n⚠️ QUERIES PROBLEMÁTICAS:")
     for res in evaluation["per_query_results"]:
         if not res.get("meets_expectation", True) and not res.get("error"):
-            print(f"   - {res['query_name']}: Esperaba ≥{res['expected_min']}, obtuvo {res['found_relevant']}")
+            print(f"   - {res['query_name']}: Esperaba ≥{res['expected_min']}, obtuvo {res['found_relevant']} (AP={res['ap']:.3f})")
 
 
 # =========================================================
@@ -342,6 +524,9 @@ if __name__ == "__main__":
     print("🔍 DIAGNÓSTICO Y EVALUACIÓN DEL SISTEMA RAG")
     print("="*70)
     
+    # Generar timestamp para los archivos
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
     # Verificar chunks en ChromaDB
     all_docs = collection.get()
     total_chunks = len(all_docs['documents']) if all_docs and all_docs['documents'] else 0
@@ -352,12 +537,37 @@ if __name__ == "__main__":
         exit(1)
     
     # Evaluar con diferentes K
-    for k in [5, 10, 20]:
+    k_values = [5, 10, 20]
+    all_evaluations = {}
+    
+    for k in k_values:
         print(f"\n{'─'*70}")
         print(f"🔄 EVALUANDO CON K={k}")
         print(f"{'─'*70}")
         
         evaluation = evaluate_system(k=k)
+        all_evaluations[k] = evaluation
         print_report(evaluation, k)
     
-    print("\n✅ Diagnóstico y evaluación completados")
+    # Resumen comparativo
+    print(f"\n{'='*70}")
+    print("📊 RESUMEN COMPARATIVO")
+    print(f"{'='*70}\n")
+    
+    print("K\tMAP\t\tP@{K}\t\tR@{K}\t\tHIT@1")
+    print("-" * 65)
+    for k in k_values:
+        metrics = all_evaluations[k]["global_metrics"]
+        print(f"{k}\t{metrics['mean_ap']:.4f}\t\t{metrics['mean_precision']:.4f}\t\t{metrics['mean_recall']:.4f}\t\t{metrics['hit_rate_1']:.2%}")
+    
+    # Guardar resultados en JSON
+    print(f"\n{'='*70}")
+    print("💾 GUARDANDO RESULTADOS")
+    print(f"{'='*70}")
+    
+    json_path, summary_path = save_results_to_json(all_evaluations, timestamp)
+    
+    print(f"\n✅ Diagnóstico y evaluación completados")
+    print(f"📁 Resultados guardados en: {RESULTS_DIR}")
+    print(f"   - Reporte completo: {os.path.basename(json_path)}")
+    print(f"   - Resumen: {os.path.basename(summary_path)}")
