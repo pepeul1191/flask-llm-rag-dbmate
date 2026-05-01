@@ -24,3 +24,6 @@
 8. `reviews`
 9. `books_authors`
 10. `books_genres`
+
+
+https://chat.deepseek.com/share/kricuvgqusxxxh8qrx
