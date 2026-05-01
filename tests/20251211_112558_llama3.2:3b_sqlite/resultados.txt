@@ -1,0 +1,399 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON SQLITE3
+   Esquema: Programas, Fases, Participantes, Trabajadores
+======================================================================
+✅ Conectado a SQLite: 72 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=3 con SQLite3
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.544 | ROUGE-L: 0.535
+   Tabla esperada: programs | Correcta: ❌
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.358 | ROUGE-L: 0.429
+   Tabla esperada: phases | Correcta: ❌
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.003 | ROUGE-L: 0.035
+   Tabla esperada: participants | Correcta: ❌
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.133 | ROUGE-L: 0.238
+   Tabla esperada: workers | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.386 | ROUGE-L: 0.523
+
+
+======================================================================
+📈 REPORTE END-TO-END - SQLite3 (Programas)
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=3
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   0.00%
+   BLEU:             0.2850
+   ROUGE-L:          0.3519
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_115835_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=5 con SQLite3
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.544 | ROUGE-L: 0.535
+   Tabla esperada: programs | Correcta: ❌
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.618 | ROUGE-L: 0.556
+   Tabla esperada: phases | Correcta: ❌
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.000 | ROUGE-L: 0.000
+   Tabla esperada: participants | Correcta: ❌
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.133 | ROUGE-L: 0.238
+   Tabla esperada: workers | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.386 | ROUGE-L: 0.523
+
+
+======================================================================
+📈 REPORTE END-TO-END - SQLite3 (Programas)
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=5
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   0.00%
+   BLEU:             0.3361
+   ROUGE-L:          0.3703
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_115835_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=10 con SQLite3
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.544 | ROUGE-L: 0.535
+   Tabla esperada: programs | Correcta: ❌
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.618 | ROUGE-L: 0.556
+   Tabla esperada: phases | Correcta: ❌
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.000 | ROUGE-L: 0.000
+   Tabla esperada: participants | Correcta: ❌
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.133 | ROUGE-L: 0.238
+   Tabla esperada: workers | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.386 | ROUGE-L: 0.523
+
+
+======================================================================
+📈 REPORTE END-TO-END - SQLite3 (Programas)
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=10
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   0.00%
+   BLEU:             0.3361
+   ROUGE-L:          0.3703
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_115835_k10.json
+
+✅ Evaluación completada
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite$ python3 test_recuperacion.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN DE RECUPERACIÓN - SQLite3
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+✅ Conectado a SQLite: 72 chunks
+
+📋 Ejemplos de chunks:
+   1. ID: 20251211112559_create_document_types.sql_full
+      Tipo: full_file
+      Tablas: document_types
+   2. ID: 20251211112559_create_document_types.sql_create_1
+      Tipo: create_table
+      Tablas: document_types
+   3. ID: 20251211112560_create_industries.sql_full
+      Tipo: full_file
+      Tablas: industries
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=5)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.950, P@5: 0.800
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 3, Encontrados: 3
+   AP: 1.000, P@5: 0.600
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 3, Encontrados: 3
+   AP: 0.917, P@5: 0.600
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 3, Encontrados: 3
+   AP: 1.000, P@5: 0.600
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.950, P@5: 0.800
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.887, P@5: 0.800
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@5: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLite3 (Programas)
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=5
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.8149
+   Mean Precision@5: 0.6000
+   Mean Recall@5: 1.0000
+   Mean NDCG@5: 0.8413
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.9507
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_120002_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=10)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.950, P@10: 0.400
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 3, Encontrados: 3
+   AP: 1.000, P@10: 0.300
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 6, Encontrados: 6
+   AP: 0.774, P@10: 0.600
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.850, P@10: 0.400
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 6, Encontrados: 6
+   AP: 0.872, P@10: 0.600
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 6, Encontrados: 6
+   AP: 0.811, P@10: 0.600
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@10: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLite3 (Programas)
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=10
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7509
+   Mean Precision@10: 0.4143
+   Mean Recall@10: 1.0000
+   Mean NDCG@10: 0.8184
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.8761
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_120002_k10.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=20
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=20)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 8, Encontrados: 8
+   AP: 0.673, P@20: 0.400
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.833, P@20: 0.200
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 9, Encontrados: 9
+   AP: 0.701, P@20: 0.450
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.850, P@20: 0.200
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 9, Encontrados: 9
+   AP: 0.774, P@20: 0.450
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 10, Encontrados: 10
+   AP: 0.744, P@20: 0.500
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@20: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLite3 (Programas)
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=20
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.6535
+   Mean Precision@20: 0.3143
+   Mean Recall@20: 1.0000
+   Mean NDCG@20: 0.7841
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.7624
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_120002_k20.json
+
+✅ Evaluación completada

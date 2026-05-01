@@ -1,0 +1,80 @@
+{
+  "timestamp": "20260501_121636",
+  "k": 3,
+  "backend": "PostgreSQL",
+  "model": "llama3.2",
+  "global_metrics": {
+    "k": 3,
+    "model": "llama3.2",
+    "backend": "PostgreSQL",
+    "total_queries": 5,
+    "valid_queries": 5,
+    "mean_faithfulness": 0.9199999999999999,
+    "mean_answer_relevancy": 0.86,
+    "mean_bleu": 0.5979065700041903,
+    "mean_rouge_l": 0.5914914986076207,
+    "table_accuracy": 1.0
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla programs",
+      "question": "Necesito crear una tabla para almacenar programas con nombre y descripción",
+      "expected_table": "programs",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE programs (\n  id SERIAL PRIMARY KEY,\n  name VARCHAR(30) NOT NULL,\n  description TEXT NOT NULL,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.4783021825811098,
+      "rouge_l": 0.5526315789473684,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla phases",
+      "question": "Tabla para fases de programa con fechas de inicio y fin",
+      "expected_table": "phases",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE phases (\n  id SERIAL PRIMARY KEY,\n  program_id INTEGER NOT NULL,\n  start_date TIMESTAMP NOT NULL,\n  end_date TIMESTAMP NOT NULL,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (program_id) REFERENCES programs(id)\n);",
+      "faithfulness": 0.6,
+      "answer_relevancy": 0.8,
+      "bleu": 0.5169488192568142,
+      "rouge_l": 0.49411764705882355,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla participants",
+      "question": "Tabla para participantes con nombres, email y DNI",
+      "expected_table": "participants",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE participants (\n  id SERIAL PRIMARY KEY,\n  names VARCHAR(50) NOT NULL,\n  last_names VARCHAR(50) NOT NULL,\n  email VARCHAR(40) UNIQUE NOT NULL,\n  phone VARCHAR(40) NOT NULL,\n  dni VARCHAR(20) NOT NULL,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.6609485148496945,
+      "rouge_l": 0.6947368421052631,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla workers",
+      "question": "Tabla para trabajadores con nombres y email",
+      "expected_table": "workers",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE workers (\n  id SERIAL PRIMARY KEY,\n  names VARCHAR(50) NOT NULL,\n  last_names VARCHAR(50) NOT NULL,\n  email VARCHAR(40) UNIQUE NOT NULL,\n  phone VARCHAR(40),\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.9230769230769231,
+      "rouge_l": 0.9253731343283582,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Query negativa",
+      "question": "Necesito una tabla para inscripciones",
+      "expected_table": null,
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE inscripciones (\n  id SERIAL PRIMARY KEY,\n  program_id INTEGER NOT NULL,\n  participant_id INTEGER NOT NULL,\n  phase_id INTEGER NOT NULL,\n  start_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  end_date TIMESTAMP NOT NULL,\n  status VARCHAR(10) NOT NULL CHECK(status IN ('pendiente', 'aceptado', 'rechazado')),\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE INDEX idx_program_id ON inscripciones (program",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.41025641025641024,
+      "rouge_l": 0.2905982905982906,
+      "num_chunks": 3
+    }
+  ]
+}

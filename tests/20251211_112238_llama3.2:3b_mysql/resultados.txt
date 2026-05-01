@@ -1,0 +1,400 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql$ python3 test_recuperacion.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN DE RECUPERACIÓN - MySQL
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+✅ PyMySQL versión: 2.2.8
+✅ Conectado a MySQL: 73 chunks
+
+📋 Ejemplos de chunks:
+   1. ID: 20251211112239_create_document_types.sql_create_1
+      Tipo: create_table
+      Tablas: document_types
+   2. ID: 20251211112239_create_document_types.sql_full
+      Tipo: full_file
+      Tablas: document_types
+   3. ID: 20251211112240_create_industries.sql_create_1
+      Tipo: create_table
+      Tablas: industries
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=5)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.950, P@5: 0.800
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 3, Encontrados: 3
+   AP: 1.000, P@5: 0.600
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 3, Encontrados: 3
+   AP: 1.000, P@5: 0.600
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 3, Encontrados: 3
+   AP: 1.000, P@5: 0.600
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.950, P@5: 0.800
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 5, Encontrados: 5
+   AP: 1.000, P@5: 1.000
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@5: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=5
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.8429
+   Mean Precision@5: 0.6286
+   Mean Recall@5: 1.0000
+   Mean NDCG@5: 0.8523
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.9833
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_114934_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=10)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.950, P@10: 0.400
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.861, P@10: 0.400
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 6, Encontrados: 6
+   AP: 0.830, P@10: 0.600
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.893, P@10: 0.400
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 6, Encontrados: 6
+   AP: 0.883, P@10: 0.600
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 8, Encontrados: 8
+   AP: 0.942, P@10: 0.800
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@10: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=10
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7656
+   Mean Precision@10: 0.4571
+   Mean Recall@10: 1.0000
+   Mean NDCG@10: 0.8256
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.8932
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_114934_k10.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=20
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=20)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 8, Encontrados: 8
+   AP: 0.674, P@20: 0.400
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.861, P@20: 0.200
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 10, Encontrados: 10
+   AP: 0.724, P@20: 0.500
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.893, P@20: 0.200
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 11, Encontrados: 11
+   AP: 0.764, P@20: 0.550
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 10, Encontrados: 10
+   AP: 0.894, P@20: 0.500
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@20: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=20
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.6870
+   Mean Precision@20: 0.3357
+   Mean Recall@20: 1.0000
+   Mean NDCG@20: 0.7990
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.8015
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_114934_k20.json
+
+✅ Evaluación completada
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON MYSQL
+   Esquema: Programas, Fases, Participantes, Trabajadores
+======================================================================
+✅ Conectado a MySQL: 73 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=3 con MySQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.537 | ROUGE-L: 0.514
+   Tabla esperada: programs | Correcta: ❌
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.647 | ROUGE-L: 0.506
+   Tabla esperada: phases | Correcta: ❌
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.000 | ROUGE-L: 0.000
+   Tabla esperada: participants | Correcta: ❌
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.000 | ROUGE-L: 0.000
+   Tabla esperada: workers | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.404 | ROUGE-L: 0.523
+
+
+======================================================================
+📈 REPORTE END-TO-END - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=3
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   0.00%
+   BLEU:             0.3176
+   ROUGE-L:          0.3084
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_114950_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=5 con MySQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.771 | ROUGE-L: 0.783
+   Tabla esperada: programs | Correcta: ❌
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.564 | ROUGE-L: 0.515
+   Tabla esperada: phases | Correcta: ❌
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.706 | ROUGE-L: 0.653
+   Tabla esperada: participants | Correcta: ❌
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.092 | ROUGE-L: 0.150
+   Tabla esperada: workers | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.406 | ROUGE-L: 0.500
+
+
+======================================================================
+📈 REPORTE END-TO-END - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=5
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   0.00%
+   BLEU:             0.5078
+   ROUGE-L:          0.5202
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_114950_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=10 con MySQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.743 | ROUGE-L: 0.761
+   Tabla esperada: programs | Correcta: ❌
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.564 | ROUGE-L: 0.515
+   Tabla esperada: phases | Correcta: ❌
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.706 | ROUGE-L: 0.653
+   Tabla esperada: participants | Correcta: ❌
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.092 | ROUGE-L: 0.150
+   Tabla esperada: workers | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.406 | ROUGE-L: 0.500
+
+
+======================================================================
+📈 REPORTE END-TO-END - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=10
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   0.00%
+   BLEU:             0.5021
+   ROUGE-L:          0.5159
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_114950_k10.json
+
+✅ Evaluación completada

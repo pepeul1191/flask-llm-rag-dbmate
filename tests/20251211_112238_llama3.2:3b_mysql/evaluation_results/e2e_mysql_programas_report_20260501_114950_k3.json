@@ -1,0 +1,80 @@
+{
+  "timestamp": "20260501_114950",
+  "k": 3,
+  "backend": "MySQL",
+  "model": "llama3.2",
+  "global_metrics": {
+    "k": 3,
+    "model": "llama3.2",
+    "backend": "MySQL",
+    "total_queries": 5,
+    "valid_queries": 5,
+    "mean_faithfulness": 1.0,
+    "mean_answer_relevancy": 0.74,
+    "mean_bleu": 0.31756729426212904,
+    "mean_rouge_l": 0.3083975825355135,
+    "table_accuracy": 0.0
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla programs",
+      "question": "Necesito crear una tabla para almacenar programas con nombre y descripción",
+      "expected_table": "programs",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS programs (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(100) NOT NULL,\n    description TEXT,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.5372187742785386,
+      "rouge_l": 0.5135135135135135,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla phases",
+      "question": "Tabla para fases de programa con fechas de inicio y fin",
+      "expected_table": "phases",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS phases (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(30) NOT NULL,\n    description TEXT,\n    init_date DATE NOT NULL,\n    end_date DATE NOT NULL,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    FOREIGN KEY (id) REFERENCES programs(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.6470588235294118,
+      "rouge_l": 0.5057471264367817,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla participants",
+      "question": "Tabla para participantes con nombres, email y DNI",
+      "expected_table": "participants",
+      "table_correct": false,
+      "generated_answer": "SELECT * FROM participants;",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.0,
+      "rouge_l": 0.0,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla workers",
+      "question": "Tabla para trabajadores con nombres y email",
+      "expected_table": "workers",
+      "table_correct": false,
+      "generated_answer": "SELECT * FROM workers;",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.0,
+      "rouge_l": 0.0,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Query negativa",
+      "question": "Necesito una tabla para inscripciones",
+      "expected_table": null,
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS inscriptions (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    participant_id INT NOT NULL,\n    program_id INT NOT NULL,\n    phase_id INT NOT NULL,\n    registration_date DATE NOT NULL,\n    FOREIGN KEY (participant_id) REFERENCES participants(id),\n    FOREIGN KEY (program_id) REFERENCES programs(id),\n    FOREIGN KEY (phase_id) REFERENCES phases(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.4035588735026947,
+      "rouge_l": 0.5227272727272727,
+      "num_chunks": 3
+    }
+  ]
+}

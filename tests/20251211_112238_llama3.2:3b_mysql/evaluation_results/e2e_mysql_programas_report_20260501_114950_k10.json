@@ -1,0 +1,80 @@
+{
+  "timestamp": "20260501_114950",
+  "k": 10,
+  "backend": "MySQL",
+  "model": "llama3.2",
+  "global_metrics": {
+    "k": 10,
+    "model": "llama3.2",
+    "backend": "MySQL",
+    "total_queries": 5,
+    "valid_queries": 5,
+    "mean_faithfulness": 1.0,
+    "mean_answer_relevancy": 0.74,
+    "mean_bleu": 0.5020882132388298,
+    "mean_rouge_l": 0.5158789414465921,
+    "table_accuracy": 0.0
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla programs",
+      "question": "Necesito crear una tabla para almacenar programas con nombre y descripción",
+      "expected_table": "programs",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS programs (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(100) NOT NULL,\n    description TEXT,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    program_type_id INT NOT NULL,\n    period_id INT NOT NULL,\n    FOREIGN KEY (program_type_id) REFERENCES catatalogs(program_types(id)),\n    FOREIGN KEY (period_id) REFERENCES catatalogs(periods(id))\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.7428571428571429,
+      "rouge_l": 0.7608695652173914,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla phases",
+      "question": "Tabla para fases de programa con fechas de inicio y fin",
+      "expected_table": "phases",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS phases (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(30) NOT NULL,\n    description TEXT,\n    init_date DATE NOT NULL,\n    end_date DATE NOT NULL,\n    delivery_deadline DATE,\n    evaluation_deadline DATE,\n    revaluation_deadline DATE,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    program_id INT NOT NULL,\n    FOREIGN KEY (program_id) REFERENCES programs(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.5641025641025641,
+      "rouge_l": 0.5154639175257733,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla participants",
+      "question": "Tabla para participantes con nombres, email y DNI",
+      "expected_table": "participants",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS participants (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    names VARCHAR(50) NOT NULL,\n    email VARCHAR(40) NOT NULL UNIQUE,\n    dni VARCHAR(20) NOT NULL UNIQUE,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    dni_type_id INT NOT NULL,\n    nation_id INT NOT NULL,\n    user_id INT\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.7055647299611856,
+      "rouge_l": 0.6530612244897959,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla workers",
+      "question": "Tabla para trabajadores con nombres y email",
+      "expected_table": "workers",
+      "table_correct": false,
+      "generated_answer": "SELECT * FROM workers WHERE names != '' AND email != '';",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.09161208579249883,
+      "rouge_l": 0.15,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Query negativa",
+      "question": "Necesito una tabla para inscripciones",
+      "expected_table": null,
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS inscriptions (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    participant_id INT NOT NULL,\n    program_id INT NOT NULL,\n    phase_id INT NOT NULL,\n    start_date DATE NOT NULL,\n    end_date DATE NOT NULL,\n    FOREIGN KEY (participant_id) REFERENCES participants(id),\n    FOREIGN KEY (program_id) REFERENCES programs(id),\n    FOREIGN KEY (phase_id) REFERENCES phases(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.40630454348075756,
+      "rouge_l": 0.5,
+      "num_chunks": 10
+    }
+  ]
+}

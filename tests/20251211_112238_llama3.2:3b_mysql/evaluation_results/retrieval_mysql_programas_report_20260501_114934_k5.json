@@ -1,0 +1,179 @@
+{
+  "timestamp": "20260501_114934",
+  "k": 5,
+  "backend": "MySQL",
+  "schema": [
+    "programs",
+    "phases",
+    "participants",
+    "internals",
+    "externals",
+    "workers",
+    "internal_workers",
+    "external_workers",
+    "mentors",
+    "specialisms"
+  ],
+  "global_metrics": {
+    "k": 5,
+    "backend": "MySQL",
+    "schema": [
+      "programs",
+      "phases",
+      "participants",
+      "internals",
+      "externals",
+      "workers",
+      "internal_workers",
+      "external_workers",
+      "mentors",
+      "specialisms"
+    ],
+    "total_queries": 7,
+    "valid_queries": 7,
+    "mean_ap": 0.8428571428571429,
+    "mean_precision": 0.6285714285714287,
+    "mean_recall": 1.0,
+    "mean_ndcg": 0.8522548805590536,
+    "positive_queries": 6,
+    "positive_map": 0.9833333333333334,
+    "negative_queries": 1,
+    "negative_false_positives": 0,
+    "expectation_rate": 1.0
+  },
+  "per_query_results": [
+    {
+      "query_name": "✅ Tabla programs",
+      "query_text": "tabla de programas con nombre descripcion y fechas",
+      "precision_at_k": 0.8,
+      "recall_at_k": 1.0,
+      "ap": 0.95,
+      "ndcg": 0.9828920819566879,
+      "total_relevant": 4,
+      "found_relevant": 4,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "query_name": "✅ Tabla phases",
+      "query_text": "tabla de fases de programa con fechas de inicio fin entregas",
+      "precision_at_k": 0.6,
+      "recall_at_k": 1.0,
+      "ap": 1.0,
+      "ndcg": 1.0,
+      "total_relevant": 3,
+      "found_relevant": 3,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "query_name": "✅ Tabla participants",
+      "query_text": "tabla de participantes con nombres email y dni",
+      "precision_at_k": 0.6,
+      "recall_at_k": 1.0,
+      "ap": 1.0,
+      "ndcg": 1.0,
+      "total_relevant": 3,
+      "found_relevant": 3,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "query_name": "✅ Tabla internals",
+      "query_text": "participantes internos con codigo y carrera",
+      "precision_at_k": 0.6,
+      "recall_at_k": 1.0,
+      "ap": 1.0,
+      "ndcg": 1.0,
+      "total_relevant": 3,
+      "found_relevant": 3,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "query_name": "✅ Tabla workers",
+      "query_text": "tabla de trabajadores con nombres email telefono",
+      "precision_at_k": 0.8,
+      "recall_at_k": 1.0,
+      "ap": 0.95,
+      "ndcg": 0.9828920819566879,
+      "total_relevant": 4,
+      "found_relevant": 4,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "query_name": "✅ Tabla mentors",
+      "query_text": "tabla de mentores con relacion a trabajadores",
+      "precision_at_k": 1.0,
+      "recall_at_k": 1.0,
+      "ap": 1.0,
+      "ndcg": 1.0,
+      "total_relevant": 5,
+      "found_relevant": 5,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "query_name": "❌ Tabla inexistente",
+      "query_text": "tabla de inscripciones",
+      "precision_at_k": 0.0,
+      "recall_at_k": 1.0,
+      "ap": 0.0,
+      "ndcg": 0.0,
+      "total_relevant": 0,
+      "found_relevant": 0,
+      "expected_min": 0,
+      "meets_expectation": true,
+      "relevance_vector": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}
