@@ -1,0 +1,347 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql$ python3 test_recuperacion.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN DE RECUPERACIÓN CON MYSQL
+======================================================================
+✅ PyMySQL versión: 2.2.8
+✅ Conectado a MySQL: 49 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=5)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id, username, password, email...
+   ✅ OK: AP=1.000, P@5=1.000
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title, isbn, pages...
+   ✅ OK: AP=1.000, P@5=1.000
+
+📝 ✅ Relación books-genres
+   Query: tabla intermedia para libros y géneros con foreign keys...
+   ✅ OK: AP=0.417, P@5=0.400
+
+📝 ✅ Tabla reviews
+   Query: tabla de reseñas con rating, comentario, foreign keys a users y books...
+   ✅ OK: AP=1.000, P@5=0.400
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock y location...
+   ✅ OK: AP=0.000, P@5=0.000
+
+📝 ⚠️ Query ambigua - usuarios
+   Query: guardar información de personas que usan el sistema...
+   ✅ OK: AP=1.000, P@5=0.800
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - MYSQL
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=5
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7361
+   Mean Precision@5: 0.6000
+   Mean Recall@5: 1.0000
+   Mean NDCG@5: 0.7618
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (5): MAP=0.8833
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_report_20260501_102903_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=10)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id, username, password, email...
+   ✅ OK: AP=0.947, P@10=0.800
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title, isbn, pages...
+   ✅ OK: AP=1.000, P@10=1.000
+
+📝 ✅ Relación books-genres
+   Query: tabla intermedia para libros y géneros con foreign keys...
+   ✅ OK: AP=0.417, P@10=0.200
+
+📝 ✅ Tabla reviews
+   Query: tabla de reseñas con rating, comentario, foreign keys a users y books...
+   ✅ OK: AP=1.000, P@10=0.200
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock y location...
+   ✅ OK: AP=0.000, P@10=0.000
+
+📝 ⚠️ Query ambigua - usuarios
+   Query: guardar información de personas que usan el sistema...
+   ✅ OK: AP=0.938, P@10=0.700
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - MYSQL
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=10
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7170
+   Mean Precision@10: 0.4833
+   Mean Recall@10: 1.0000
+   Mean NDCG@10: 0.7560
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (5): MAP=0.8604
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_report_20260501_102903_k10.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=20
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=20)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id, username, password, email...
+   ✅ OK: AP=0.861, P@20=0.650
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title, isbn, pages...
+   ✅ OK: AP=0.996, P@20=0.750
+
+📝 ✅ Relación books-genres
+   Query: tabla intermedia para libros y géneros con foreign keys...
+   ✅ OK: AP=0.336, P@20=0.300
+
+📝 ✅ Tabla reviews
+   Query: tabla de reseñas con rating, comentario, foreign keys a users y books...
+   ✅ OK: AP=0.613, P@20=0.200
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock y location...
+   ✅ OK: AP=0.000, P@20=0.000
+
+📝 ⚠️ Query ambigua - usuarios
+   Query: guardar información de personas que usan el sistema...
+   ✅ OK: AP=0.832, P@20=0.600
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - MYSQL
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=20
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.6062
+   Mean Precision@20: 0.4167
+   Mean Recall@20: 1.0000
+   Mean NDCG@20: 0.7208
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (5): MAP=0.7274
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_report_20260501_102903_k20.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql/evaluation_results
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql$ python3 test_ 
+test_end_2_end.py     test_recuperacion.py  
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON MYSQL Y LLAMA 3.2
+======================================================================
+✅ PyMySQL versión: 2.2.8
+✅ Conectado a MySQL: 49 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=3) con MySQL y llama3.2
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.772 | ROUGE-L: 0.737
+
+📝 Tabla books
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.856 | ROUGE-L: 0.808
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.700 | ROUGE-L: 0.623
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.357 | ROUGE-L: 0.455
+
+
+======================================================================
+📈 REPORTE END-TO-END CON MYSQL
+======================================================================
+
+🎯 Backend: MySQL
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.9000
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.7370
+   Mean ROUGE-L:          0.7244
+
+✅ Queries evaluadas: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql/evaluation_results/e2e_mysql_report_20260501_102925_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=5) con MySQL y llama3.2
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.772 | ROUGE-L: 0.737
+
+📝 Tabla books
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.904 | ROUGE-L: 0.846
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.700 | ROUGE-L: 0.623
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.250 | ROUGE-L: 0.345
+
+
+======================================================================
+📈 REPORTE END-TO-END CON MYSQL
+======================================================================
+
+🎯 Backend: MySQL
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.9000
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.7251
+   Mean ROUGE-L:          0.7102
+
+✅ Queries evaluadas: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql/evaluation_results/e2e_mysql_report_20260501_102925_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=10) con MySQL y llama3.2
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.772 | ROUGE-L: 0.737
+
+📝 Tabla books
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.904 | ROUGE-L: 0.846
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.700 | ROUGE-L: 0.623
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.250 | ROUGE-L: 0.345
+
+
+======================================================================
+📈 REPORTE END-TO-END CON MYSQL
+======================================================================
+
+🎯 Backend: MySQL
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.9000
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.7251
+   Mean ROUGE-L:          0.7102
+
+✅ Queries evaluadas: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql/evaluation_results/e2e_mysql_report_20260501_102925_k10.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111548_llama3.2:3b_mysql/evaluation_results

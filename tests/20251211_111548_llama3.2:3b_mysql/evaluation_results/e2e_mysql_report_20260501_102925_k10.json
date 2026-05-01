@@ -1,0 +1,74 @@
+{
+  "timestamp": "20260501_102925",
+  "k": 10,
+  "backend": "MySQL",
+  "model": "llama3.2",
+  "global_metrics": {
+    "k": 10,
+    "model": "llama3.2",
+    "backend": "MySQL",
+    "total_queries": 5,
+    "valid_queries": 5,
+    "mean_faithfulness": 1.0,
+    "mean_answer_relevancy": 0.9,
+    "mean_bleu": 0.7251036022292403,
+    "mean_rouge_l": 0.7101548714592063
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla users",
+      "question": "Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y email",
+      "generated_answer": "CREATE TABLE users (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  username VARCHAR(30),\n  password VARCHAR(40),\n  email VARCHAR(30)\n);",
+      "ground_truth": "CREATE TABLE users (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  username VARCHAR(30) NOT NULL,\n  password VARCHAR(40) NOT NULL,\n  email VARCHAR(30) NOT NULL\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.772184789761521,
+      "rouge_l": 0.7368421052631579,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla books",
+      "question": "Quiero almacenar libros con título, ISBN y número de páginas",
+      "generated_answer": "CREATE TABLE books (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  title VARCHAR(60),\n  isbn VARCHAR(30),\n  pages INT\n);",
+      "ground_truth": "CREATE TABLE books (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  title VARCHAR(60),\n  isbn VARCHAR(30),\n  pages INT\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 1.0,
+      "rouge_l": 1.0,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Relación libros-géneros",
+      "question": "Cómo relaciono libros con géneros? Necesito una tabla intermedia",
+      "generated_answer": "CREATE TABLE books_genres (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  book_id INT,\n  genre_id INT,\n  FOREIGN KEY (book_id) REFERENCES books(id),\n  FOREIGN KEY (genre_id) REFERENCES genres(id)\n);",
+      "ground_truth": "CREATE TABLE books_genres (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  book_id INT NOT NULL,\n  genre_id INT NOT NULL,\n  FOREIGN KEY (book_id) REFERENCES books(id),\n  FOREIGN KEY (genre_id) REFERENCES genres(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.9036679532756783,
+      "rouge_l": 0.8461538461538461,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla de reseñas",
+      "question": "Crear tabla para reseñas de libros con calificación, comentario y fecha",
+      "generated_answer": "CREATE TABLE reviews (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  book_id INT,\n  rating TINYINT,\n  comment TEXT,\n  review_date DATE,\n  FOREIGN KEY (book_id) REFERENCES books(id)\n);",
+      "ground_truth": "CREATE TABLE reviews (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  rating INT NOT NULL,\n  comment TEXT,\n  review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  user_id INT NOT NULL,\n  book_id INT NOT NULL,\n  FOREIGN KEY (user_id) REFERENCES users(id),\n  FOREIGN KEY (book_id) REFERENCES books(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.6996652681090024,
+      "rouge_l": 0.6229508196721311,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla inexistente (negativa)",
+      "question": "Necesito una tabla para inventario con stock y ubicación",
+      "generated_answer": "CREATE TABLE inventory (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  book_id INT,\n  location VARCHAR(50),\n  stock INT,\n  FOREIGN KEY (book_id) REFERENCES books(id)\n);",
+      "ground_truth": "CREATE TABLE example (id INT AUTO_INCREMENT PRIMARY KEY);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.25,
+      "rouge_l": 0.3448275862068965,
+      "num_chunks": 10
+    }
+  ]
+}
