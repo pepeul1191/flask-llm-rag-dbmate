@@ -1,0 +1,419 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite$ python3 test_recuperacion.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN DE RECUPERACIÓN - SQLite3
+======================================================================
+✅ Conectado a SQLite: 26 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=5)
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 ✅ Tabla users
+   Query: Necesito la estructura SQL para crear la tabla de usuarios...
+   ✅ OK: AP=0.917, P@5=0.600
+
+📝 ✅ Tabla systems
+   Query: CREATE TABLE para sistemas con nombre y descripción...
+   ✅ OK: AP=0.887, P@5=0.800
+
+📝 ✅ Tabla roles
+   Query: Estructura de tabla para roles asociados a sistemas...
+   ✅ OK: AP=0.950, P@5=0.800
+
+📝 ✅ Tabla permissions
+   Query: Cómo crear la tabla de permisos con relación a roles...
+   ✅ OK: AP=0.950, P@5=0.800
+
+📝 ✅ Relación systems_users
+   Query: Tabla intermedia para relacionar usuarios con sistemas...
+   ✅ OK: AP=1.000, P@5=0.400
+
+📝 ✅ Tabla systems_users_permissions
+   Query: Permisos especiales por usuario y sistema - estructura de tabla...
+   ✅ OK: AP=0.833, P@5=0.400
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE para logs del sistema...
+   ✅ OK: AP=0.000, P@5=0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLite3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=5
+🎯 Tablas: users, systems, roles... (6 tablas)
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7911
+   Mean Precision@5: 0.5429
+   Mean Recall@5: 1.0000
+   Mean NDCG@5: 0.8298
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.9229
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_schema_report_20260501_110430_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=10)
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 ✅ Tabla users
+   Query: Necesito la estructura SQL para crear la tabla de usuarios...
+   ✅ OK: AP=0.808, P@10=0.500
+
+📝 ✅ Tabla systems
+   Query: CREATE TABLE para sistemas con nombre y descripción...
+   ✅ OK: AP=0.844, P@10=0.700
+
+📝 ✅ Tabla roles
+   Query: Estructura de tabla para roles asociados a sistemas...
+   ✅ OK: AP=0.827, P@10=0.700
+
+📝 ✅ Tabla permissions
+   Query: Cómo crear la tabla de permisos con relación a roles...
+   ✅ OK: AP=0.896, P@10=0.800
+
+📝 ✅ Relación systems_users
+   Query: Tabla intermedia para relacionar usuarios con sistemas...
+   ✅ OK: AP=0.700, P@10=0.500
+
+📝 ✅ Tabla systems_users_permissions
+   Query: Permisos especiales por usuario y sistema - estructura de tabla...
+   ✅ OK: AP=0.622, P@10=0.500
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE para logs del sistema...
+   ✅ OK: AP=0.000, P@10=0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLite3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=10
+🎯 Tablas: users, systems, roles... (6 tablas)
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.6712
+   Mean Precision@10: 0.5286
+   Mean Recall@10: 1.0000
+   Mean NDCG@10: 0.7830
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.7830
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_schema_report_20260501_110430_k10.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=20
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=20)
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 ✅ Tabla users
+   Query: Necesito la estructura SQL para crear la tabla de usuarios...
+   ✅ OK: AP=0.667, P@20=0.600
+
+📝 ✅ Tabla systems
+   Query: CREATE TABLE para sistemas con nombre y descripción...
+   ✅ OK: AP=0.802, P@20=0.800
+
+📝 ✅ Tabla roles
+   Query: Estructura de tabla para roles asociados a sistemas...
+   ✅ OK: AP=0.793, P@20=0.500
+
+📝 ✅ Tabla permissions
+   Query: Cómo crear la tabla de permisos con relación a roles...
+   ✅ OK: AP=0.875, P@20=0.500
+
+📝 ✅ Relación systems_users
+   Query: Tabla intermedia para relacionar usuarios con sistemas...
+   ✅ OK: AP=0.612, P@20=0.500
+
+📝 ✅ Tabla systems_users_permissions
+   Query: Permisos especiales por usuario y sistema - estructura de tabla...
+   ✅ OK: AP=0.609, P@20=0.300
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE para logs del sistema...
+   ✅ OK: AP=0.000, P@20=0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLite3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=20
+🎯 Tablas: users, systems, roles... (6 tablas)
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.6226
+   Mean Precision@20: 0.4571
+   Mean Recall@20: 1.0000
+   Mean NDCG@20: 0.7662
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.7264
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_schema_report_20260501_110430_k20.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite/evaluation_results
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON SQLITE3
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+✅ Conectado a SQLite: 26 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=3) con SQLite3 y llama3.2
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 Tabla users - Usuarios
+   Pregunta: Necesito crear una tabla para almacenar usuarios con nombre de usuario, contrase...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.531 | ROUGE-L: 0.700
+   📋 Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems - Sistemas
+   Pregunta: Quiero una tabla para guardar información de los sistemas de la plataforma con n...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.552 | ROUGE-L: 0.594
+   📋 Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles - Roles
+   Pregunta: Crear una tabla para roles que pertenecen a un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+   📋 Tabla esperada: roles | Correcta: ✅
+
+📝 Tabla permissions - Permisos
+   Pregunta: Necesito una tabla para permisos que están asociados a roles...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.616 | ROUGE-L: 0.633
+   📋 Tabla esperada: permissions | Correcta: ❌
+
+📝 Relación users-systems - Acceso a sistemas
+   Pregunta: Cómo relaciono usuarios con sistemas? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.357 | ROUGE-L: 0.361
+   📋 Tabla esperada: systems_users | Correcta: ✅
+
+📝 Permisos especiales por usuario
+   Pregunta: Tabla para asignar permisos específicos a un usuario en un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 0.000
+   📊 BLEU: 0.000 | ROUGE-L: 0.000
+   📋 Tabla esperada: systems_users_permissions | Correcta: ❌
+
+📝 Query negativa - Tabla inexistente
+   Pregunta: Necesito una tabla para logs de auditoría...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.425 | ROUGE-L: 0.562
+
+
+======================================================================
+📈 REPORTE END-TO-END - SQLite3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 Modelo: llama3.2
+🎯 K=3
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.7857
+   Table Accuracy:        66.67%
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.4971
+   Mean ROUGE-L:          0.5501
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_schema_report_20260501_110443_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=5) con SQLite3 y llama3.2
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 Tabla users - Usuarios
+   Pregunta: Necesito crear una tabla para almacenar usuarios con nombre de usuario, contrase...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.531 | ROUGE-L: 0.700
+   📋 Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems - Sistemas
+   Pregunta: Quiero una tabla para guardar información de los sistemas de la plataforma con n...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.552 | ROUGE-L: 0.594
+   📋 Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles - Roles
+   Pregunta: Crear una tabla para roles que pertenecen a un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+   📋 Tabla esperada: roles | Correcta: ✅
+
+📝 Tabla permissions - Permisos
+   Pregunta: Necesito una tabla para permisos que están asociados a roles...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.588 | ROUGE-L: 0.588
+   📋 Tabla esperada: permissions | Correcta: ❌
+
+📝 Relación users-systems - Acceso a sistemas
+   Pregunta: Cómo relaciono usuarios con sistemas? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.500 | ROUGE-L: 0.436
+   📋 Tabla esperada: systems_users | Correcta: ✅
+
+📝 Permisos especiales por usuario
+   Pregunta: Tabla para asignar permisos específicos a un usuario en un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 0.000
+   📊 BLEU: 0.000 | ROUGE-L: 0.000
+   📋 Tabla esperada: systems_users_permissions | Correcta: ❌
+
+📝 Query negativa - Tabla inexistente
+   Pregunta: Necesito una tabla para logs de auditoría...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.455 | ROUGE-L: 0.562
+
+
+======================================================================
+📈 REPORTE END-TO-END - SQLite3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 Modelo: llama3.2
+🎯 K=5
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.7857
+   Table Accuracy:        66.67%
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.5179
+   Mean ROUGE-L:          0.5543
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_schema_report_20260501_110443_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=10) con SQLite3 y llama3.2
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 Tabla users - Usuarios
+   Pregunta: Necesito crear una tabla para almacenar usuarios con nombre de usuario, contrase...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.531 | ROUGE-L: 0.700
+   📋 Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems - Sistemas
+   Pregunta: Quiero una tabla para guardar información de los sistemas de la plataforma con n...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.552 | ROUGE-L: 0.594
+   📋 Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles - Roles
+   Pregunta: Crear una tabla para roles que pertenecen a un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+   📋 Tabla esperada: roles | Correcta: ✅
+
+📝 Tabla permissions - Permisos
+   Pregunta: Necesito una tabla para permisos que están asociados a roles...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.588 | ROUGE-L: 0.588
+   📋 Tabla esperada: permissions | Correcta: ❌
+
+📝 Relación users-systems - Acceso a sistemas
+   Pregunta: Cómo relaciono usuarios con sistemas? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.357 | ROUGE-L: 0.361
+   📋 Tabla esperada: systems_users | Correcta: ✅
+
+📝 Permisos especiales por usuario
+   Pregunta: Tabla para asignar permisos específicos a un usuario en un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 0.000
+   📊 BLEU: 0.000 | ROUGE-L: 0.000
+   📋 Tabla esperada: systems_users_permissions | Correcta: ❌
+
+📝 Query negativa - Tabla inexistente
+   Pregunta: Necesito una tabla para logs de auditoría...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.455 | ROUGE-L: 0.562
+
+
+======================================================================
+📈 REPORTE END-TO-END - SQLite3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 Modelo: llama3.2
+🎯 K=10
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.7857
+   Table Accuracy:        66.67%
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.4975
+   Mean ROUGE-L:          0.5437
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_schema_report_20260501_110443_k10.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111233_llama3.2:3b_sqlite/evaluation_results

@@ -1,0 +1,80 @@
+{
+  "timestamp": "20260501_113303",
+  "k": 3,
+  "backend": "PostgreSQL",
+  "model": "llama3.2",
+  "global_metrics": {
+    "k": 3,
+    "model": "llama3.2",
+    "backend": "PostgreSQL",
+    "total_queries": 5,
+    "valid_queries": 5,
+    "mean_faithfulness": 1.0,
+    "mean_answer_relevancy": 0.74,
+    "mean_bleu": 0.47434374466632534,
+    "mean_rouge_l": 0.5257013832110136,
+    "table_accuracy": 0.0
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla users",
+      "question": "Necesito crear una tabla para usuarios con nombre de usuario, contraseña y email",
+      "expected_table": "users",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS users (\n    id SERIAL PRIMARY KEY,\n    username VARCHAR(20) NOT NULL UNIQUE,\n    password VARCHAR(100) NOT NULL,\n    email VARCHAR(50) NOT NULL UNIQUE,\n    activated BOOLEAN DEFAULT FALSE,\n    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.6,
+      "rouge_l": 0.6779661016949152,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla systems",
+      "question": "Tabla para sistemas con nombre y descripción",
+      "expected_table": "systems",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS systems (\n    id SERIAL PRIMARY KEY,\n    name VARCHAR(40) NOT NULL UNIQUE,\n    description TEXT,\n    repository VARCHAR(100),\n    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.35714285714285715,
+      "rouge_l": 0.37735849056603776,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla roles",
+      "question": "Tabla para roles que pertenecen a un sistema",
+      "expected_table": "roles",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS system_roles (\n    id SERIAL PRIMARY KEY,\n    system_id INTEGER NOT NULL,\n    role_id INTEGER NOT NULL,\n    FOREIGN KEY (system_id) REFERENCES systems(id) ON DELETE CASCADE,\n    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.6296296296296297,
+      "rouge_l": 0.6206896551724137,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla permissions",
+      "question": "Tabla para permisos asociados a roles",
+      "expected_table": "permissions",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS role_permissions (\n    id SERIAL PRIMARY KEY,\n    role_id INTEGER NOT NULL,\n    permission_id INTEGER NOT NULL,\n    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,\n    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.45161290322580644,
+      "rouge_l": 0.5161290322580645,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Query negativa",
+      "question": "Necesito una tabla para logs",
+      "expected_table": null,
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS logs (\n    id SERIAL PRIMARY KEY,\n    user_id INTEGER NOT NULL,\n    action VARCHAR(40) NOT NULL,\n    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    data JSONB,\n    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.3333333333333333,
+      "rouge_l": 0.43636363636363634,
+      "num_chunks": 3
+    }
+  ]
+}

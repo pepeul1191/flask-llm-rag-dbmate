@@ -1,0 +1,423 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON MYSQL
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+✅ PyMySQL versión: 2.2.8
+✅ Conectado a MySQL: 26 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=3) con MySQL y llama3.2
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 Tabla users - Usuarios
+   Pregunta: Necesito crear una tabla para almacenar usuarios con nombre de usuario, contrase...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.478 | ROUGE-L: 0.667
+   📋 Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems - Sistemas
+   Pregunta: Quiero una tabla para guardar información de los sistemas de la plataforma con n...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.580 | ROUGE-L: 0.629
+   📋 Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles - Roles
+   Pregunta: Crear una tabla para roles que pertenecen a un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+   📋 Tabla esperada: roles | Correcta: ✅
+
+📝 Tabla permissions - Permisos
+   Pregunta: Necesito una tabla para permisos que están asociados a roles...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.871 | ROUGE-L: 0.687
+   📋 Tabla esperada: permissions | Correcta: ✅
+
+📝 Relación users-systems - Acceso a sistemas
+   Pregunta: Cómo relaciono usuarios con sistemas? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.498 | ROUGE-L: 0.456
+   📋 Tabla esperada: systems_users | Correcta: ❌
+
+📝 Permisos especiales por usuario
+   Pregunta: Tabla para asignar permisos específicos a un usuario en un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.373 | ROUGE-L: 0.264
+   📋 Tabla esperada: systems_users_permissions | Correcta: ❌
+
+📝 Query negativa - Tabla inexistente
+   Pregunta: Necesito una tabla para logs de auditoría...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.500 | ROUGE-L: 0.458
+
+
+======================================================================
+📈 REPORTE END-TO-END - ESQUEMA USUARIOS/SISTEMAS/ROLES
+======================================================================
+
+🎯 Backend: MySQL
+🎯 Modelo: llama3.2
+🎯 K=3
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.9286
+   Table Accuracy:        66.67%
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.6142
+   Mean ROUGE-L:          0.5943
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql/evaluation_results/e2e_mysql_schema_report_20260501_105249_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=5) con MySQL y llama3.2
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 Tabla users - Usuarios
+   Pregunta: Necesito crear una tabla para almacenar usuarios con nombre de usuario, contrase...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.478 | ROUGE-L: 0.667
+   📋 Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems - Sistemas
+   Pregunta: Quiero una tabla para guardar información de los sistemas de la plataforma con n...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.580 | ROUGE-L: 0.629
+   📋 Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles - Roles
+   Pregunta: Crear una tabla para roles que pertenecen a un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+   📋 Tabla esperada: roles | Correcta: ✅
+
+📝 Tabla permissions - Permisos
+   Pregunta: Necesito una tabla para permisos que están asociados a roles...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.557 | ROUGE-L: 0.563
+   📋 Tabla esperada: permissions | Correcta: ❌
+
+📝 Relación users-systems - Acceso a sistemas
+   Pregunta: Cómo relaciono usuarios con sistemas? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.500 | ROUGE-L: 0.429
+   📋 Tabla esperada: systems_users | Correcta: ✅
+
+📝 Permisos especiales por usuario
+   Pregunta: Tabla para asignar permisos específicos a un usuario en un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.372 | ROUGE-L: 0.368
+   📋 Tabla esperada: systems_users_permissions | Correcta: ❌
+
+📝 Query negativa - Tabla inexistente
+   Pregunta: Necesito una tabla para logs de auditoría...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.384 | ROUGE-L: 0.537
+
+
+======================================================================
+📈 REPORTE END-TO-END - ESQUEMA USUARIOS/SISTEMAS/ROLES
+======================================================================
+
+🎯 Backend: MySQL
+🎯 Modelo: llama3.2
+🎯 K=5
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.9286
+   Table Accuracy:        66.67%
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.5529
+   Mean ROUGE-L:          0.5989
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql/evaluation_results/e2e_mysql_schema_report_20260501_105249_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=10) con MySQL y llama3.2
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 Tabla users - Usuarios
+   Pregunta: Necesito crear una tabla para almacenar usuarios con nombre de usuario, contrase...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.478 | ROUGE-L: 0.667
+   📋 Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems - Sistemas
+   Pregunta: Quiero una tabla para guardar información de los sistemas de la plataforma con n...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.580 | ROUGE-L: 0.629
+   📋 Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles - Roles
+   Pregunta: Crear una tabla para roles que pertenecen a un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+   📋 Tabla esperada: roles | Correcta: ✅
+
+📝 Tabla permissions - Permisos
+   Pregunta: Necesito una tabla para permisos que están asociados a roles...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.557 | ROUGE-L: 0.563
+   📋 Tabla esperada: permissions | Correcta: ❌
+
+📝 Relación users-systems - Acceso a sistemas
+   Pregunta: Cómo relaciono usuarios con sistemas? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.500 | ROUGE-L: 0.429
+   📋 Tabla esperada: systems_users | Correcta: ✅
+
+📝 Permisos especiales por usuario
+   Pregunta: Tabla para asignar permisos específicos a un usuario en un sistema...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.375 | ROUGE-L: 0.344
+   📋 Tabla esperada: systems_users_permissions | Correcta: ❌
+
+📝 Query negativa - Tabla inexistente
+   Pregunta: Necesito una tabla para logs de auditoría...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.384 | ROUGE-L: 0.537
+
+
+======================================================================
+📈 REPORTE END-TO-END - ESQUEMA USUARIOS/SISTEMAS/ROLES
+======================================================================
+
+🎯 Backend: MySQL
+🎯 Modelo: llama3.2
+🎯 K=10
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.9286
+   Table Accuracy:        66.67%
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.5534
+   Mean ROUGE-L:          0.5955
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql/evaluation_results/e2e_mysql_schema_report_20260501_105249_k10.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql/evaluation_results
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql$ python3 test_
+test_end_2_end.py     test_recuperacion.py  
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql$ python3 test_recuperacion.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN DE RECUPERACIÓN - ESQUEMA USUARIOS/SISTEMAS/ROLES
+======================================================================
+✅ PyMySQL versión: 2.2.8
+✅ Conectado a MySQL: 26 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=5)
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 ✅ Tabla users
+   Query: Necesito la estructura SQL para crear la tabla de usuarios...
+   ✅ OK: AP=0.867, P@5=0.600
+
+📝 ✅ Tabla systems
+   Query: CREATE TABLE para sistemas con nombre y descripción...
+   ✅ OK: AP=0.887, P@5=0.800
+
+📝 ✅ Tabla roles
+   Query: Estructura de tabla para roles asociados a sistemas...
+   ✅ OK: AP=1.000, P@5=0.800
+
+📝 ✅ Tabla permissions
+   Query: Cómo crear la tabla de permisos con relación a roles...
+   ✅ OK: AP=1.000, P@5=0.800
+
+📝 ✅ Relación systems_users
+   Query: Tabla intermedia para relacionar usuarios con sistemas...
+   ✅ OK: AP=0.867, P@5=0.600
+
+📝 ✅ Tabla systems_users_permissions
+   Query: Permisos especiales por usuario y sistema - estructura de tabla...
+   ✅ OK: AP=0.806, P@5=0.600
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE para logs del sistema...
+   ✅ OK: AP=0.000, P@5=0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - ESQUEMA USUARIOS/SISTEMAS/ROLES
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=5
+🎯 Tablas: users, systems, roles... (6 tablas)
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7752
+   Mean Precision@5: 0.6000
+   Mean Recall@5: 1.0000
+   Mean NDCG@5: 0.8222
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.9044
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_schema_report_20260501_105507_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=10)
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 ✅ Tabla users
+   Query: Necesito la estructura SQL para crear la tabla de usuarios...
+   ✅ OK: AP=0.778, P@10=0.500
+
+📝 ✅ Tabla systems
+   Query: CREATE TABLE para sistemas con nombre y descripción...
+   ✅ OK: AP=0.878, P@10=0.900
+
+📝 ✅ Tabla roles
+   Query: Estructura de tabla para roles asociados a sistemas...
+   ✅ OK: AP=0.881, P@10=0.700
+
+📝 ✅ Tabla permissions
+   Query: Cómo crear la tabla de permisos con relación a roles...
+   ✅ OK: AP=0.921, P@10=0.800
+
+📝 ✅ Relación systems_users
+   Query: Tabla intermedia para relacionar usuarios con sistemas...
+   ✅ OK: AP=0.720, P@10=0.500
+
+📝 ✅ Tabla systems_users_permissions
+   Query: Permisos especiales por usuario y sistema - estructura de tabla...
+   ✅ OK: AP=0.672, P@10=0.500
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE para logs del sistema...
+   ✅ OK: AP=0.000, P@10=0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - ESQUEMA USUARIOS/SISTEMAS/ROLES
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=10
+🎯 Tablas: users, systems, roles... (6 tablas)
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.6929
+   Mean Precision@10: 0.5571
+   Mean Recall@10: 1.0000
+   Mean NDCG@10: 0.7920
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.8084
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_schema_report_20260501_105507_k10.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=20
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON MYSQL (K=20)
+   Esquema: Usuarios, Sistemas, Roles, Permisos
+======================================================================
+
+📝 ✅ Tabla users
+   Query: Necesito la estructura SQL para crear la tabla de usuarios...
+   ✅ OK: AP=0.655, P@20=0.600
+
+📝 ✅ Tabla systems
+   Query: CREATE TABLE para sistemas con nombre y descripción...
+   ✅ OK: AP=0.858, P@20=0.750
+
+📝 ✅ Tabla roles
+   Query: Estructura de tabla para roles asociados a sistemas...
+   ✅ OK: AP=0.841, P@20=0.500
+
+📝 ✅ Tabla permissions
+   Query: Cómo crear la tabla de permisos con relación a roles...
+   ✅ OK: AP=0.902, P@20=0.500
+
+📝 ✅ Relación systems_users
+   Query: Tabla intermedia para relacionar usuarios con sistemas...
+   ✅ OK: AP=0.616, P@20=0.500
+
+📝 ✅ Tabla systems_users_permissions
+   Query: Permisos especiales por usuario y sistema - estructura de tabla...
+   ✅ OK: AP=0.651, P@20=0.300
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE para logs del sistema...
+   ✅ OK: AP=0.000, P@20=0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - ESQUEMA USUARIOS/SISTEMAS/ROLES
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=20
+🎯 Tablas: users, systems, roles... (6 tablas)
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.6461
+   Mean Precision@20: 0.4500
+   Mean Recall@20: 1.0000
+   Mean NDCG@20: 0.7759
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.7538
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_schema_report_20260501_105507_k20.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111124_llama3.2:3b_mysql/evaluation_results

@@ -3,6 +3,9 @@ flask==3.1.2
 flask_session==0.8.0
 sqlalchemy==2.0.44
 plantuml==0.3.0
+mysql
+pymysql
+psycopg2
 
 # ai
 ollama==0.6.0

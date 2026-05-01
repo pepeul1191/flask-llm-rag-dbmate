@@ -1,0 +1,484 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres$ python3 test_end_2_end.py
+✅ Conectado a ChromaDB: 45 chunks
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON LLAMA 3.2
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=3) con llama3.2
+======================================================================
+
+📝 Tabla users - creación completa
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+
+
+
+   📊 AP: 1.000 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.758 | ROUGE-L: 0.722
+
+📝 Tabla books - estructura
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 AP: 1.000 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 AP: 0.500 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.658 | ROUGE-L: 0.640
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 AP: 0.000 | Faithfulness: 0.800 | Relevancy: 1.000
+   📊 BLEU: 0.759 | ROUGE-L: 0.647
+
+📝 Relación libros-autores
+   Pregunta: Tabla para vincular libros con autores...
+   📊 AP: 0.000 | Faithfulness: 0.600 | Relevancy: 1.000
+   📊 BLEU: 0.571 | ROUGE-L: 0.634
+
+📝 Query ambigua - usuarios
+   Pregunta: Guardar información de personas que usan el sistema...
+   📊 AP: 1.000 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.333 | ROUGE-L: 0.343
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 AP: 0.000 | Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.160 | ROUGE-L: 0.229
+
+
+======================================================================
+📈 REPORTE END-TO-END
+======================================================================
+
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     0.9143
+   Mean Answer Relevancy: 0.9286
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.6057
+   Mean ROUGE-L:          0.6021
+
+📊 MÉTRICAS DE RECUPERACIÓN:
+   Mean Retrieval AP:     0.5000
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres/evaluation_results/e2e_report_20260501_090306_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=5) con llama3.2
+======================================================================
+
+📝 Tabla users - creación completa
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+   📊 AP: 0.750 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.758 | ROUGE-L: 0.722
+
+📝 Tabla books - estructura
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 AP: 1.000 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 AP: 0.500 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.853 | ROUGE-L: 0.840
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 AP: 0.200 | Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.510 | ROUGE-L: 0.571
+
+📝 Relación libros-autores
+   Pregunta: Tabla para vincular libros con autores...
+   📊 AP: 0.000 | Faithfulness: 0.600 | Relevancy: 1.000
+   📊 BLEU: 0.607 | ROUGE-L: 0.597
+
+📝 Query ambigua - usuarios
+   Pregunta: Guardar información de personas que usan el sistema...
+   📊 AP: 1.000 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.333 | ROUGE-L: 0.343
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 AP: 0.000 | Faithfulness: 0.800 | Relevancy: 0.500
+   📊 BLEU: 0.148 | ROUGE-L: 0.216
+
+
+======================================================================
+📈 REPORTE END-TO-END
+======================================================================
+
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     0.9143
+   Mean Answer Relevancy: 0.8571
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.6014
+   Mean ROUGE-L:          0.6128
+
+📊 MÉTRICAS DE RECUPERACIÓN:
+   Mean Retrieval AP:     0.4929
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres/evaluation_results/e2e_report_20260501_090306_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=10) con llama3.2
+======================================================================
+
+📝 Tabla users - creación completa
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+   📊 AP: 0.607 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.758 | ROUGE-L: 0.722
+
+📝 Tabla books - estructura
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 AP: 0.937 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 1.000 | ROUGE-L: 1.000
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 AP: 0.500 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.853 | ROUGE-L: 0.840
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 AP: 0.200 | Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.510 | ROUGE-L: 0.571
+
+📝 Relación libros-autores
+   Pregunta: Tabla para vincular libros con autores...
+   📊 AP: 0.000 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.586 | ROUGE-L: 0.597
+
+📝 Query ambigua - usuarios
+   Pregunta: Guardar información de personas que usan el sistema...
+   📊 AP: 0.911 | Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.333 | ROUGE-L: 0.343
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 AP: 0.000 | Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.211 | ROUGE-L: 0.296
+
+
+======================================================================
+📈 REPORTE END-TO-END
+======================================================================
+
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.8571
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.6073
+   Mean ROUGE-L:          0.6243
+
+📊 MÉTRICAS DE RECUPERACIÓN:
+   Mean Retrieval AP:     0.4507
+
+✅ Queries evaluadas: 7/7
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres/evaluation_results/e2e_report_20260501_090306_k10.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres/evaluation_results
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres$ 
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres$ 
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres$ 
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres$ 
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres$ python3 test.py
+python3: can't open file '/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres/test.py': [Errno 2] No such file or directory
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres$ python3 test_recuperacion.py 
+
+======================================================================
+🔍 DIAGNÓSTICO Y EVALUACIÓN DEL SISTEMA RAG
+======================================================================
+
+💾 Total de chunks en ChromaDB: 45
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG (K=5)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id INT PRIMARY KEY, username VARCHAR, password VARCHAR, e...
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+   ✅ OK: AP=1.000, Precision@5=1.000
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title VARCHAR, isbn VARCHAR, pages INT...
+   ✅ OK: AP=1.000, Precision@5=1.000
+
+📝 ✅ Tabla genres
+   Query: CREATE TABLE genres con id INT, name VARCHAR...
+   ✅ OK: AP=1.000, Precision@5=1.000
+
+📝 ✅ Relación books-genres
+   Query: CREATE TABLE books_genres con book_id INT, genre_id INT, FOREIGN KEY...
+   ✅ OK: AP=1.000, Precision@5=1.000
+
+📝 ✅ Tabla books_authors
+   Query: CREATE TABLE books_authors con book_id INT, author_id INT...
+   ✅ OK: AP=1.000, Precision@5=1.000
+
+📝 ✅ Múltiples tablas
+   Query: CREATE TABLE books, CREATE TABLE authors, CREATE TABLE books_authors con book_id...
+   ✅ OK: AP=1.000, Precision@5=1.000
+
+📝 ✅ Tabla reviews
+   Query: CREATE TABLE reviews con rating INT, comment TEXT, review_date DATETIME, FOREIGN...
+   ✅ OK: AP=1.000, Precision@5=0.800
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock INT, location VARCHAR...
+   ✅ OK: AP=0.000, Precision@5=0.000
+
+📝 ❌ Tabla shopping_cart
+   Query: CREATE TABLE shopping_cart con user_id INT, product_id INT...
+   ✅ OK: AP=0.000, Precision@5=0.000
+
+📝 ⚠️ Query ambigua
+   Query: tabla para guardar información de personas que usan el sistema con email y contr...
+   ✅ OK: AP=1.000, Precision@5=0.600
+
+
+======================================================================
+📈 REPORTE DETALLADO (K=5)
+======================================================================
+
+🎯 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.8000
+   Mean Precision@5: 0.7400
+   Mean Recall@5: 1.0000
+   Mean NDCG@5: 0.8000
+   Mean F1-Score: 0.7639
+   MRR: 0.8000
+   Expectation Rate: 100.00%
+
+📊 POR TIPO DE QUERY:
+   Positivas (8):
+     - MAP: 1.0000
+     - Precision@5: 0.9250
+     - Recall@5: 1.0000
+
+   Negativas (2):
+     - False Positives: 0
+     - Specificity: 100.00%
+
+🎯 HIT RATES:
+   Hit Rate@1: 80.00%
+   Hit Rate@3: 80.00%
+   Hit Rate@5: 80.00%
+
+⚠️ QUERIES PROBLEMÁTICAS:
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG (K=10)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id INT PRIMARY KEY, username VARCHAR, password VARCHAR, e...
+   ✅ OK: AP=0.933, Precision@10=0.700
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title VARCHAR, isbn VARCHAR, pages INT...
+   ✅ OK: AP=0.959, Precision@10=0.800
+
+📝 ✅ Tabla genres
+   Query: CREATE TABLE genres con id INT, name VARCHAR...
+   ✅ OK: AP=0.982, Precision@10=0.700
+
+📝 ✅ Relación books-genres
+   Query: CREATE TABLE books_genres con book_id INT, genre_id INT, FOREIGN KEY...
+   ✅ OK: AP=1.000, Precision@10=0.600
+
+📝 ✅ Tabla books_authors
+   Query: CREATE TABLE books_authors con book_id INT, author_id INT...
+   ✅ OK: AP=0.942, Precision@10=0.800
+
+📝 ✅ Múltiples tablas
+   Query: CREATE TABLE books, CREATE TABLE authors, CREATE TABLE books_authors con book_id...
+   ✅ OK: AP=1.000, Precision@10=1.000
+
+📝 ✅ Tabla reviews
+   Query: CREATE TABLE reviews con rating INT, comment TEXT, review_date DATETIME, FOREIGN...
+   ✅ OK: AP=1.000, Precision@10=0.400
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock INT, location VARCHAR...
+   ✅ OK: AP=0.000, Precision@10=0.000
+
+📝 ❌ Tabla shopping_cart
+   Query: CREATE TABLE shopping_cart con user_id INT, product_id INT...
+   ✅ OK: AP=0.000, Precision@10=0.000
+
+📝 ⚠️ Query ambigua
+   Query: tabla para guardar información de personas que usan el sistema con email y contr...
+   ✅ OK: AP=0.917, Precision@10=0.400
+
+
+======================================================================
+📈 REPORTE DETALLADO (K=10)
+======================================================================
+
+🎯 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7732
+   Mean Precision@10: 0.5400
+   Mean Recall@10: 1.0000
+   Mean NDCG@10: 0.7918
+   Mean F1-Score: 0.6318
+   MRR: 0.8000
+   Expectation Rate: 100.00%
+
+📊 POR TIPO DE QUERY:
+   Positivas (8):
+     - MAP: 0.9665
+     - Precision@10: 0.6750
+     - Recall@10: 1.0000
+
+   Negativas (2):
+     - False Positives: 0
+     - Specificity: 100.00%
+
+🎯 HIT RATES:
+   Hit Rate@1: 80.00%
+   Hit Rate@3: 80.00%
+   Hit Rate@5: 80.00%
+
+⚠️ QUERIES PROBLEMÁTICAS:
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=20
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG (K=20)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id INT PRIMARY KEY, username VARCHAR, password VARCHAR, e...
+   ✅ OK: AP=0.893, Precision@20=0.400
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title VARCHAR, isbn VARCHAR, pages INT...
+   ✅ OK: AP=0.904, Precision@20=0.600
+
+📝 ✅ Tabla genres
+   Query: CREATE TABLE genres con id INT, name VARCHAR...
+   ✅ OK: AP=0.950, Precision@20=0.400
+
+📝 ✅ Relación books-genres
+   Query: CREATE TABLE books_genres con book_id INT, genre_id INT, FOREIGN KEY...
+   ✅ OK: AP=1.000, Precision@20=0.300
+
+📝 ✅ Tabla books_authors
+   Query: CREATE TABLE books_authors con book_id INT, author_id INT...
+   ✅ OK: AP=0.928, Precision@20=0.450
+
+📝 ✅ Múltiples tablas
+   Query: CREATE TABLE books, CREATE TABLE authors, CREATE TABLE books_authors con book_id...
+   ✅ OK: AP=0.972, Precision@20=0.800
+
+📝 ✅ Tabla reviews
+   Query: CREATE TABLE reviews con rating INT, comment TEXT, review_date DATETIME, FOREIGN...
+   ✅ OK: AP=1.000, Precision@20=0.200
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock INT, location VARCHAR...
+   ✅ OK: AP=0.000, Precision@20=0.000
+
+📝 ❌ Tabla shopping_cart
+   Query: CREATE TABLE shopping_cart con user_id INT, product_id INT...
+   ✅ OK: AP=0.000, Precision@20=0.000
+
+📝 ⚠️ Query ambigua
+   Query: tabla para guardar información de personas que usan el sistema con email y contr...
+   ✅ OK: AP=0.729, Precision@20=0.300
+
+
+======================================================================
+📈 REPORTE DETALLADO (K=20)
+======================================================================
+
+🎯 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7377
+   Mean Precision@20: 0.3450
+   Mean Recall@20: 1.0000
+   Mean NDCG@20: 0.7803
+   Mean F1-Score: 0.4659
+   MRR: 0.8000
+   Expectation Rate: 100.00%
+
+📊 POR TIPO DE QUERY:
+   Positivas (8):
+     - MAP: 0.9221
+     - Precision@20: 0.4313
+     - Recall@20: 1.0000
+
+   Negativas (2):
+     - False Positives: 0
+     - Specificity: 100.00%
+
+🎯 HIT RATES:
+   Hit Rate@1: 80.00%
+   Hit Rate@3: 80.00%
+   Hit Rate@5: 80.00%
+
+⚠️ QUERIES PROBLEMÁTICAS:
+
+======================================================================
+📊 RESUMEN COMPARATIVO
+======================================================================
+
+K	MAP		P@{K}		R@{K}		HIT@1
+-----------------------------------------------------------------
+5	0.8000		0.7400		1.0000		80.00%
+10	0.7732		0.5400		1.0000		80.00%
+20	0.7377		0.3450		1.0000		80.00%
+
+======================================================================
+💾 GUARDANDO RESULTADOS
+======================================================================
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres/evaluation_results/evaluation_report_20260501_090629.json
+💾 Resumen guardado en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres/evaluation_results/evaluation_summary_20260501_090629.json
+
+✅ Diagnóstico y evaluación completados
+📁 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112010_llama3.2:3b_postgres/evaluation_results
+   - Reporte completo: evaluation_report_20260501_090629.json
+   - Resumen: evaluation_summary_20260501_090629.json

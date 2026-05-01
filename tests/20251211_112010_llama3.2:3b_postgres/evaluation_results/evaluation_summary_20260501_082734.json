@@ -1,0 +1,23 @@
+{
+  "timestamp": "20260501_082734",
+  "summary": {
+    "5": {
+      "map": 0.8,
+      "positive_map": 1.0,
+      "expectation_rate": 1.0,
+      "false_positives": 0
+    },
+    "10": {
+      "map": 0.8,
+      "positive_map": 1.0,
+      "expectation_rate": 1.0,
+      "false_positives": 0
+    },
+    "20": {
+      "map": 0.7993589743589744,
+      "positive_map": 0.999198717948718,
+      "expectation_rate": 1.0,
+      "false_positives": 0
+    }
+  }
+}

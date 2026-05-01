@@ -1,0 +1,343 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite$ python3 test_recuperacion.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN DE RECUPERACIÓN CON SQLITE3
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=5)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id, username, password, email...
+   ✅ OK: AP=1.000, P@5=1.000
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title, isbn, pages...
+   ✅ OK: AP=1.000, P@5=1.000
+
+📝 ✅ Relación books-genres
+   Query: tabla intermedia para libros y géneros con foreign keys...
+   ✅ OK: AP=0.250, P@5=0.200
+
+📝 ✅ Tabla reviews
+   Query: tabla de reseñas con rating, comentario, foreign keys a users y books...
+   ✅ OK: AP=1.000, P@5=0.400
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock y location...
+   ✅ OK: AP=0.000, P@5=0.000
+
+📝 ⚠️ Query ambigua - usuarios
+   Query: guardar información de personas que usan el sistema...
+   ✅ OK: AP=1.000, P@5=0.800
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLITE3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=5
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.7083
+   Mean Precision@5: 0.5667
+   Mean Recall@5: 1.0000
+   Mean NDCG@5: 0.7384
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (5): MAP=0.8500
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_report_20260501_100534_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=10)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id, username, password, email...
+   ✅ OK: AP=0.916, P@10=0.800
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title, isbn, pages...
+   ✅ OK: AP=1.000, P@10=1.000
+
+📝 ✅ Relación books-genres
+   Query: tabla intermedia para libros y géneros con foreign keys...
+   ✅ OK: AP=0.268, P@10=0.200
+
+📝 ✅ Tabla reviews
+   Query: tabla de reseñas con rating, comentario, foreign keys a users y books...
+   ✅ OK: AP=1.000, P@10=0.200
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock y location...
+   ✅ OK: AP=0.000, P@10=0.000
+
+📝 ⚠️ Query ambigua - usuarios
+   Query: guardar información de personas que usan el sistema...
+   ✅ OK: AP=0.886, P@10=0.700
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLITE3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=10
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.6783
+   Mean Precision@10: 0.4833
+   Mean Recall@10: 1.0000
+   Mean NDCG@10: 0.7346
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (5): MAP=0.8139
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_report_20260501_100534_k10.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=20
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON SQLITE3 (K=20)
+======================================================================
+
+📝 ✅ Tabla users
+   Query: CREATE TABLE users con id, username, password, email...
+   ✅ OK: AP=0.856, P@20=0.600
+
+📝 ✅ Tabla books
+   Query: CREATE TABLE books con id, title, isbn, pages...
+   ✅ OK: AP=0.992, P@20=0.750
+
+📝 ✅ Relación books-genres
+   Query: tabla intermedia para libros y géneros con foreign keys...
+   ✅ OK: AP=0.277, P@20=0.300
+
+📝 ✅ Tabla reviews
+   Query: tabla de reseñas con rating, comentario, foreign keys a users y books...
+   ✅ OK: AP=0.606, P@20=0.200
+
+📝 ❌ Tabla inexistente
+   Query: CREATE TABLE inventory con stock y location...
+   ✅ OK: AP=0.000, P@20=0.000
+
+📝 ⚠️ Query ambigua - usuarios
+   Query: guardar información de personas que usan el sistema...
+   ✅ OK: AP=0.801, P@20=0.600
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - SQLITE3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 K=20
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.5887
+   Mean Precision@20: 0.4083
+   Mean Recall@20: 1.0000
+   Mean NDCG@20: 0.7082
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (5): MAP=0.7064
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_report_20260501_100534_k20.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/evaluation_results
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite$ python3 test_e2e.py 
+python3: can't open file '/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/test_e2e.py': [Errno 2] No such file or directory
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON SQLITE3 Y LLAMA 3.2
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=3) con SQLite3 y llama3.2
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.763 | ROUGE-L: 0.684
+
+📝 Tabla books
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.867 | ROUGE-L: 0.875
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.899 | ROUGE-L: 0.846
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.667 | ROUGE-L: 0.545
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 Faithfulness: 0.800 | Relevancy: 0.500
+   📊 BLEU: 0.238 | ROUGE-L: 0.323
+
+
+======================================================================
+📈 REPORTE END-TO-END CON SQLITE3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     0.9600
+   Mean Answer Relevancy: 0.8000
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.6867
+   Mean ROUGE-L:          0.6547
+
+✅ Queries evaluadas: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_report_20260501_100601_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=5) con SQLite3 y llama3.2
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.763 | ROUGE-L: 0.684
+
+📝 Tabla books
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.867 | ROUGE-L: 0.875
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.899 | ROUGE-L: 0.846
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.704 | ROUGE-L: 0.576
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.238 | ROUGE-L: 0.323
+
+
+======================================================================
+📈 REPORTE END-TO-END CON SQLITE3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.9000
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.6941
+   Mean ROUGE-L:          0.6607
+
+✅ Queries evaluadas: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_report_20260501_100601_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN END-TO-END (K=10) con SQLite3 y llama3.2
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y e...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.763 | ROUGE-L: 0.684
+
+📝 Tabla books
+   Pregunta: Quiero almacenar libros con título, ISBN y número de páginas...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.867 | ROUGE-L: 0.875
+
+📝 Relación libros-géneros
+   Pregunta: Cómo relaciono libros con géneros? Necesito una tabla intermedia...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.899 | ROUGE-L: 0.846
+
+📝 Tabla de reseñas
+   Pregunta: Crear tabla para reseñas de libros con calificación, comentario y fecha...
+   📊 Faithfulness: 1.000 | Relevancy: 1.000
+   📊 BLEU: 0.704 | ROUGE-L: 0.576
+
+📝 Tabla inexistente (negativa)
+   Pregunta: Necesito una tabla para inventario con stock y ubicación...
+   📊 Faithfulness: 1.000 | Relevancy: 0.500
+   📊 BLEU: 0.238 | ROUGE-L: 0.323
+
+
+======================================================================
+📈 REPORTE END-TO-END CON SQLITE3
+======================================================================
+
+🎯 Backend: SQLite3
+🎯 Modelo: llama3.2
+
+🎯 MÉTRICAS DE GENERACIÓN:
+   Mean Faithfulness:     1.0000
+   Mean Answer Relevancy: 0.9000
+
+🎯 MÉTRICAS NLG CLÁSICAS:
+   Mean BLEU:             0.6941
+   Mean ROUGE-L:          0.6607
+
+✅ Queries evaluadas: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_report_20260501_100601_k10.json
+
+✅ Evaluación completada
+📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111817_llama3.2:3b_sqlite/evaluation_results

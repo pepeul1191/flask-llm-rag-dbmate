@@ -1,0 +1,171 @@
+{
+  "timestamp": "20260501_105507",
+  "k": 5,
+  "backend": "MySQL",
+  "schema": [
+    "users",
+    "systems",
+    "roles",
+    "permissions",
+    "systems_users",
+    "systems_users_permissions"
+  ],
+  "global_metrics": {
+    "k": 5,
+    "backend": "MySQL",
+    "schema": [
+      "users",
+      "systems",
+      "roles",
+      "permissions",
+      "systems_users",
+      "systems_users_permissions"
+    ],
+    "total_queries": 7,
+    "valid_queries": 7,
+    "mean_ap": 0.7751984126984127,
+    "mean_precision": 0.6,
+    "mean_recall": 1.0,
+    "mean_ndcg": 0.8222371268311981,
+    "positive_queries": 6,
+    "positive_map": 0.9043981481481481,
+    "negative_queries": 1,
+    "negative_false_positives": 0,
+    "expectation_rate": 1.0
+  },
+  "per_query_results": [
+    {
+      "query_name": "✅ Tabla users",
+      "query_text": "Necesito la estructura SQL para crear la tabla de usuarios",
+      "precision_at_k": 0.6,
+      "recall_at_k": 1.0,
+      "ap": 0.8666666666666667,
+      "ndcg": 0.9469024295259745,
+      "total_relevant": 3,
+      "found_relevant": 3,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "query_name": "✅ Tabla systems",
+      "query_text": "CREATE TABLE para sistemas con nombre y descripción",
+      "precision_at_k": 0.8,
+      "recall_at_k": 1.0,
+      "ap": 0.8875,
+      "ndcg": 0.9558295932317544,
+      "total_relevant": 4,
+      "found_relevant": 4,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "query_name": "✅ Tabla roles",
+      "query_text": "Estructura de tabla para roles asociados a sistemas",
+      "precision_at_k": 0.8,
+      "recall_at_k": 1.0,
+      "ap": 1.0,
+      "ndcg": 1.0,
+      "total_relevant": 4,
+      "found_relevant": 4,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "query_name": "✅ Tabla permissions",
+      "query_text": "Cómo crear la tabla de permisos con relación a roles",
+      "precision_at_k": 0.8,
+      "recall_at_k": 1.0,
+      "ap": 1.0,
+      "ndcg": 1.0,
+      "total_relevant": 4,
+      "found_relevant": 4,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "query_name": "✅ Relación systems_users",
+      "query_text": "Tabla intermedia para relacionar usuarios con sistemas",
+      "precision_at_k": 0.6,
+      "recall_at_k": 1.0,
+      "ap": 0.8666666666666667,
+      "ndcg": 0.9469024295259745,
+      "total_relevant": 3,
+      "found_relevant": 3,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "query_name": "✅ Tabla systems_users_permissions",
+      "query_text": "Permisos especiales por usuario y sistema - estructura de tabla",
+      "precision_at_k": 0.6,
+      "recall_at_k": 1.0,
+      "ap": 0.8055555555555555,
+      "ndcg": 0.9060254355346823,
+      "total_relevant": 3,
+      "found_relevant": 3,
+      "expected_min": 1,
+      "meets_expectation": true,
+      "relevance_vector": [
+        1,
+        0,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "query_name": "❌ Tabla inexistente",
+      "query_text": "CREATE TABLE para logs del sistema",
+      "precision_at_k": 0.0,
+      "recall_at_k": 1.0,
+      "ap": 0.0,
+      "ndcg": 0.0,
+      "total_relevant": 0,
+      "found_relevant": 0,
+      "expected_min": 0,
+      "meets_expectation": true,
+      "relevance_vector": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

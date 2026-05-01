@@ -1,0 +1,108 @@
+{
+  "timestamp": "20260501_090306_k3",
+  "model": "llama3.2",
+  "global_metrics": {
+    "k": 3,
+    "model": "llama3.2",
+    "total_queries": 7,
+    "valid_queries": 7,
+    "mean_retrieval_ap": 0.5,
+    "mean_faithfulness": 0.9142857142857143,
+    "mean_answer_relevancy": 0.9285714285714286,
+    "mean_bleu": 0.6057486875003647,
+    "mean_rouge_l": 0.6021222798062313
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla users - creación completa",
+      "question": "Necesito crear una tabla para usuarios con id, nombre de usuario, contraseña y email",
+      "generated_answer": "CREATE TABLE users (\n  id SERIAL PRIMARY KEY,\n  username VARCHAR(30),\n  password VARCHAR(40),\n  email VARCHAR(30)\n);",
+      "ground_truth": "CREATE TABLE users (\n  id SERIAL PRIMARY KEY,\n  username VARCHAR(30) NOT NULL,\n  password VARCHAR(40) NOT NULL,\n  email VARCHAR(30) NOT NULL\n);",
+      "retrieval_ap": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.7584835431705546,
+      "rouge_l": 0.7222222222222222,
+      "num_chunks": 3,
+      "relevant_chunks": 1
+    },
+    {
+      "query_name": "Tabla books - estructura",
+      "question": "Quiero almacenar libros con título, ISBN y número de páginas",
+      "generated_answer": "CREATE TABLE books (\n  id SERIAL PRIMARY KEY,\n  title VARCHAR(60),\n  isbn VARCHAR(30),\n  pages INTEGER\n);",
+      "ground_truth": "CREATE TABLE books (\n  id SERIAL PRIMARY KEY,\n  title VARCHAR(60),\n  isbn VARCHAR(30),\n  pages INTEGER\n);",
+      "retrieval_ap": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 1.0,
+      "rouge_l": 1.0,
+      "num_chunks": 3,
+      "relevant_chunks": 3
+    },
+    {
+      "query_name": "Relación libros-géneros",
+      "question": "Cómo relaciono libros con géneros? Necesito una tabla intermedia",
+      "generated_answer": "CREATE TABLE books_genres_intermediate (\n  book_id INTEGER,\n  genre_id INTEGER,\n  PRIMARY KEY (book_id, genre_id),\n  FOREIGN KEY (book_id) REFERENCES books(id),\n  FOREIGN KEY (genre_id) REFERENCES genres(id)\n);",
+      "ground_truth": "CREATE TABLE books_genres (\n  id SERIAL PRIMARY KEY,\n  book_id INTEGER NOT NULL,\n  genre_id INTEGER NOT NULL,\n  FOREIGN KEY (book_id) REFERENCES books(id),\n  FOREIGN KEY (genre_id) REFERENCES genres(id)\n);",
+      "retrieval_ap": 0.5,
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.6583746749149221,
+      "rouge_l": 0.6399999999999999,
+      "num_chunks": 3,
+      "relevant_chunks": 1
+    },
+    {
+      "query_name": "Tabla de reseñas",
+      "question": "Crear tabla para reseñas de libros con calificación, comentario y fecha",
+      "generated_answer": "CREATE TABLE reviews (\n  id SERIAL PRIMARY KEY,\n  book_id INTEGER NOT NULL,\n  rating SMALLINT CHECK(rating BETWEEN 1 AND 5),\n  comment TEXT,\n  review_date DATE NOT NULL,\n  FOREIGN KEY (book_id) REFERENCES books(id)\n);",
+      "ground_truth": "CREATE TABLE reviews (\n  id SERIAL PRIMARY KEY,\n  rating INTEGER NOT NULL,\n  comment TEXT,\n  review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  user_id INTEGER NOT NULL,\n  book_id INTEGER NOT NULL,\n  FOREIGN KEY (user_id) REFERENCES users(id),\n  FOREIGN KEY (book_id) REFERENCES books(id)\n);",
+      "retrieval_ap": 0.0,
+      "faithfulness": 0.8,
+      "answer_relevancy": 1.0,
+      "bleu": 0.7586206896551724,
+      "rouge_l": 0.6470588235294118,
+      "num_chunks": 3,
+      "relevant_chunks": 0
+    },
+    {
+      "query_name": "Relación libros-autores",
+      "question": "Tabla para vincular libros con autores",
+      "generated_answer": "CREATE TABLE authors (\n  id SERIAL PRIMARY KEY,\n  name VARCHAR(50),\n  birth_date DATE,\n  nationality VARCHAR(30)\n);\n\nCREATE TABLE books (\n  id SERIAL PRIMARY KEY,\n  title VARCHAR(100),\n  publication_date DATE\n);\n\nCREATE TABLE book_authors (\n  book_id INTEGER NOT NULL,\n  author_id INTEGER NOT NULL,\n  PRIMARY KEY (book_id, author_id),\n  FOREIGN KEY (book_id) REFERENCES books(id),\n  FOREIGN KEY (author_id) REFERENCES authors(id)\n);",
+      "ground_truth": "CREATE TABLE books_authors (\n  id SERIAL PRIMARY KEY,\n  book_id INTEGER NOT NULL,\n  author_id INTEGER NOT NULL,\n  FOREIGN KEY (book_id) REFERENCES books(id),\n  FOREIGN KEY (author_id) REFERENCES authors(id)\n);",
+      "retrieval_ap": 0.0,
+      "faithfulness": 0.6,
+      "answer_relevancy": 1.0,
+      "bleu": 0.5714285714285714,
+      "rouge_l": 0.6341463414634146,
+      "num_chunks": 3,
+      "relevant_chunks": 0
+    },
+    {
+      "query_name": "Query ambigua - usuarios",
+      "question": "Guardar información de personas que usan el sistema",
+      "generated_answer": "CREATE TABLE users (\n  id SERIAL PRIMARY KEY,\n  username VARCHAR(30),\n  password VARCHAR(40),\n  first_names VARCHAR(50),\n  last_names VARCHAR(50),\n  email VARCHAR(30),\n  birth_date DATE,\n  profile_picture VARCHAR(100),\n  sex BOOLEAN,\n  reset_key VARCHAR(30),\n  country_id INTEGER\n);\n\nCREATE TABLE devices (\n  id SERIAL PRIMARY KEY,\n  brand VARCHAR(30),\n  type VARCHAR(30),\n  user_id INTEGER,\n  FOREIGN KEY (user_id) REFERENCES users(id)\n);",
+      "ground_truth": "CREATE TABLE users (\n  id SERIAL PRIMARY KEY,\n  username VARCHAR(30) NOT NULL,\n  password VARCHAR(40) NOT NULL,\n  email VARCHAR(30) NOT NULL\n);",
+      "retrieval_ap": 1.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.3333333333333333,
+      "rouge_l": 0.3428571428571428,
+      "num_chunks": 3,
+      "relevant_chunks": 3
+    },
+    {
+      "query_name": "Tabla inexistente (negativa)",
+      "question": "Necesito una tabla para inventario con stock y ubicación",
+      "generated_answer": "CREATE TABLE inventory (\n  id SERIAL PRIMARY KEY,\n  book_id INTEGER,\n  quantity INTEGER NOT NULL DEFAULT 0,\n  location VARCHAR(50) NOT NULL\n);\n\nALTER TABLE books ADD COLUMN inventory_id INTEGER;",
+      "ground_truth": "CREATE TABLE example (id SERIAL PRIMARY KEY);",
+      "retrieval_ap": 0.0,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.16,
+      "rouge_l": 0.2285714285714286,
+      "num_chunks": 3,
+      "relevant_chunks": 0
+    }
+  ]
+}

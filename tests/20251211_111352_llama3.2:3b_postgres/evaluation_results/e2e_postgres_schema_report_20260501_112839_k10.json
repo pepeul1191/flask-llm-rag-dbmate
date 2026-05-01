@@ -1,0 +1,73 @@
+{
+  "timestamp": "20260501_112839",
+  "k": 10,
+  "backend": "PostgreSQL",
+  "model": "llama3.2",
+  "schema": [
+    "users",
+    "systems",
+    "roles",
+    "permissions",
+    "systems_users",
+    "systems_users_permissions"
+  ],
+  "global_metrics": {
+    "k": 10,
+    "model": "llama3.2",
+    "backend": "PostgreSQL",
+    "schema_tables": [
+      "users",
+      "systems",
+      "roles",
+      "permissions",
+      "systems_users",
+      "systems_users_permissions"
+    ],
+    "total_queries": 7,
+    "valid_queries": 1,
+    "mean_faithfulness": 1.0,
+    "mean_answer_relevancy": 0.5,
+    "mean_bleu": 0.48309370390130574,
+    "mean_rouge_l": 0.5846153846153846,
+    "table_accuracy": 0.0
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla users - Usuarios",
+      "question": "Necesito crear una tabla para almacenar usuarios con nombre de usuario, contraseña y email",
+      "expected_table": "users",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS usuarios (\n    id SERIAL PRIMARY KEY,\n    nombre_usuario VARCHAR(20) NOT NULL UNIQUE,\n    contraseña VARCHAR(100) NOT NULL,\n    email VARCHAR(50) NOT NULL UNIQUE\n);",
+      "ground_truth": "CREATE TABLE users (\n    id SERIAL PRIMARY KEY,\n    username VARCHAR(20) NOT NULL UNIQUE,\n    password VARCHAR(100) NOT NULL,\n    activation_key VARCHAR(30),\n    reset_key VARCHAR(30),\n    email VARCHAR(50) NOT NULL UNIQUE,\n    activated BOOLEAN DEFAULT FALSE,\n    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.48309370390130574,
+      "rouge_l": 0.5846153846153846,
+      "num_chunks": 1
+    },
+    {
+      "query_name": "Tabla systems - Sistemas",
+      "error": "No chunks"
+    },
+    {
+      "query_name": "Tabla roles - Roles",
+      "error": "No chunks"
+    },
+    {
+      "query_name": "Tabla permissions - Permisos",
+      "error": "No chunks"
+    },
+    {
+      "query_name": "Relación users-systems - Acceso a sistemas",
+      "error": "No chunks"
+    },
+    {
+      "query_name": "Permisos especiales por usuario",
+      "error": "No chunks"
+    },
+    {
+      "query_name": "Query negativa - Tabla inexistente",
+      "error": "No chunks"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "timestamp": "20260501_112824",
+  "k": 10,
+  "backend": "PostgreSQL",
+  "schema": [
+    "users",
+    "systems",
+    "roles",
+    "permissions",
+    "systems_users",
+    "systems_users_permissions"
+  ],
+  "global_metrics": {
+    "k": 10,
+    "backend": "PostgreSQL",
+    "schema": [
+      "users",
+      "systems",
+      "roles",
+      "permissions",
+      "systems_users",
+      "systems_users_permissions"
+    ],
+    "total_queries": 7,
+    "valid_queries": 0,
+    "mean_ap": 0,
+    "mean_precision": 0,
+    "mean_recall": 0,
+    "mean_ndcg": 0,
+    "positive_queries": 0,
+    "positive_map": 0,
+    "negative_queries": 0,
+    "negative_false_positives": 0,
+    "expectation_rate": 0
+  },
+  "per_query_results": [
+    {
+      "query_name": "✅ Tabla users",
+      "error": "No chunks retrieved"
+    },
+    {
+      "query_name": "✅ Tabla systems",
+      "error": "No chunks retrieved"
+    },
+    {
+      "query_name": "✅ Tabla roles",
+      "error": "No chunks retrieved"
+    },
+    {
+      "query_name": "✅ Tabla permissions",
+      "error": "No chunks retrieved"
+    },
+    {
+      "query_name": "✅ Relación systems_users",
+      "error": "No chunks retrieved"
+    },
+    {
+      "query_name": "✅ Tabla systems_users_permissions",
+      "error": "No chunks retrieved"
+    },
+    {
+      "query_name": "❌ Tabla inexistente",
+      "error": "No chunks retrieved"
+    }
+  ]
+}

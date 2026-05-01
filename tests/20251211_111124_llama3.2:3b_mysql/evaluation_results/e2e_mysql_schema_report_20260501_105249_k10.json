@@ -1,0 +1,127 @@
+{
+  "timestamp": "20260501_105249",
+  "k": 10,
+  "backend": "MySQL",
+  "model": "llama3.2",
+  "schema": [
+    "users",
+    "systems",
+    "roles",
+    "permissions",
+    "systems_users",
+    "systems_users_permissions"
+  ],
+  "global_metrics": {
+    "k": 10,
+    "model": "llama3.2",
+    "backend": "MySQL",
+    "schema_tables": [
+      "users",
+      "systems",
+      "roles",
+      "permissions",
+      "systems_users",
+      "systems_users_permissions"
+    ],
+    "total_queries": 7,
+    "valid_queries": 7,
+    "mean_faithfulness": 1.0,
+    "mean_answer_relevancy": 0.9285714285714286,
+    "mean_bleu": 0.5534308059170595,
+    "mean_rouge_l": 0.5955127514058375,
+    "table_accuracy": 0.6666666666666666
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla users - Usuarios",
+      "question": "Necesito crear una tabla para almacenar usuarios con nombre de usuario, contraseña y email",
+      "expected_table": "users",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE users (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    username VARCHAR(20) NOT NULL,\n    password VARCHAR(100) NOT NULL,\n    email VARCHAR(50) NOT NULL\n);",
+      "ground_truth": "CREATE TABLE users (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    username VARCHAR(20) NOT NULL,\n    password VARCHAR(100) NOT NULL,\n    activation_key VARCHAR(30),\n    reset_key VARCHAR(30),\n    email VARCHAR(50) NOT NULL,\n    activated BOOLEAN DEFAULT FALSE,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.4779363341166832,
+      "rouge_l": 0.6666666666666667,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla systems - Sistemas",
+      "question": "Quiero una tabla para guardar información de los sistemas de la plataforma con nombre y descripción",
+      "expected_table": "systems",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE systems (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(40) NOT NULL,\n    description TEXT,\n    repository VARCHAR(100),\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+      "ground_truth": "CREATE TABLE users (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    username VARCHAR(20) NOT NULL,\n    password VARCHAR(100) NOT NULL,\n    activation_key VARCHAR(30),\n    reset_key VARCHAR(30),\n    email VARCHAR(50) NOT NULL,\n    activated BOOLEAN DEFAULT FALSE,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.5801742499438874,
+      "rouge_l": 0.6285714285714286,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla roles - Roles",
+      "question": "Crear una tabla para roles que pertenecen a un sistema",
+      "expected_table": "roles",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE roles (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(40) NOT NULL,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    system_id INT NOT NULL,\n    FOREIGN KEY (system_id) REFERENCES systems(id) ON DELETE CASCADE\n);",
+      "ground_truth": "CREATE TABLE roles (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(40) NOT NULL,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    system_id INT NOT NULL,\n    FOREIGN KEY (system_id) REFERENCES systems(id) ON DELETE CASCADE\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 1.0,
+      "rouge_l": 1.0,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla permissions - Permisos",
+      "question": "Necesito una tabla para permisos que están asociados a roles",
+      "expected_table": "permissions",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE role_permissions (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    role_id INT NOT NULL,\n    permission_id INT NOT NULL,\n    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,\n    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE\n);",
+      "ground_truth": "CREATE TABLE roles (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    name VARCHAR(40) NOT NULL,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n    system_id INT NOT NULL,\n    FOREIGN KEY (system_id) REFERENCES systems(id) ON DELETE CASCADE\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.5567369120930278,
+      "rouge_l": 0.5633802816901409,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Relación users-systems - Acceso a sistemas",
+      "question": "Cómo relaciono usuarios con sistemas? Necesito una tabla intermedia",
+      "expected_table": "systems_users",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE systems_users (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    system_id INT NOT NULL,\n    user_id INT NOT NULL,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    FOREIGN KEY (system_id) REFERENCES systems(id) ON DELETE CASCADE,\n    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,\n    UNIQUE KEY unique_system_user (system_id, user_id)\n);",
+      "ground_truth": "CREATE TABLE users (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    username VARCHAR(20) NOT NULL,\n    password VARCHAR(100) NOT NULL,\n    activation_key VARCHAR(30),\n    reset_key VARCHAR(30),\n    email VARCHAR(50) NOT NULL,\n    activated BOOLEAN DEFAULT FALSE,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.5,
+      "rouge_l": 0.4285714285714286,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Permisos especiales por usuario",
+      "question": "Tabla para asignar permisos específicos a un usuario en un sistema",
+      "expected_table": "systems_users_permissions",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE user_system_permissions (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    user_id INT NOT NULL,\n    system_id INT NOT NULL,\n    permission_id INT NOT NULL,\n    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,\n    FOREIGN KEY (system_id) REFERENCES systems(id) ON DELETE CASCADE,\n    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE,\n    UNIQUE KEY unique_user_system_permission (user_id, system_id, permission_id)\n);",
+      "ground_truth": "CREATE TABLE users (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    username VARCHAR(20) NOT NULL,\n    password VARCHAR(100) NOT NULL,\n    activation_key VARCHAR(30),\n    reset_key VARCHAR(30),\n    email VARCHAR(50) NOT NULL,\n    activated BOOLEAN DEFAULT FALSE,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.375,
+      "rouge_l": 0.34408602150537637,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Query negativa - Tabla inexistente",
+      "question": "Necesito una tabla para logs de auditoría",
+      "expected_table": null,
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE logs (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    user_id INT NOT NULL,\n    system_id INT NOT NULL,\n    action VARCHAR(40) NOT NULL,\n    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP\n);",
+      "ground_truth": "CREATE TABLE users (\n    id INT AUTO_INCREMENT PRIMARY KEY,\n    username VARCHAR(20) NOT NULL,\n    password VARCHAR(100) NOT NULL,\n    activation_key VARCHAR(30),\n    reset_key VARCHAR(30),\n    email VARCHAR(50) NOT NULL,\n    activated BOOLEAN DEFAULT FALSE,\n    created DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.38416814526581844,
+      "rouge_l": 0.5373134328358209,
+      "num_chunks": 10
+    }
+  ]
+}
