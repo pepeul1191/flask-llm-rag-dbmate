@@ -1,0 +1,80 @@
+{
+  "timestamp": "20260501_185013",
+  "k": 3,
+  "backend": "SQLite3",
+  "model": "llama3.2",
+  "global_metrics": {
+    "k": 3,
+    "model": "llama3.2",
+    "backend": "SQLite3",
+    "total_queries": 5,
+    "valid_queries": 5,
+    "mean_faithfulness": 1.0,
+    "mean_answer_relevancy": 0.74,
+    "mean_bleu": 0.6035499160851049,
+    "mean_rouge_l": 0.5884605208906136,
+    "table_accuracy": 1.0
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla programs",
+      "question": "Necesito crear una tabla para almacenar programas con nombre y descripción",
+      "expected_table": "programs",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS programs (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    name VARCHAR(50) NOT NULL,\n    description TEXT,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.5441040123761863,
+      "rouge_l": 0.5352112676056339,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla phases",
+      "question": "Tabla para fases de programa con fechas de inicio y fin",
+      "expected_table": "phases",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS phases (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    name VARCHAR(30) NOT NULL,\n    description TEXT,\n    init_date DATE,\n    end_date DATE,\n    delivery_deadline DATE,\n    evaluation_deadline DATE,\n    revaluation_deadline DATE,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    program_id INTEGER NOT NULL,\n    FOREIGN KEY (program_id) REFERENCES programs(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.6176470588235294,
+      "rouge_l": 0.5555555555555556,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla participants",
+      "question": "Tabla para participantes con nombres, email y DNI",
+      "expected_table": "participants",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS participants (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    names VARCHAR(50) NOT NULL,\n    last_names VARCHAR(50) NOT NULL,\n    email VARCHAR(40) NOT NULL UNIQUE,\n    phone VARCHAR(40),\n    dni VARCHAR(20) NOT NULL UNIQUE,\n    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.7560653168014251,
+      "rouge_l": 0.6593406593406594,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Tabla workers",
+      "question": "Tabla para trabajadores con nombres y email",
+      "expected_table": "workers",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS workers (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    names VARCHAR(50) NOT NULL,\n    email VARCHAR(40) NOT NULL UNIQUE\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.8,
+      "bleu": 0.6885663811400464,
+      "rouge_l": 0.68,
+      "num_chunks": 3
+    },
+    {
+      "query_name": "Query negativa",
+      "question": "Necesito una tabla para inscripciones",
+      "expected_table": null,
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE IF NOT EXISTS enrollments (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    participant_id INTEGER NOT NULL,\n    program_id INTEGER NOT NULL,\n    phase_id INTEGER,\n    FOREIGN KEY (participant_id) REFERENCES participants(id),\n    FOREIGN KEY (program_id) REFERENCES programs(id),\n    FOREIGN KEY (phase_id) REFERENCES phases(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.41136681128433705,
+      "rouge_l": 0.5121951219512196,
+      "num_chunks": 3
+    }
+  ]
+}

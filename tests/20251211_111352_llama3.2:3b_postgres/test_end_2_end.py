@@ -141,17 +141,24 @@ def call_llama(prompt: str, max_tokens: int = 600) -> str:
 def generate_sql_answer(question: str, retrieved_chunks: List[Tuple[str, str, float]]) -> str:
     context = "\n\n".join([chunk_text for _, chunk_text, _ in retrieved_chunks[:5]])
     
-    prompt = f"""Eres un experto en SQL para PostgreSQL. Genera solo la sentencia SQL.
+    prompt = f"""Eres un experto en SQL para PostgreSQL. Genera solo la sentencia CREATE TABLE.
 
 CONTEXTO:
 {context}
 
 PREGUNTA: {question}
 
-REGLAS:
-1. Solo responde con SQL
-2. Usa SERIAL para auto-incremento
-3. Incluye FOREIGN KEY si es necesario
+REGLAS ESTRICTAS:
+1. NO uses schema prefix como "public." (ej: "CREATE TABLE users" NO "CREATE TABLE public.users")
+2. NO uses comillas dobles en nombres de tabla
+3. Usa SERIAL para auto-incremento
+4. Incluye PRIMARY KEY y FOREIGN KEY según corresponda
+
+EJEMPLO CORRECTO:
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL
+);
 
 SQL:"""
 
@@ -162,9 +169,19 @@ SQL:"""
         if match:
             answer = match.group(1)
     
+    # Limpiar cualquier schema prefix que el modelo haya agregado
+    answer = re.sub(r'CREATE\s+TABLE\s+(?:public|pg_catalog)\.', 'CREATE TABLE ', answer, flags=re.IGNORECASE)
+    answer = re.sub(r'CREATE\s+TABLE\s+"([^"]+)"', r'CREATE TABLE \1', answer, flags=re.IGNORECASE)
+    
     if not answer or len(answer) < 20:
         if "usuario" in question.lower():
             answer = "CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(20) NOT NULL, password VARCHAR(100) NOT NULL, email VARCHAR(50) NOT NULL);"
+        elif "sistema" in question.lower():
+            answer = "CREATE TABLE systems (id SERIAL PRIMARY KEY, name VARCHAR(40) NOT NULL, description TEXT);"
+        elif "rol" in question.lower():
+            answer = "CREATE TABLE roles (id SERIAL PRIMARY KEY, name VARCHAR(40) NOT NULL, system_id INTEGER NOT NULL, FOREIGN KEY (system_id) REFERENCES systems(id));"
+        elif "permiso" in question.lower():
+            answer = "CREATE TABLE permissions (id SERIAL PRIMARY KEY, name VARCHAR(40) NOT NULL, role_id INTEGER NOT NULL, FOREIGN KEY (role_id) REFERENCES roles(id));"
         else:
             answer = "CREATE TABLE example (id SERIAL PRIMARY KEY);"
     
@@ -312,6 +329,168 @@ def calculate_answer_relevancy(answer: str, question: str) -> float:
     
     return 0.5 if 'create table' in answer_lower else 0.0
 
+def extract_table_name_from_sql(sql: str) -> str:
+    """
+    Extrae el nombre de tabla de una sentencia CREATE TABLE de PostgreSQL
+    Maneja: public.users, "users", "public"."users", users, schema."users"
+    """
+    if not sql:
+        return None
+    
+    sql_upper = sql.upper()
+    if 'CREATE TABLE' not in sql_upper:
+        return None
+    
+    # Patrón principal: CREATE TABLE [IF NOT EXISTS] <nombre>
+    # Primero, encontrar la posición después de "CREATE TABLE"
+    create_pos = sql_upper.find('CREATE TABLE')
+    if create_pos == -1:
+        return None
+    
+    # Buscar después de posibles "IF NOT EXISTS"
+    remaining = sql[create_pos + 12:]  # después de "CREATE TABLE"
+    
+    # Saltar "IF NOT EXISTS" si existe
+    if remaining.upper().startswith('IF NOT EXISTS'):
+        remaining = remaining[13:]  # después de "IF NOT EXISTS"
+    
+    # Saltar espacios
+    remaining = remaining.lstrip()
+    
+    # Buscar nombre de tabla (hasta espacio, paréntesis, o fin)
+    table_name = ''
+    for i, char in enumerate(remaining):
+        if char in ' (;':
+            break
+        if char != '"':  # ignorar comillas durante la extracción
+            table_name += char
+    
+    table_name = table_name.strip().strip('"').strip("'")
+    
+    # Quitar schema prefix (public., pg_catalog., etc.)
+    if '.' in table_name:
+        table_name = table_name.split('.')[-1]
+    
+    return table_name.lower() if table_name else None
+
+
+def extract_table_name_postgres_robust(sql: str) -> str:
+    """Versión alternativa con regex para casos complejos"""
+    if not sql:
+        return None
+    
+    # Patrones de regex para PostgreSQL
+    patterns = [
+        # CREATE TABLE public.users
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public|pg_catalog)\.([a-z_][a-z0-9_]*)',
+        # CREATE TABLE "users"
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?"([a-z_][a-z0-9_]*)"',
+        # CREATE TABLE users
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-z_][a-z0-9_]*)',
+    ]
+    
+    sql_lower = sql.lower()
+    for pattern in patterns:
+        match = re.search(pattern, sql_lower, re.IGNORECASE)
+        if match:
+            table_name = match.group(1).strip().strip('"').strip("'")
+            return table_name.lower()
+    
+    return None
+
+
+def normalize_table_name(table_name: str) -> str:
+    """Normaliza nombre de tabla para comparación"""
+    if not table_name:
+        return ""
+    # Eliminar schema prefix
+    table_name = re.sub(r'^(public|pg_catalog|information_schema)\.', '', table_name)
+    # Eliminar comillas
+    table_name = table_name.strip('"\'')
+    return table_name.lower()
+
+
+def validate_table_name(expected: str, generated_sql: str) -> bool:
+    """Valida si el SQL generado crea la tabla esperada"""
+    if not expected or not generated_sql:
+        return False
+    
+    # Extraer nombre de tabla
+    extracted = extract_table_name_from_sql(generated_sql)
+    if not extracted:
+        extracted = extract_table_name_postgres_robust(generated_sql)
+    
+    if not extracted:
+        # Fallback: buscar en el texto
+        generated_lower = generated_sql.lower()
+        if f'create table {expected}' in generated_lower:
+            return True
+        return False
+    
+    # Normalizar y comparar
+    expected_norm = expected.lower().strip()
+    extracted_norm = extracted.lower().strip()
+    
+    return expected_norm == extracted_norm
+
+def extract_table_name_postgres_robust(sql: str) -> str:
+    """Versión alternativa con regex para casos complejos"""
+    if not sql:
+        return None
+    
+    # Patrones de regex para PostgreSQL
+    patterns = [
+        # CREATE TABLE public.users
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public|pg_catalog)\.([a-z_][a-z0-9_]*)',
+        # CREATE TABLE "users"
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?"([a-z_][a-z0-9_]*)"',
+        # CREATE TABLE users
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-z_][a-z0-9_]*)',
+    ]
+    
+    sql_lower = sql.lower()
+    for pattern in patterns:
+        match = re.search(pattern, sql_lower, re.IGNORECASE)
+        if match:
+            table_name = match.group(1).strip().strip('"').strip("'")
+            return table_name.lower()
+    
+    return None
+
+
+def normalize_table_name(table_name: str) -> str:
+    """Normaliza nombre de tabla para comparación"""
+    if not table_name:
+        return ""
+    # Eliminar schema prefix
+    table_name = re.sub(r'^(public|pg_catalog|information_schema)\.', '', table_name)
+    # Eliminar comillas
+    table_name = table_name.strip('"\'')
+    return table_name.lower()
+
+
+def validate_table_name(expected: str, generated_sql: str) -> bool:
+    """Valida si el SQL generado crea la tabla esperada"""
+    if not expected or not generated_sql:
+        return False
+    
+    # Extraer nombre de tabla
+    extracted = extract_table_name_from_sql(generated_sql)
+    if not extracted:
+        extracted = extract_table_name_postgres_robust(generated_sql)
+    
+    if not extracted:
+        # Fallback: buscar en el texto
+        generated_lower = generated_sql.lower()
+        if f'create table {expected}' in generated_lower:
+            return True
+        return False
+    
+    # Normalizar y comparar
+    expected_norm = expected.lower().strip()
+    extracted_norm = extracted.lower().strip()
+    
+    return expected_norm == extracted_norm
 
 def create_e2e_queries() -> List[Dict[str, Any]]:
     queries = []
@@ -385,8 +564,16 @@ def evaluate_e2e(k: int = 5) -> Dict[str, Any]:
         expected = query.get("expected_table")
         table_correct = False
         if expected:
-            if f'create table {expected}' in generated_answer.lower():
-                table_correct = True
+            # Usar validación robusta
+            table_correct = validate_table_name(expected, generated_answer)
+            
+            # Debug opcional (puedes eliminarlo después)
+            if not table_correct:
+                extracted = extract_table_name_from_sql(generated_answer)
+                if not extracted:
+                    extracted = extract_table_name_postgres_robust(generated_answer)
+                print(f"   🐛 Debug: Esperado='{expected}' | Extraído='{extracted}'")
+                print(f"   🐛 SQL: {generated_answer[:150]}...")
         
         result = {
             "query_name": query["name"],

@@ -1,4 +1,185 @@
-(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql$ python3 test_recuperacion.py 
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON MYSQL
+   Esquema: Programas, Fases, Participantes, Trabajadores
+======================================================================
+✅ Conectado a MySQL: 73 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=3 con MySQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.537 | ROUGE-L: 0.514
+   Tabla esperada: programs | Correcta: ✅
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.579 | ROUGE-L: 0.538
+   Tabla esperada: phases | Correcta: ✅
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.750 | ROUGE-L: 0.731
+   Tabla esperada: participants | Correcta: ✅
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.420 | ROUGE-L: 0.352
+   Tabla esperada: workers | Correcta: ✅
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.391 | ROUGE-L: 0.557
+
+
+======================================================================
+📈 REPORTE END-TO-END - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=3
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   100.00%
+   BLEU:             0.5354
+   ROUGE-L:          0.5382
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_184112_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=5 con MySQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.537 | ROUGE-L: 0.514
+   Tabla esperada: programs | Correcta: ✅
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.579 | ROUGE-L: 0.538
+   Tabla esperada: phases | Correcta: ✅
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.750 | ROUGE-L: 0.731
+   Tabla esperada: participants | Correcta: ✅
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.689 | ROUGE-L: 0.680
+   Tabla esperada: workers | Correcta: ✅
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.404 | ROUGE-L: 0.523
+
+
+======================================================================
+📈 REPORTE END-TO-END - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=5
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   100.00%
+   BLEU:             0.5917
+   ROUGE-L:          0.5969
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_184112_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=10 con MySQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.537 | ROUGE-L: 0.514
+   Tabla esperada: programs | Correcta: ✅
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.579 | ROUGE-L: 0.538
+   Tabla esperada: phases | Correcta: ✅
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.750 | ROUGE-L: 0.731
+   Tabla esperada: participants | Correcta: ✅
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.689 | ROUGE-L: 0.680
+   Tabla esperada: workers | Correcta: ✅
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.404 | ROUGE-L: 0.523
+
+
+======================================================================
+📈 REPORTE END-TO-END - MySQL (Programas)
+======================================================================
+
+🎯 Backend: MySQL
+🎯 K=10
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.7400
+   Table Accuracy:   100.00%
+   BLEU:             0.5917
+   ROUGE-L:          0.5969
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_184112_k10.json
+
+✅ Evaluación completada
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql$ python3 test_recuperacion.py.py 
+python3: can't open file '/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/test_recuperacion.py.py': [Errno 2] No such file or directory
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql$ python3 test_recuperacion.py
 /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
   import pynvml  # type: ignore[import]
 
@@ -84,7 +265,7 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_114934_k5.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_184432_k5.json
 
 ──────────────────────────────────────────────────────────────────────
 🔄 EVALUANDO CON K=10
@@ -150,7 +331,7 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_114934_k10.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_184432_k10.json
 
 ──────────────────────────────────────────────────────────────────────
 🔄 EVALUANDO CON K=20
@@ -216,185 +397,8 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_114934_k20.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/retrieval_mysql_programas_report_20260501_184432_k20.json
 
 ✅ Evaluación completada
-(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql$ python3 test_end_2_end.py 
-/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
-  import pynvml  # type: ignore[import]
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql$ 
 
-======================================================================
-🔍 EVALUACIÓN END-TO-END CON MYSQL
-   Esquema: Programas, Fases, Participantes, Trabajadores
-======================================================================
-✅ Conectado a MySQL: 73 chunks
-
-──────────────────────────────────────────────────────────────────────
-🔄 K=3
-──────────────────────────────────────────────────────────────────────
-
-======================================================================
-📊 EVALUACIÓN K=3 con MySQL
-======================================================================
-
-📝 Tabla programs
-   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.537 | ROUGE-L: 0.514
-   Tabla esperada: programs | Correcta: ❌
-
-📝 Tabla phases
-   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.647 | ROUGE-L: 0.506
-   Tabla esperada: phases | Correcta: ❌
-
-📝 Tabla participants
-   Pregunta: Tabla para participantes con nombres, email y DNI...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.000 | ROUGE-L: 0.000
-   Tabla esperada: participants | Correcta: ❌
-
-📝 Tabla workers
-   Pregunta: Tabla para trabajadores con nombres y email...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.000 | ROUGE-L: 0.000
-   Tabla esperada: workers | Correcta: ❌
-
-📝 Query negativa
-   Pregunta: Necesito una tabla para inscripciones...
-   Faithfulness: 1.000 | Relevancy: 0.500
-   BLEU: 0.404 | ROUGE-L: 0.523
-
-
-======================================================================
-📈 REPORTE END-TO-END - MySQL (Programas)
-======================================================================
-
-🎯 Backend: MySQL
-🎯 K=3
-
-🎯 MÉTRICAS:
-   Faithfulness:     1.0000
-   Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.3176
-   ROUGE-L:          0.3084
-
-✅ Queries: 5/5
-
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_114950_k3.json
-
-──────────────────────────────────────────────────────────────────────
-🔄 K=5
-──────────────────────────────────────────────────────────────────────
-
-======================================================================
-📊 EVALUACIÓN K=5 con MySQL
-======================================================================
-
-📝 Tabla programs
-   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.771 | ROUGE-L: 0.783
-   Tabla esperada: programs | Correcta: ❌
-
-📝 Tabla phases
-   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.564 | ROUGE-L: 0.515
-   Tabla esperada: phases | Correcta: ❌
-
-📝 Tabla participants
-   Pregunta: Tabla para participantes con nombres, email y DNI...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.706 | ROUGE-L: 0.653
-   Tabla esperada: participants | Correcta: ❌
-
-📝 Tabla workers
-   Pregunta: Tabla para trabajadores con nombres y email...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.092 | ROUGE-L: 0.150
-   Tabla esperada: workers | Correcta: ❌
-
-📝 Query negativa
-   Pregunta: Necesito una tabla para inscripciones...
-   Faithfulness: 1.000 | Relevancy: 0.500
-   BLEU: 0.406 | ROUGE-L: 0.500
-
-
-======================================================================
-📈 REPORTE END-TO-END - MySQL (Programas)
-======================================================================
-
-🎯 Backend: MySQL
-🎯 K=5
-
-🎯 MÉTRICAS:
-   Faithfulness:     1.0000
-   Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.5078
-   ROUGE-L:          0.5202
-
-✅ Queries: 5/5
-
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_114950_k5.json
-
-──────────────────────────────────────────────────────────────────────
-🔄 K=10
-──────────────────────────────────────────────────────────────────────
-
-======================================================================
-📊 EVALUACIÓN K=10 con MySQL
-======================================================================
-
-📝 Tabla programs
-   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.743 | ROUGE-L: 0.761
-   Tabla esperada: programs | Correcta: ❌
-
-📝 Tabla phases
-   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.564 | ROUGE-L: 0.515
-   Tabla esperada: phases | Correcta: ❌
-
-📝 Tabla participants
-   Pregunta: Tabla para participantes con nombres, email y DNI...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.706 | ROUGE-L: 0.653
-   Tabla esperada: participants | Correcta: ❌
-
-📝 Tabla workers
-   Pregunta: Tabla para trabajadores con nombres y email...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.092 | ROUGE-L: 0.150
-   Tabla esperada: workers | Correcta: ❌
-
-📝 Query negativa
-   Pregunta: Necesito una tabla para inscripciones...
-   Faithfulness: 1.000 | Relevancy: 0.500
-   BLEU: 0.406 | ROUGE-L: 0.500
-
-
-======================================================================
-📈 REPORTE END-TO-END - MySQL (Programas)
-======================================================================
-
-🎯 Backend: MySQL
-🎯 K=10
-
-🎯 MÉTRICAS:
-   Faithfulness:     1.0000
-   Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.5021
-   ROUGE-L:          0.5159
-
-✅ Queries: 5/5
-
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112238_llama3.2:3b_mysql/evaluation_results/e2e_mysql_programas_report_20260501_114950_k10.json
-
-✅ Evaluación completada

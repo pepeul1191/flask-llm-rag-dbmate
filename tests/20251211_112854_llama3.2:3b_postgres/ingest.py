@@ -93,106 +93,172 @@ def extract_table_names(sql_content: str) -> List[str]:
     
     return list(tables)
 
-
 def generate_enhanced_chunks(sql_files: List[str]) -> List[Dict[str, Any]]:
     all_chunks = []
     
-    # Procesar archivos SQL existentes
-    for filepath in sql_files:
-        filename = os.path.basename(filepath)
-        content = read_sql_file(filepath)
-        tables_in_file = extract_table_names(content)
-        
-        print(f"\n📖 Procesando: {filename}")
-        print(f"   Tablas encontradas: {tables_in_file}")
-        
+    # ... (código existente para procesar archivos SQL) ...
+    
+    # =========================================================
+    # NUEVO: Añadir chunks para tablas principales
+    # =========================================================
+    
+    # SQL para tablas principales (PostgreSQL)
+    MAIN_TABLES_SQL = {
+        "programs": """CREATE TABLE programs (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) NOT NULL,
+    description TEXT,
+    image_url VARCHAR(60),
+    pdf_url VARCHAR(60),
+    max_participant_team INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    program_type_id INTEGER NOT NULL,
+    period_id INTEGER NOT NULL,
+    FOREIGN KEY (program_type_id) REFERENCES program_types(id),
+    FOREIGN KEY (period_id) REFERENCES periods(id)
+);""",
+        "phases": """CREATE TABLE phases (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) NOT NULL,
+    description TEXT,
+    init_date DATE,
+    end_date DATE,
+    delivery_deadline DATE,
+    evaluation_deadline DATE,
+    revaluation_deadline DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    program_id INTEGER NOT NULL,
+    FOREIGN KEY (program_id) REFERENCES programs(id)
+);""",
+        "participants": """CREATE TABLE participants (
+    id SERIAL PRIMARY KEY,
+    names VARCHAR(50) NOT NULL,
+    last_names VARCHAR(50) NOT NULL,
+    email VARCHAR(40) NOT NULL UNIQUE,
+    phone VARCHAR(40),
+    dni VARCHAR(20) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    dni_type_id INTEGER NOT NULL,
+    nation_id INTEGER NOT NULL,
+    FOREIGN KEY (dni_type_id) REFERENCES dni_types(id),
+    FOREIGN KEY (nation_id) REFERENCES nations(id)
+);""",
+        "internals": """CREATE TABLE internals (
+    id SERIAL PRIMARY KEY,
+    code INTEGER NOT NULL,
+    participant_id INTEGER NOT NULL,
+    period_id INTEGER NOT NULL,
+    carrere_id INTEGER NOT NULL,
+    FOREIGN KEY (participant_id) REFERENCES participants(id),
+    FOREIGN KEY (period_id) REFERENCES periods(id),
+    FOREIGN KEY (carrere_id) REFERENCES carreres(id),
+    UNIQUE(participant_id, period_id)
+);""",
+        "workers": """CREATE TABLE workers (
+    id SERIAL PRIMARY KEY,
+    names VARCHAR(50) NOT NULL,
+    last_names VARCHAR(50) NOT NULL,
+    email VARCHAR(40) NOT NULL UNIQUE,
+    phone VARCHAR(40),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);""",
+        "mentors": """CREATE TABLE mentors (
+    id SERIAL PRIMARY KEY,
+    worker_id INTEGER NOT NULL,
+    FOREIGN KEY (worker_id) REFERENCES workers(id),
+    UNIQUE(worker_id)
+);""",
+# Añadir a MAIN_TABLES_SQL
+"internals": """CREATE TABLE internals (
+    id SERIAL PRIMARY KEY,
+    code INTEGER NOT NULL,
+    participant_id INTEGER NOT NULL,
+    period_id INTEGER NOT NULL,
+    carrere_id INTEGER NOT NULL,
+    FOREIGN KEY (participant_id) REFERENCES participants(id),
+    FOREIGN KEY (period_id) REFERENCES periods(id),
+    FOREIGN KEY (carrere_id) REFERENCES carreres(id),
+    UNIQUE(participant_id, period_id)
+);""",
+
+"workers": """CREATE TABLE workers (
+    id SERIAL PRIMARY KEY,
+    names VARCHAR(50) NOT NULL,
+    last_names VARCHAR(50) NOT NULL,
+    email VARCHAR(40) NOT NULL UNIQUE,
+    phone VARCHAR(40),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);""",
+
+"mentors": """CREATE TABLE mentors (
+    id SERIAL PRIMARY KEY,
+    worker_id INTEGER NOT NULL,
+    FOREIGN KEY (worker_id) REFERENCES workers(id),
+    UNIQUE(worker_id)
+);""",
+
+"external_workers": """CREATE TABLE external_workers (
+    id SERIAL PRIMARY KEY,
+    worker_id INTEGER NOT NULL,
+    FOREIGN KEY (worker_id) REFERENCES workers(id),
+    UNIQUE(worker_id)
+);""",
+
+"internal_workers": """CREATE TABLE internal_workers (
+    id SERIAL PRIMARY KEY,
+    worker_id INTEGER NOT NULL,
+    code INTEGER NOT NULL,
+    FOREIGN KEY (worker_id) REFERENCES workers(id),
+    UNIQUE(worker_id)
+);"""
+    }
+    
+    descripciones = {
+        "programs": "Tabla de programas: Define los programas disponibles con nombre, descripción, URLs, fechas, relación con tipo de programa y período.",
+        "phases": "Tabla de fases: Define las fases de cada programa con fechas de inicio, fin, entregas, evaluaciones y reevaluaciones.",
+        "participants": "Tabla de participantes: Almacena información personal de participantes (nombres, email, DNI, teléfono) con relación a tipo de DNI y nacionalidad.",
+        "internals": "Tabla de participantes internos: Participantes que pertenecen a la institución, con código, período y carrera.",
+        "workers": "Tabla de trabajadores: Almacena información de trabajadores (nombres, email, teléfono).",
+        "mentors": "Tabla de mentores: Trabajadores que actúan como mentores (relación 1:1 con workers)."
+    }
+    
+    print("\n📦 Generando chunks para tablas principales...")
+    for table_name, create_sql in MAIN_TABLES_SQL.items():
+        # Chunk SQL puro
         all_chunks.append({
-            "id": f"{filename}_full",
-            "text": content,
+            "id": f"schema_{table_name}",
+            "text": create_sql,
             "metadata": {
-                "source_file": filename,
-                "chunk_type": "full_file",
-                "tables": ",".join(tables_in_file),
-                "num_tables": len(tables_in_file),
-                "char_length": len(content)
+                "source_file": "schema",
+                "chunk_type": "table_sql",
+                "tables": table_name,
+                "num_tables": 1,
+                "char_length": len(create_sql)
             }
         })
         
-        create_statements = re.split(r'(?=CREATE\s+TABLE)', content, flags=re.IGNORECASE)
-        for i, stmt in enumerate(create_statements):
-            if 'CREATE TABLE' in stmt.upper():
-                stmt_tables = extract_table_names(stmt)
-                all_chunks.append({
-                    "id": f"{filename}_create_{i}",
-                    "text": stmt.strip(),
-                    "metadata": {
-                        "source_file": filename,
-                        "chunk_type": "create_table",
-                        "tables": ",".join(stmt_tables),
-                        "num_tables": len(stmt_tables),
-                        "char_length": len(stmt)
-                    }
-                })
-    
-    # Añadir chunks del esquema objetivo
-    print("\n📦 Generando chunks del esquema objetivo...")
-    
-    # Descripción general del esquema
-    schema_description = """Sistema de gestión de programas, participantes, trabajadores y mentores.
-
-Tablas principales:
-- CATÁLOGOS: document_types, industries, specialisms, carrere_grades, carreres, program_types, dni_types, nations, periods
-- PROGRAMAS: programs, phases
-- PARTICIPANTES: participants, internals, externals
-- TRABAJADORES: workers, internal_workers, external_workers, mentors, mentors_specialisms
-
-Relaciones clave:
-- Un programa tiene muchas fases
-- Un participante puede ser interno (con código, período, carrera) o externo
-- Un trabajador puede ser interno, externo o mentor
-- Un mentor puede tener múltiples especialidades"""
-    
-    all_chunks.append({
-        "id": "schema_description",
-        "text": schema_description,
-        "metadata": {
-            "source_file": "schema",
-            "chunk_type": "description",
-            "tables": ",".join(TARGET_TABLES),
-            "num_tables": len(TARGET_TABLES),
-            "char_length": len(schema_description)
-        }
-    })
-    
-    # Chunk de relaciones
-    relationships_text = """Relaciones del esquema:
-
-1. programs → program_types, periods
-2. phases → programs
-3. participants → dni_types, nations
-4. carreres → carrere_grades
-5. internals → participants, periods, carreres
-6. externals → participants
-7. internal_workers → workers
-8. external_workers → workers
-9. mentors → workers
-10. mentors_specialisms → mentors, specialisms"""
-    
-    all_chunks.append({
-        "id": "schema_relationships",
-        "text": relationships_text,
-        "metadata": {
-            "source_file": "schema",
-            "chunk_type": "relationships",
-            "tables": ",".join(TARGET_TABLES),
-            "num_tables": len(TARGET_TABLES),
-            "char_length": len(relationships_text)
-        }
-    })
+        # Chunk mejorado con descripción
+        desc = descripciones.get(table_name, f"Tabla {table_name}")
+        enhanced_text = f"{desc}\n\n{create_sql}"
+        all_chunks.append({
+            "id": f"schema_{table_name}_enhanced",
+            "text": enhanced_text,
+            "metadata": {
+                "source_file": "schema",
+                "chunk_type": "table_enhanced",
+                "tables": table_name,
+                "num_tables": 1,
+                "char_length": len(enhanced_text)
+            }
+        })
+        print(f"   ✅ Añadido chunk para: {table_name}")
     
     return all_chunks
-
-
 # =========================================================
 # BASE DE DATOS POSTGRESQL
 # =========================================================

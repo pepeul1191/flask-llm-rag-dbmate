@@ -1,0 +1,421 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112854_llama3.2:3b_postgres$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON POSTGRESQL
+   Esquema: Programas, Fases, Participantes, Trabajadores
+======================================================================
+✅ psycopg2 versión: 2.9.12 (dt dec pq3 ext lo64)
+✅ Conectado a PostgreSQL: 16 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=3 con PostgreSQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.489 | ROUGE-L: 0.629
+   Tabla esperada: programs | Correcta: ✅
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.649 | ROUGE-L: 0.644
+   Tabla esperada: phases | Correcta: ✅
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.946 | ROUGE-L: 0.944
+   Tabla esperada: participants | Correcta: ✅
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.585 | ROUGE-L: 0.653
+   Tabla esperada: workers | Correcta: ✅
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.361 | ROUGE-L: 0.538
+
+
+======================================================================
+📈 REPORTE END-TO-END - PostgreSQL (Programas)
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=3
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.8600
+   Table Accuracy:   100.00%
+   BLEU:             0.6059
+   ROUGE-L:          0.6816
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112854_llama3.2:3b_postgres/evaluation_results/e2e_postgres_programas_report_20260501_190755_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=5 con PostgreSQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.489 | ROUGE-L: 0.629
+   Tabla esperada: programs | Correcta: ✅
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.649 | ROUGE-L: 0.675
+   Tabla esperada: phases | Correcta: ✅
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   🐛 Debug: Esperado='participants' | Generado='programs' (original='programs')
+   🐛 SQL fragmento: CREATE TABLE programs (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) NOT NULL,
+    description TEXT,
+    image_url VARCHAR(60),
+    pdf_url VARCHAR...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.538 | ROUGE-L: 0.445
+   Tabla esperada: participants | Correcta: ❌
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   🐛 Debug: Esperado='workers' | Generado='programs' (original='programs')
+   🐛 SQL fragmento: CREATE TABLE programs (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMES...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.324 | ROUGE-L: 0.222
+   Tabla esperada: workers | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.342 | ROUGE-L: 0.541
+
+
+======================================================================
+📈 REPORTE END-TO-END - PostgreSQL (Programas)
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=5
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.8600
+   Table Accuracy:   50.00%
+   BLEU:             0.4686
+   ROUGE-L:          0.5023
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112854_llama3.2:3b_postgres/evaluation_results/e2e_postgres_programas_report_20260501_190755_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=10 con PostgreSQL
+======================================================================
+
+📝 Tabla programs
+   Pregunta: Necesito crear una tabla para almacenar programas con nombre...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.489 | ROUGE-L: 0.629
+   Tabla esperada: programs | Correcta: ✅
+
+📝 Tabla phases
+   Pregunta: Tabla para fases de programa con fechas de inicio y fin...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.501 | ROUGE-L: 0.568
+   Tabla esperada: phases | Correcta: ✅
+
+📝 Tabla participants
+   Pregunta: Tabla para participantes con nombres, email y DNI...
+   🐛 Debug: Esperado='participants' | Generado='programs' (original='programs')
+   🐛 SQL fragmento: CREATE TABLE programs (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) NOT NULL,
+    description TEXT,
+    image_url VARCHAR(60),
+    pdf_url VARCHAR...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.538 | ROUGE-L: 0.445
+   Tabla esperada: participants | Correcta: ❌
+
+📝 Tabla workers
+   Pregunta: Tabla para trabajadores con nombres y email...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.874 | ROUGE-L: 0.842
+   Tabla esperada: workers | Correcta: ✅
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para inscripciones...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.369 | ROUGE-L: 0.513
+
+
+======================================================================
+📈 REPORTE END-TO-END - PostgreSQL (Programas)
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=10
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.8000
+   Table Accuracy:   75.00%
+   BLEU:             0.5542
+   ROUGE-L:          0.5993
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112854_llama3.2:3b_postgres/evaluation_results/e2e_postgres_programas_report_20260501_190755_k10.json
+
+✅ Evaluación completada
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112854_llama3.2:3b_postgres$ python3 test_recuperacion.py
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN DE RECUPERACIÓN - PostgreSQL
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+✅ psycopg2 versión: 2.9.12 (dt dec pq3 ext lo64)
+✅ Conectado a PostgreSQL: 16 chunks
+
+📋 Ejemplos de chunks:
+   1. ID: schema_programs
+      Tipo: table_sql
+      Tablas: programs
+   2. ID: schema_programs_enhanced
+      Tipo: table_enhanced
+      Tablas: programs
+   3. ID: schema_phases
+      Tipo: table_sql
+      Tablas: phases
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON POSTGRESQL (K=5)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 4, Encontrados: 4
+   AP: 1.000, P@5: 0.800
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 2, Encontrados: 2
+   AP: 0.417, P@5: 0.400
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 1, Encontrados: 1
+   AP: 0.200, P@5: 0.200
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@5: 0.000
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@5: 0.000
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@5: 0.000
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@5: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - PostgreSQL (Programas)
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=5
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.2310
+   Mean Precision@5: 0.2000
+   Mean Recall@5: 1.0000
+   Mean NDCG@5: 0.2796
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.2694
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 57.14%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112854_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_programas_report_20260501_191128_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON POSTGRESQL (K=10)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 4, Encontrados: 4
+   AP: 1.000, P@10: 0.400
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 2, Encontrados: 2
+   AP: 0.417, P@10: 0.200
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.365, P@10: 0.400
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 2, Encontrados: 2
+   AP: 0.196, P@10: 0.200
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 2, Encontrados: 2
+   AP: 0.156, P@10: 0.200
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@10: 0.000
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@10: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - PostgreSQL (Programas)
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=10
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.3049
+   Mean Precision@10: 0.2000
+   Mean Recall@10: 1.0000
+   Mean NDCG@10: 0.4105
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.3557
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 85.71%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112854_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_programas_report_20260501_191128_k10.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 EVALUANDO CON K=20
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUANDO SISTEMA RAG CON POSTGRESQL (K=20)
+   Esquema: Programas, Participantes, Trabajadores, Mentores
+======================================================================
+
+📝 ✅ Tabla programs
+   Query: tabla de programas con nombre descripcion y fechas
+   Total relevantes: 4, Encontrados: 4
+   AP: 1.000, P@20: 0.200
+
+📝 ✅ Tabla phases
+   Query: tabla de fases de programa con fechas de inicio fin entregas
+   Total relevantes: 2, Encontrados: 2
+   AP: 0.417, P@20: 0.100
+
+📝 ✅ Tabla participants
+   Query: tabla de participantes con nombres email y dni
+   Total relevantes: 4, Encontrados: 4
+   AP: 0.365, P@20: 0.200
+
+📝 ✅ Tabla internals
+   Query: participantes internos con codigo y carrera
+   Total relevantes: 2, Encontrados: 2
+   AP: 0.196, P@20: 0.100
+
+📝 ✅ Tabla workers
+   Query: tabla de trabajadores con nombres email telefono
+   Total relevantes: 8, Encontrados: 8
+   AP: 0.337, P@20: 0.400
+
+📝 ✅ Tabla mentors
+   Query: tabla de mentores con relacion a trabajadores
+   Total relevantes: 2, Encontrados: 2
+   AP: 0.129, P@20: 0.100
+
+📝 ❌ Tabla inexistente
+   Query: tabla de inscripciones
+   Total relevantes: 0, Encontrados: 0
+   AP: 0.000, P@20: 0.000
+
+
+======================================================================
+📈 REPORTE DE RECUPERACIÓN - PostgreSQL (Programas)
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=20
+
+📊 MÉTRICAS GLOBALES:
+   Mean Average Precision (MAP): 0.3492
+   Mean Precision@20: 0.1571
+   Mean Recall@20: 1.0000
+   Mean NDCG@20: 0.4847
+
+📊 POR TIPO DE QUERY:
+   Queries positivas (6): MAP=0.4074
+   Queries negativas (1): False Positives=0
+
+✅ Expectation Rate: 100.00%
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112854_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_programas_report_20260501_191128_k20.json
+
+✅ Evaluación completada

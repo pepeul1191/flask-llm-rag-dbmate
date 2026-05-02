@@ -1,0 +1,80 @@
+{
+  "timestamp": "20260501_190755",
+  "k": 10,
+  "backend": "PostgreSQL",
+  "model": "llama3.2",
+  "global_metrics": {
+    "k": 10,
+    "model": "llama3.2",
+    "backend": "PostgreSQL",
+    "total_queries": 5,
+    "valid_queries": 5,
+    "mean_faithfulness": 1.0,
+    "mean_answer_relevancy": 0.8,
+    "mean_bleu": 0.5542179374428631,
+    "mean_rouge_l": 0.5992959238557951,
+    "table_accuracy": 0.75
+  },
+  "per_query_results": [
+    {
+      "query_name": "Tabla programs",
+      "question": "Necesito crear una tabla para almacenar programas con nombre y descripción",
+      "expected_table": "programs",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE programs (\n    id SERIAL PRIMARY KEY,\n    name VARCHAR(30) NOT NULL,\n    description TEXT,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.48896868479294475,
+      "rouge_l": 0.6285714285714286,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla phases",
+      "question": "Tabla para fases de programa con fechas de inicio y fin",
+      "expected_table": "phases",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE phases (\n    id SERIAL PRIMARY KEY,\n    name VARCHAR(30) NOT NULL,\n    description TEXT,\n    init_date DATE,\n    end_date DATE,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.5005998575641144,
+      "rouge_l": 0.5675675675675675,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla participants",
+      "question": "Tabla para participantes con nombres, email y DNI",
+      "expected_table": "participants",
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE programs (\n    id SERIAL PRIMARY KEY,\n    name VARCHAR(30) NOT NULL,\n    description TEXT,\n    image_url VARCHAR(60),\n    pdf_url VARCHAR(60),\n    max_participant_team INTEGER,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    program_type_id INTEGER NOT NULL,\n    period_id INTEGER NOT NULL,\n    FOREIGN KEY (program_type_id) REFERENCES program_types(id),\n    FOREIGN KEY (period_id) REFERENCES periods(id)\n);\n\nCREATE TABLE phas",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.5384615384615384,
+      "rouge_l": 0.44541484716157204,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Tabla workers",
+      "question": "Tabla para trabajadores con nombres y email",
+      "expected_table": "workers",
+      "table_correct": true,
+      "generated_answer": "CREATE TABLE workers (\n    id SERIAL PRIMARY KEY,\n    names VARCHAR(50) NOT NULL,\n    email VARCHAR(40) NOT NULL UNIQUE,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "bleu": 0.874196553453739,
+      "rouge_l": 0.8421052631578947,
+      "num_chunks": 10
+    },
+    {
+      "query_name": "Query negativa",
+      "question": "Necesito una tabla para inscripciones",
+      "expected_table": null,
+      "table_correct": false,
+      "generated_answer": "CREATE TABLE enrollments (\n    id SERIAL PRIMARY KEY,\n    participant_id INTEGER NOT NULL,\n    program_id INTEGER NOT NULL,\n    start_date DATE,\n    end_date DATE,\n    FOREIGN KEY (participant_id) REFERENCES participants(id),\n    FOREIGN KEY (program_id) REFERENCES programs(id)\n);",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5,
+      "bleu": 0.3688630529419791,
+      "rouge_l": 0.5128205128205128,
+      "num_chunks": 10
+    }
+  ]
+}

@@ -20,30 +20,30 @@
    Pregunta: Necesito crear una tabla para almacenar programas con nombre...
    Faithfulness: 1.000 | Relevancy: 0.800
    BLEU: 0.544 | ROUGE-L: 0.535
-   Tabla esperada: programs | Correcta: ❌
+   Tabla esperada: programs | Correcta: ✅
 
 📝 Tabla phases
    Pregunta: Tabla para fases de programa con fechas de inicio y fin...
    Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.358 | ROUGE-L: 0.429
-   Tabla esperada: phases | Correcta: ❌
+   BLEU: 0.618 | ROUGE-L: 0.556
+   Tabla esperada: phases | Correcta: ✅
 
 📝 Tabla participants
    Pregunta: Tabla para participantes con nombres, email y DNI...
    Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.003 | ROUGE-L: 0.035
-   Tabla esperada: participants | Correcta: ❌
+   BLEU: 0.756 | ROUGE-L: 0.659
+   Tabla esperada: participants | Correcta: ✅
 
 📝 Tabla workers
    Pregunta: Tabla para trabajadores con nombres y email...
    Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.133 | ROUGE-L: 0.238
-   Tabla esperada: workers | Correcta: ❌
+   BLEU: 0.689 | ROUGE-L: 0.680
+   Tabla esperada: workers | Correcta: ✅
 
 📝 Query negativa
    Pregunta: Necesito una tabla para inscripciones...
    Faithfulness: 1.000 | Relevancy: 0.500
-   BLEU: 0.386 | ROUGE-L: 0.523
+   BLEU: 0.411 | ROUGE-L: 0.512
 
 
 ======================================================================
@@ -56,13 +56,13 @@
 🎯 MÉTRICAS:
    Faithfulness:     1.0000
    Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.2850
-   ROUGE-L:          0.3519
+   Table Accuracy:   100.00%
+   BLEU:             0.6035
+   ROUGE-L:          0.5885
 
 ✅ Queries: 5/5
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_115835_k3.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_185013_k3.json
 
 ──────────────────────────────────────────────────────────────────────
 🔄 K=5
@@ -76,30 +76,30 @@
    Pregunta: Necesito crear una tabla para almacenar programas con nombre...
    Faithfulness: 1.000 | Relevancy: 0.800
    BLEU: 0.544 | ROUGE-L: 0.535
-   Tabla esperada: programs | Correcta: ❌
+   Tabla esperada: programs | Correcta: ✅
 
 📝 Tabla phases
    Pregunta: Tabla para fases de programa con fechas de inicio y fin...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.618 | ROUGE-L: 0.556
-   Tabla esperada: phases | Correcta: ❌
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.573 | ROUGE-L: 0.469
+   Tabla esperada: phases | Correcta: ✅
 
 📝 Tabla participants
    Pregunta: Tabla para participantes con nombres, email y DNI...
    Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.000 | ROUGE-L: 0.000
-   Tabla esperada: participants | Correcta: ❌
+   BLEU: 0.818 | ROUGE-L: 0.752
+   Tabla esperada: participants | Correcta: ✅
 
 📝 Tabla workers
    Pregunta: Tabla para trabajadores con nombres y email...
    Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.133 | ROUGE-L: 0.238
-   Tabla esperada: workers | Correcta: ❌
+   BLEU: 0.689 | ROUGE-L: 0.680
+   Tabla esperada: workers | Correcta: ✅
 
 📝 Query negativa
    Pregunta: Necesito una tabla para inscripciones...
    Faithfulness: 1.000 | Relevancy: 0.500
-   BLEU: 0.386 | ROUGE-L: 0.523
+   BLEU: 0.378 | ROUGE-L: 0.548
 
 
 ======================================================================
@@ -111,14 +111,14 @@
 
 🎯 MÉTRICAS:
    Faithfulness:     1.0000
-   Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.3361
-   ROUGE-L:          0.3703
+   Answer Relevancy: 0.6800
+   Table Accuracy:   100.00%
+   BLEU:             0.6003
+   ROUGE-L:          0.5969
 
 ✅ Queries: 5/5
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_115835_k5.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_185013_k5.json
 
 ──────────────────────────────────────────────────────────────────────
 🔄 K=10
@@ -132,25 +132,25 @@
    Pregunta: Necesito crear una tabla para almacenar programas con nombre...
    Faithfulness: 1.000 | Relevancy: 0.800
    BLEU: 0.544 | ROUGE-L: 0.535
-   Tabla esperada: programs | Correcta: ❌
+   Tabla esperada: programs | Correcta: ✅
 
 📝 Tabla phases
    Pregunta: Tabla para fases de programa con fechas de inicio y fin...
    Faithfulness: 1.000 | Relevancy: 0.800
    BLEU: 0.618 | ROUGE-L: 0.556
-   Tabla esperada: phases | Correcta: ❌
+   Tabla esperada: phases | Correcta: ✅
 
 📝 Tabla participants
    Pregunta: Tabla para participantes con nombres, email y DNI...
    Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.000 | ROUGE-L: 0.000
-   Tabla esperada: participants | Correcta: ❌
+   BLEU: 0.818 | ROUGE-L: 0.752
+   Tabla esperada: participants | Correcta: ✅
 
 📝 Tabla workers
    Pregunta: Tabla para trabajadores con nombres y email...
    Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.133 | ROUGE-L: 0.238
-   Tabla esperada: workers | Correcta: ❌
+   BLEU: 0.689 | ROUGE-L: 0.680
+   Tabla esperada: workers | Correcta: ✅
 
 📝 Query negativa
    Pregunta: Necesito una tabla para inscripciones...
@@ -168,16 +168,20 @@
 🎯 MÉTRICAS:
    Faithfulness:     1.0000
    Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.3361
-   ROUGE-L:          0.3703
+   Table Accuracy:   100.00%
+   BLEU:             0.6108
+   ROUGE-L:          0.6092
 
 ✅ Queries: 5/5
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_115835_k10.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/e2e_sqlite_programas_report_20260501_185013_k10.json
 
 ✅ Evaluación completada
-(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite$ python3 test_recuperacion.py 
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite$ python3 test_.py 
+test_end_2_end.py     test_recuperacion.py  
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite$ python3 test_recuperacion.py.py 
+python3: can't open file '/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/test_recuperacion.py.py': [Errno 2] No such file or directory
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite$ python3 test_recuperacion.py
 /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
   import pynvml  # type: ignore[import]
 
@@ -262,7 +266,7 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_120002_k5.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_185348_k5.json
 
 ──────────────────────────────────────────────────────────────────────
 🔄 EVALUANDO CON K=10
@@ -328,7 +332,7 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_120002_k10.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_185348_k10.json
 
 ──────────────────────────────────────────────────────────────────────
 🔄 EVALUANDO CON K=20
@@ -394,6 +398,8 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_120002_k20.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite/evaluation_results/retrieval_sqlite_programas_report_20260501_185348_k20.json
 
 ✅ Evaluación completada
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_112558_llama3.2:3b_sqlite$ 
+

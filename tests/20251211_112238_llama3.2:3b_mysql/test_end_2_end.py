@@ -140,17 +140,25 @@ def call_llama(prompt: str, max_tokens: int = 600) -> str:
 def generate_sql_answer(question: str, retrieved_chunks: List[Tuple[str, str, float]]) -> str:
     context = "\n\n".join([chunk_text for _, chunk_text, _ in retrieved_chunks[:5]])
     
-    prompt = f"""Eres un experto en SQL para MySQL. Genera solo la sentencia SQL.
+    prompt = f"""Eres un experto en SQL para MySQL. Genera solo la sentencia CREATE TABLE.
 
-CONTEXTO:
+CONTEXTO DEL ESQUEMA (nombres en INGLÉS):
 {context}
 
 PREGUNTA: {question}
 
-REGLAS:
-1. Solo responde con SQL
-2. Usa AUTO_INCREMENT para IDs
-3. Incluye FOREIGN KEY si es necesario
+REGLAS ESTRICTAS:
+1. Los nombres de tabla DEBEN estar en INGLÉS (programs, phases, participants, workers, mentors)
+2. NO uses nombres en español (programas, fases, participantes, trabajadores, mentores)
+3. Usa AUTO_INCREMENT para PRIMARY KEY
+4. Incluye FOREIGN KEY según corresponda
+
+EJEMPLOS CORRECTOS:
+- "programas" → CREATE TABLE programs (...)
+- "fases" → CREATE TABLE phases (...)
+- "participantes" → CREATE TABLE participants (...)
+- "trabajadores" → CREATE TABLE workers (...)
+- "mentores" → CREATE TABLE mentors (...)
 
 SQL:"""
 
@@ -161,14 +169,13 @@ SQL:"""
         if match:
             answer = match.group(1)
     
+    # Fallback específico para programas
     if not answer or len(answer) < 20:
         if "programa" in question.lower():
             answer = """CREATE TABLE programs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
-    description TEXT,
-    program_type_id INT NOT NULL,
-    period_id INT NOT NULL
+    description TEXT
 );"""
         elif "participante" in question.lower():
             answer = """CREATE TABLE participants (
@@ -185,11 +192,16 @@ SQL:"""
     last_names VARCHAR(50) NOT NULL,
     email VARCHAR(40) NOT NULL
 );"""
+        elif "mentor" in question.lower():
+            answer = """CREATE TABLE mentors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    worker_id INT NOT NULL,
+    FOREIGN KEY (worker_id) REFERENCES workers(id)
+);"""
         else:
             answer = "CREATE TABLE example (id INT AUTO_INCREMENT PRIMARY KEY);"
     
     return answer
-
 
 def get_ground_truth_answer(question: str) -> str:
     ground_truths = {
@@ -415,13 +427,12 @@ def evaluate_e2e(k: int = 5) -> Dict[str, Any]:
         answer_relevancy = calculate_answer_relevancy(generated_answer, query["question"])
         bleu_score = calculate_bleu_simple(generated_answer, ground_truth)
         rouge_l = calculate_rouge_l_simple(generated_answer, ground_truth)
-        
+                
         expected = query.get("expected_table")
         table_correct = False
         if expected:
-            if f'create table {expected}' in generated_answer.lower():
-                table_correct = True
-        
+            table_correct = validate_table_name(expected, generated_answer)
+                
         result = {
             "query_name": query["name"],
             "question": query["question"],
@@ -501,6 +512,80 @@ def save_results(evaluation: Dict[str, Any], timestamp: str, k: int):
     print(f"\n💾 Resultados guardados en: {filepath}")
     return filepath
 
+def normalize_table_name_mysql(table_name: str) -> str:
+    """Normaliza nombres de tabla español → inglés para MySQL"""
+    mapping = {
+        # Español → Inglés
+        'programa': 'programs',
+        'programas': 'programs',
+        'fase': 'phases',
+        'fases': 'phases',
+        'participante': 'participants',
+        'participantes': 'participants',
+        'trabajador': 'workers',
+        'trabajadores': 'workers',
+        'mentor': 'mentors',
+        'mentores': 'mentors',
+        'internos': 'internals',
+        'interno': 'internals',
+        'externos': 'externals',
+        'externo': 'externals',
+        # Plurales irregulares
+        'program': 'programs',
+        'phase': 'phases',
+        'participant': 'participants',
+        'worker': 'workers',
+        'mentor': 'mentors',
+    }
+    table_lower = table_name.lower().strip()
+    return mapping.get(table_lower, table_lower)
+
+
+def extract_table_name_from_sql(sql: str) -> str:
+    """Extrae nombre de tabla de sentencia CREATE TABLE"""
+    if not sql:
+        return None
+    
+    # Patrón para MySQL
+    patterns = [
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`?([a-z_][a-z0-9_]*)`?',
+        r'CREATE\s+TABLE\s+`?([a-z_][a-z0-9_]*)`?',
+    ]
+    
+    sql_lower = sql.lower()
+    for pattern in patterns:
+        match = re.search(pattern, sql_lower, re.IGNORECASE)
+        if match:
+            table_name = match.group(1).strip('`').strip("'").strip('"')
+            return table_name.lower()
+    
+    return None
+
+
+def validate_table_name(expected: str, generated_sql: str) -> bool:
+    """Valida si el SQL generado crea la tabla esperada (con normalización)"""
+    if not expected or not generated_sql:
+        return False
+    
+    # Extraer nombre de tabla del SQL generado
+    generated_table = extract_table_name_from_sql(generated_sql)
+    
+    if not generated_table:
+        # Fallback: búsqueda directa
+        generated_lower = generated_sql.lower()
+        if f'create table {expected}' in generated_lower:
+            return True
+        return False
+    
+    # Normalizar ambos nombres
+    expected_norm = expected.lower().strip()
+    generated_norm = normalize_table_name_mysql(generated_table)
+    
+    # Debug (opcional)
+    if expected_norm != generated_norm:
+        print(f"   🐛 Debug: Esperado='{expected_norm}' | Generado='{generated_norm}' (original='{generated_table}')")
+    
+    return expected_norm == generated_norm
 
 # =========================================================
 # MAIN

@@ -1,3 +1,212 @@
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres$ python3 test_end_2_end.py 
+/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+======================================================================
+🔍 EVALUACIÓN END-TO-END CON POSTGRESQL
+======================================================================
+✅ Conectado a PostgreSQL: 26 chunks
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=3
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=3 con PostgreSQL
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con nombre de usuario...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.827 | ROUGE-L: 0.769
+   Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems
+   Pregunta: Tabla para sistemas con nombre y descripción...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.370 | ROUGE-L: 0.400
+   Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles
+   Pregunta: Tabla para roles que pertenecen a un sistema...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.667 | ROUGE-L: 0.772
+   Tabla esperada: roles | Correcta: ✅
+
+📝 Tabla permissions
+   Pregunta: Tabla para permisos asociados a roles...
+   🐛 Debug: Esperado='permissions' | Extraído='if'
+   🐛 SQL: CREATE TABLE IF NOT EXISTS role_permissions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(40) NOT NULL,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAM...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.500 | ROUGE-L: 0.600
+   Tabla esperada: permissions | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para logs...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.333 | ROUGE-L: 0.419
+
+
+======================================================================
+📈 REPORTE END-TO-END - PostgreSQL
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=3
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.8200
+   Table Accuracy:   75.00%
+   BLEU:             0.5395
+   ROUGE-L:          0.5921
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/e2e_postgres_report_20260501_183045_k3.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=5
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=5 con PostgreSQL
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con nombre de usuario...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.895 | ROUGE-L: 0.864
+   Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems
+   Pregunta: Tabla para sistemas con nombre y descripción...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.552 | ROUGE-L: 0.541
+   Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles
+   Pregunta: Tabla para roles que pertenecen a un sistema...
+   🐛 Debug: Esperado='roles' | Extraído='roles_systems'
+   🐛 SQL: CREATE TABLE roles_systems (
+    role_id INTEGER NOT NULL,
+    system_id INTEGER NOT NULL,
+    PRIMARY KEY (role_id, system_id),
+    FOREIGN KEY (role...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.583 | ROUGE-L: 0.545
+   Tabla esperada: roles | Correcta: ❌
+
+📝 Tabla permissions
+   Pregunta: Tabla para permisos asociados a roles...
+   🐛 Debug: Esperado='permissions' | Extraído='if'
+   🐛 SQL: CREATE TABLE IF NOT EXISTS roles_permissions (
+    id SERIAL PRIMARY KEY,
+    role_id INTEGER NOT NULL,
+    permission_name VARCHAR(40) NOT NULL,
+    ...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.484 | ROUGE-L: 0.536
+   Tabla esperada: permissions | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para logs...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.478 | ROUGE-L: 0.468
+
+
+======================================================================
+📈 REPORTE END-TO-END - PostgreSQL
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=5
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.8200
+   Table Accuracy:   50.00%
+   BLEU:             0.5984
+   ROUGE-L:          0.5907
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/e2e_postgres_report_20260501_183045_k5.json
+
+──────────────────────────────────────────────────────────────────────
+🔄 K=10
+──────────────────────────────────────────────────────────────────────
+
+======================================================================
+📊 EVALUACIÓN K=10 con PostgreSQL
+======================================================================
+
+📝 Tabla users
+   Pregunta: Necesito crear una tabla para usuarios con nombre de usuario...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.895 | ROUGE-L: 0.864
+   Tabla esperada: users | Correcta: ✅
+
+📝 Tabla systems
+   Pregunta: Tabla para sistemas con nombre y descripción...
+   Faithfulness: 1.000 | Relevancy: 1.000
+   BLEU: 0.552 | ROUGE-L: 0.541
+   Tabla esperada: systems | Correcta: ✅
+
+📝 Tabla roles
+   Pregunta: Tabla para roles que pertenecen a un sistema...
+   🐛 Debug: Esperado='roles' | Extraído='roles_systems'
+   🐛 SQL: CREATE TABLE roles_systems (
+    role_id INTEGER NOT NULL,
+    system_id INTEGER NOT NULL,
+    PRIMARY KEY (role_id, system_id),
+    FOREIGN KEY (role...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.583 | ROUGE-L: 0.545
+   Tabla esperada: roles | Correcta: ❌
+
+📝 Tabla permissions
+   Pregunta: Tabla para permisos asociados a roles...
+   🐛 Debug: Esperado='permissions' | Extraído='if'
+   🐛 SQL: CREATE TABLE IF NOT EXISTS roles_permissions (
+    id SERIAL PRIMARY KEY,
+    role_id INTEGER NOT NULL,
+    permission_name VARCHAR(40) NOT NULL,
+    ...
+   Faithfulness: 1.000 | Relevancy: 0.800
+   BLEU: 0.556 | ROUGE-L: 0.577
+   Tabla esperada: permissions | Correcta: ❌
+
+📝 Query negativa
+   Pregunta: Necesito una tabla para logs...
+   Faithfulness: 1.000 | Relevancy: 0.500
+   BLEU: 0.324 | ROUGE-L: 0.377
+
+
+======================================================================
+📈 REPORTE END-TO-END - PostgreSQL
+======================================================================
+
+🎯 Backend: PostgreSQL
+🎯 K=10
+
+🎯 MÉTRICAS:
+   Faithfulness:     1.0000
+   Answer Relevancy: 0.8200
+   Table Accuracy:   50.00%
+   BLEU:             0.5817
+   ROUGE-L:          0.5807
+
+✅ Queries: 5/5
+
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/e2e_postgres_report_20260501_183045_k10.json
+
+✅ Evaluación completada
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres$ python3 test_ 
+test_end_2_end.py     test_recuperacion.py  
 (venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres$ python3 test_recuperacion.py 
 /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
   import pynvml  # type: ignore[import]
@@ -92,7 +301,7 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_schema_report_20260501_113252_k5.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_schema_report_20260501_183338_k5.json
 
 ──────────────────────────────────────────────────────────────────────
 🔄 EVALUANDO CON K=10
@@ -164,7 +373,7 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_schema_report_20260501_113252_k10.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_schema_report_20260501_183338_k10.json
 
 ──────────────────────────────────────────────────────────────────────
 🔄 EVALUANDO CON K=20
@@ -236,185 +445,9 @@
 
 ✅ Expectation Rate: 100.00%
 
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_schema_report_20260501_113252_k20.json
+💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/retrieval_postgres_schema_report_20260501_183338_k20.json
 
 ✅ Evaluación completada
 📁 Resultados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results
-(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres$ python3 test_end_2_end.py 
-/home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/venv/lib/python3.12/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
-  import pynvml  # type: ignore[import]
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres$ 
 
-======================================================================
-🔍 EVALUACIÓN END-TO-END CON POSTGRESQL
-======================================================================
-✅ Conectado a PostgreSQL: 26 chunks
-
-──────────────────────────────────────────────────────────────────────
-🔄 K=3
-──────────────────────────────────────────────────────────────────────
-
-======================================================================
-📊 EVALUACIÓN K=3 con PostgreSQL
-======================================================================
-
-📝 Tabla users
-   Pregunta: Necesito crear una tabla para usuarios con nombre de usuario...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.600 | ROUGE-L: 0.678
-   Tabla esperada: users | Correcta: ❌
-
-📝 Tabla systems
-   Pregunta: Tabla para sistemas con nombre y descripción...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.357 | ROUGE-L: 0.377
-   Tabla esperada: systems | Correcta: ❌
-
-📝 Tabla roles
-   Pregunta: Tabla para roles que pertenecen a un sistema...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.630 | ROUGE-L: 0.621
-   Tabla esperada: roles | Correcta: ❌
-
-📝 Tabla permissions
-   Pregunta: Tabla para permisos asociados a roles...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.452 | ROUGE-L: 0.516
-   Tabla esperada: permissions | Correcta: ❌
-
-📝 Query negativa
-   Pregunta: Necesito una tabla para logs...
-   Faithfulness: 1.000 | Relevancy: 0.500
-   BLEU: 0.333 | ROUGE-L: 0.436
-
-
-======================================================================
-📈 REPORTE END-TO-END - PostgreSQL
-======================================================================
-
-🎯 Backend: PostgreSQL
-🎯 K=3
-
-🎯 MÉTRICAS:
-   Faithfulness:     1.0000
-   Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.4743
-   ROUGE-L:          0.5257
-
-✅ Queries: 5/5
-
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/e2e_postgres_report_20260501_113303_k3.json
-
-──────────────────────────────────────────────────────────────────────
-🔄 K=5
-──────────────────────────────────────────────────────────────────────
-
-======================================================================
-📊 EVALUACIÓN K=5 con PostgreSQL
-======================================================================
-
-📝 Tabla users
-   Pregunta: Necesito crear una tabla para usuarios con nombre de usuario...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.600 | ROUGE-L: 0.678
-   Tabla esperada: users | Correcta: ❌
-
-📝 Tabla systems
-   Pregunta: Tabla para sistemas con nombre y descripción...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.385 | ROUGE-L: 0.400
-   Tabla esperada: systems | Correcta: ❌
-
-📝 Tabla roles
-   Pregunta: Tabla para roles que pertenecen a un sistema...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.531 | ROUGE-L: 0.545
-   Tabla esperada: roles | Correcta: ❌
-
-📝 Tabla permissions
-   Pregunta: Tabla para permisos asociados a roles...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.452 | ROUGE-L: 0.516
-   Tabla esperada: permissions | Correcta: ❌
-
-📝 Query negativa
-   Pregunta: Necesito una tabla para logs...
-   Faithfulness: 1.000 | Relevancy: 0.500
-   BLEU: 0.353 | ROUGE-L: 0.400
-
-
-======================================================================
-📈 REPORTE END-TO-END - PostgreSQL
-======================================================================
-
-🎯 Backend: PostgreSQL
-🎯 K=5
-
-🎯 MÉTRICAS:
-   Faithfulness:     1.0000
-   Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.4641
-   ROUGE-L:          0.5079
-
-✅ Queries: 5/5
-
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/e2e_postgres_report_20260501_113303_k5.json
-
-──────────────────────────────────────────────────────────────────────
-🔄 K=10
-──────────────────────────────────────────────────────────────────────
-
-======================================================================
-📊 EVALUACIÓN K=10 con PostgreSQL
-======================================================================
-
-📝 Tabla users
-   Pregunta: Necesito crear una tabla para usuarios con nombre de usuario...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.600 | ROUGE-L: 0.678
-   Tabla esperada: users | Correcta: ❌
-
-📝 Tabla systems
-   Pregunta: Tabla para sistemas con nombre y descripción...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.385 | ROUGE-L: 0.400
-   Tabla esperada: systems | Correcta: ❌
-
-📝 Tabla roles
-   Pregunta: Tabla para roles que pertenecen a un sistema...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.548 | ROUGE-L: 0.581
-   Tabla esperada: roles | Correcta: ❌
-
-📝 Tabla permissions
-   Pregunta: Tabla para permisos asociados a roles...
-   Faithfulness: 1.000 | Relevancy: 0.800
-   BLEU: 0.452 | ROUGE-L: 0.516
-   Tabla esperada: permissions | Correcta: ❌
-
-📝 Query negativa
-   Pregunta: Necesito una tabla para logs...
-   Faithfulness: 1.000 | Relevancy: 0.500
-   BLEU: 0.297 | ROUGE-L: 0.353
-
-
-======================================================================
-📈 REPORTE END-TO-END - PostgreSQL
-======================================================================
-
-🎯 Backend: PostgreSQL
-🎯 K=10
-
-🎯 MÉTRICAS:
-   Faithfulness:     1.0000
-   Answer Relevancy: 0.7400
-   Table Accuracy:   0.00%
-   BLEU:             0.4564
-   ROUGE-L:          0.5055
-
-✅ Queries: 5/5
-
-💾 Resultados guardados en: /home/pepe/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta/tests/20251211_111352_llama3.2:3b_postgres/evaluation_results/e2e_postgres_report_20260501_113303_k10.json
-
-✅ Evaluación completada

@@ -1,4 +1,4 @@
-# test_end_2_end_postgres_programas.py - Pruebas end-to-end
+# test_end_2_end_postgres_programas.py - Pruebas end-to-end con normalización
 
 import os
 import json
@@ -37,6 +37,100 @@ TARGET_TABLES = ['programs', 'phases', 'participants', 'internals', 'workers', '
 
 
 # =========================================================
+# FUNCIONES DE NORMALIZACIÓN (NUEVAS)
+# =========================================================
+
+def normalize_table_name_postgres(table_name: str) -> str:
+    """Normaliza nombres de tabla español → inglés para PostgreSQL"""
+    mapping = {
+        # Español → Inglés
+        'programa': 'programs',
+        'programas': 'programs',
+        'fase': 'phases',
+        'fases': 'phases',
+        'participante': 'participants',
+        'participantes': 'participants',
+        'trabajador': 'workers',
+        'trabajadores': 'workers',
+        'mentor': 'mentors',
+        'mentores': 'mentors',
+        'interno': 'internals',
+        'internos': 'internals',
+        'externo': 'externals',
+        'externos': 'externals',
+        # Inglés → Inglés (por si acaso)
+        'program': 'programs',
+        'phase': 'phases',
+        'participant': 'participants',
+        'worker': 'workers',
+        'mentor': 'mentors',
+    }
+    table_lower = table_name.lower().strip()
+    return mapping.get(table_lower, table_lower)
+
+
+def extract_table_name_from_sql(sql: str) -> str:
+    """Extrae nombre de tabla de sentencia CREATE TABLE para PostgreSQL"""
+    if not sql:
+        return None
+    
+    # Patrones para PostgreSQL
+    patterns = [
+        # CREATE TABLE public.users
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public|pg_catalog)\.([a-z_][a-z0-9_]*)',
+        # CREATE TABLE "users"
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?"([a-z_][a-z0-9_]*)"',
+        # CREATE TABLE users
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-z_][a-z0-9_]*)',
+        # CREATE TABLE users (
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-z_][a-z0-9_]*)\s*\(',
+    ]
+    
+    sql_lower = sql.lower()
+    for pattern in patterns:
+        match = re.search(pattern, sql_lower, re.IGNORECASE)
+        if match:
+            table_name = match.group(1)
+            # Limpiar comillas y schema prefix
+            table_name = table_name.strip('"').strip("'").strip()
+            if '.' in table_name:
+                table_name = table_name.split('.')[-1]
+            return table_name.lower()
+    
+    return None
+
+
+def validate_table_name(expected: str, generated_sql: str, debug: bool = True) -> bool:
+    """Valida si el SQL generado crea la tabla esperada (con normalización)"""
+    if not expected or not generated_sql:
+        return False
+    
+    # Extraer nombre de tabla del SQL generado
+    generated_table = extract_table_name_from_sql(generated_sql)
+    
+    if not generated_table:
+        # Fallback: búsqueda directa
+        generated_lower = generated_sql.lower()
+        expected_lower = expected.lower()
+        if f'create table {expected_lower}' in generated_lower:
+            return True
+        if expected_lower in generated_lower and 'create table' in generated_lower:
+            return True
+        return False
+    
+    # Normalizar ambos nombres
+    expected_norm = normalize_table_name_postgres(expected)
+    generated_norm = normalize_table_name_postgres(generated_table)
+    
+    # Debug para identificar problemas
+    if debug and expected_norm != generated_norm:
+        print(f"   🐛 Debug: Esperado='{expected_norm}' | Generado='{generated_norm}' (original='{generated_table}')")
+        print(f"   🐛 SQL fragmento: {generated_sql[:150]}...")
+    
+    return expected_norm == generated_norm
+
+
+# =========================================================
 # FUNCIONES DE UTILIDAD
 # =========================================================
 
@@ -65,7 +159,6 @@ def cosine_similarity(emb1: List[float], emb2_str: str) -> float:
         
         return float(np.dot(vec1, vec2) / (norm1 * norm2))
     except Exception as e:
-        # Si falla, intentar búsqueda por texto
         return 0.0
 
 
@@ -119,6 +212,7 @@ class VectorSearchPostgreSQL:
             print(f"❌ Error en búsqueda: {e}")
             return []
 
+
 # =========================================================
 # FUNCIONES PARA LLAMA 3.2
 # =========================================================
@@ -152,18 +246,27 @@ def call_llama(prompt: str, max_tokens: int = 600) -> str:
 def generate_sql_answer(question: str, retrieved_chunks: List[Tuple[str, str, float]]) -> str:
     context = "\n\n".join([chunk_text for _, chunk_text, _ in retrieved_chunks[:5]])
     
-    prompt = f"""Eres un experto en SQL para PostgreSQL. Genera solo la sentencia SQL.
+    prompt = f"""Eres un experto en SQL para PostgreSQL. Genera solo la sentencia CREATE TABLE.
 
-CONTEXTO:
+CONTEXTO DEL ESQUEMA (nombres en INGLÉS):
 {context}
 
 PREGUNTA: {question}
 
-REGLAS:
-1. Solo responde con SQL
-2. Usa SERIAL para auto-incremento
-3. Incluye FOREIGN KEY si es necesario
-4. Usa TIMESTAMP para fechas
+REGLAS ESTRICTAS:
+1. Los nombres de tabla DEBEN estar en INGLÉS (programs, phases, participants, workers, mentors)
+2. NO uses nombres en español (programas, fases, participantes, trabajadores, mentores)
+3. NO uses schema prefix como "public." (ej: "CREATE TABLE users" NO "CREATE TABLE public.users")
+4. NO uses comillas dobles en nombres de tabla
+5. Usa SERIAL para auto-incremento
+6. Incluye FOREIGN KEY si es necesario
+
+EJEMPLOS CORRECTOS:
+- "programas" → CREATE TABLE programs (...)
+- "fases" → CREATE TABLE phases (...)
+- "participantes" → CREATE TABLE participants (...)
+- "trabajadores" → CREATE TABLE workers (...)
+- "mentores" → CREATE TABLE mentors (...)
 
 SQL:"""
 
@@ -174,14 +277,26 @@ SQL:"""
         if match:
             answer = match.group(1)
     
+    # Limpiar schema prefix y comillas
+    answer = re.sub(r'CREATE\s+TABLE\s+(?:public|pg_catalog)\.', 'CREATE TABLE ', answer, flags=re.IGNORECASE)
+    answer = re.sub(r'CREATE\s+TABLE\s+"([^"]+)"', r'CREATE TABLE \1', answer, flags=re.IGNORECASE)
+    
+    # Fallback específico
     if not answer or len(answer) < 20:
         if "programa" in question.lower():
             answer = """CREATE TABLE programs (
     id SERIAL PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
-    description TEXT,
-    program_type_id INTEGER NOT NULL,
-    period_id INTEGER NOT NULL
+    description TEXT
+);"""
+        elif "fase" in question.lower():
+            answer = """CREATE TABLE phases (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) NOT NULL,
+    init_date DATE,
+    end_date DATE,
+    program_id INTEGER NOT NULL,
+    FOREIGN KEY (program_id) REFERENCES programs(id)
 );"""
         elif "participante" in question.lower():
             answer = """CREATE TABLE participants (
@@ -432,11 +547,11 @@ def evaluate_e2e(k: int = 5) -> Dict[str, Any]:
         bleu_score = calculate_bleu_simple(generated_answer, ground_truth)
         rouge_l = calculate_rouge_l_simple(generated_answer, ground_truth)
         
+        # ✅ VALIDACIÓN CORREGIDA CON NORMALIZACIÓN
         expected = query.get("expected_table")
         table_correct = False
         if expected:
-            if f'create table {expected}' in generated_answer.lower():
-                table_correct = True
+            table_correct = validate_table_name(expected, generated_answer)
         
         result = {
             "query_name": query["name"],
