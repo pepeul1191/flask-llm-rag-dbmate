@@ -9,7 +9,7 @@ from application.models import Engine, Project
 from sqlalchemy import text
 from pathlib import Path
 from sqlalchemy.orm import joinedload
-from main.database import session
+from main.database import Session
 from ai.draft import demo
 from ai.main import execute
 
@@ -21,17 +21,18 @@ def build_response(data=None, message="Operación exitosa", success=True):
     "error": None
   }
 
-def handle_error(message, traceback=None):
-  # Aquí podrías registrar logs si es necesario
+def handle_error(message, traceback=None, status=500):
   print(message)
+
   if traceback:
     print(traceback)
+
   return {
     "error": traceback,
     "message": message,
     "data": None,
     "success": False
-  }
+  }, status
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 # engines
@@ -40,6 +41,7 @@ def handle_error(message, traceback=None):
 def fetch_engines():
   try:
     # Usar context manager para manejo de sesión
+    session = Session()
     engines = session.query(Engine).all()
     data = [
       {
@@ -74,6 +76,7 @@ def fetch_engines():
   
 def fetch_project(project_id):
   try:
+    session = Session()
     project = session.query(Project)\
       .options(
         joinedload(Project.engine),
@@ -115,6 +118,7 @@ def fetch_project(project_id):
 
 def fetch_projects():
   try:
+    session = Session()
     projects = session.query(Project)\
       .options(
         joinedload(Project.engine),
@@ -165,6 +169,7 @@ def create_project(data):
     if not all([title, description, connection_string, engine_id]):
       return build_response(success=False, message="Todos los campos son obligatorios"), 400
 
+    session = Session()
     engine = session.query(Engine).get(engine_id)
     if not engine:
       return build_response(success=False, message="Motor no encontrado"), 404
@@ -190,6 +195,7 @@ def create_project(data):
 
 def update_project(project_id, data):
   try:
+    session = Session()
     project = session.query(Project).get(project_id)
     if not project:
       return build_response(success=False, message="Proyecto no encontrado"), 404
@@ -209,6 +215,7 @@ def update_project(project_id, data):
 
 def delete_project(project_id):
   try:
+    session = Session()
     project = session.query(Project).get(project_id)
     if not project:
       return build_response(success=False, message="Proyecto no encontrado"), 404

@@ -8,4 +8,4 @@ from sqlalchemy.orm import sessionmaker
 
 engine = create_engine("sqlite:///db/app.db", echo=True)
 Session = sessionmaker(bind=engine)
-session = Session()
+#session = Session()
