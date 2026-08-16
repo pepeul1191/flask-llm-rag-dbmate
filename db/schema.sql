@@ -10,38 +10,141 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `permissions`
+-- Table structure for table `categories`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `permissions` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(40) NOT NULL,
-  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `role_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `role_id` (`role_id`),
-  CONSTRAINT `permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`)
+CREATE TABLE `categories` (
+  `category_id` int NOT NULL AUTO_INCREMENT,
+  `category_name` varchar(15) DEFAULT NULL,
+  `description` text,
+  `picture` blob,
+  PRIMARY KEY (`category_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `roles`
+-- Table structure for table `customers`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `roles` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(40) NOT NULL,
-  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `system_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `system_id` (`system_id`),
-  CONSTRAINT `roles_ibfk_1` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`)
+CREATE TABLE `customers` (
+  `customer_id` int NOT NULL AUTO_INCREMENT,
+  `company_name` varchar(40) DEFAULT NULL,
+  `contact_name` varchar(30) DEFAULT NULL,
+  `contact_title` varchar(30) DEFAULT NULL,
+  `address` varchar(60) DEFAULT NULL,
+  `city` varchar(15) DEFAULT NULL,
+  `region` varchar(15) DEFAULT NULL,
+  `postal_code` varchar(10) DEFAULT NULL,
+  `country` varchar(15) DEFAULT NULL,
+  `phone` varchar(24) DEFAULT NULL,
+  `fax` varchar(24) DEFAULT NULL,
+  PRIMARY KEY (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `employees`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `employees` (
+  `employee_id` int NOT NULL AUTO_INCREMENT,
+  `last_name` varchar(20) DEFAULT NULL,
+  `first_name` varchar(10) DEFAULT NULL,
+  `title` varchar(30) DEFAULT NULL,
+  `title_of_courtesy` varchar(25) DEFAULT NULL,
+  `birth_date` date DEFAULT NULL,
+  `hire_date` date DEFAULT NULL,
+  `address` varchar(60) DEFAULT NULL,
+  `city` varchar(15) DEFAULT NULL,
+  `region` varchar(15) DEFAULT NULL,
+  `postal_code` varchar(10) DEFAULT NULL,
+  `country` varchar(15) DEFAULT NULL,
+  `home_phone` varchar(24) DEFAULT NULL,
+  `extension` varchar(4) DEFAULT NULL,
+  `notes` text,
+  `reports_to` int DEFAULT NULL,
+  PRIMARY KEY (`employee_id`),
+  KEY `reports_to` (`reports_to`),
+  CONSTRAINT `employees_ibfk_1` FOREIGN KEY (`reports_to`) REFERENCES `employees` (`employee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `order_details`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `order_details` (
+  `order_id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `unit_price` decimal(10,0) DEFAULT NULL,
+  `quantity` smallint DEFAULT NULL,
+  `discount` float DEFAULT NULL,
+  PRIMARY KEY (`order_id`,`product_id`),
+  KEY `product_id` (`product_id`),
+  CONSTRAINT `order_details_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`),
+  CONSTRAINT `order_details_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `orders`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `orders` (
+  `order_id` int NOT NULL AUTO_INCREMENT,
+  `customer_id` int DEFAULT NULL,
+  `employee_id` int DEFAULT NULL,
+  `order_date` datetime DEFAULT NULL,
+  `required_date` datetime DEFAULT NULL,
+  `shipped_date` datetime DEFAULT NULL,
+  `ship_via` int DEFAULT NULL,
+  `freight` decimal(10,0) DEFAULT NULL,
+  `ship_name` varchar(40) DEFAULT NULL,
+  `ship_address` varchar(60) DEFAULT NULL,
+  `ship_city` varchar(15) DEFAULT NULL,
+  `ship_region` varchar(15) DEFAULT NULL,
+  `ship_postal_code` varchar(10) DEFAULT NULL,
+  `ship_country` varchar(15) DEFAULT NULL,
+  PRIMARY KEY (`order_id`),
+  KEY `customer_id` (`customer_id`),
+  KEY `employee_id` (`employee_id`),
+  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`),
+  CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`employee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `products`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `products` (
+  `product_id` int NOT NULL AUTO_INCREMENT,
+  `product_name` varchar(40) DEFAULT NULL,
+  `supplier_id` int DEFAULT NULL,
+  `category_id` int DEFAULT NULL,
+  `quantity_per_unit` varchar(20) DEFAULT NULL,
+  `unit_price` decimal(10,0) DEFAULT NULL,
+  `units_in_stock` int DEFAULT NULL,
+  `units_on_order` int DEFAULT NULL,
+  `reorder_level` int DEFAULT NULL,
+  `discontinued` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`product_id`),
+  KEY `supplier_id` (`supplier_id`),
+  KEY `category_id` (`category_id`),
+  CONSTRAINT `products_ibfk_1` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`),
+  CONSTRAINT `products_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -58,85 +161,44 @@ CREATE TABLE `schema_migrations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `systems`
+-- Table structure for table `shippers`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `systems` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(40) NOT NULL,
-  `description` text,
-  `repository` varchar(100) DEFAULT NULL,
-  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+CREATE TABLE `shippers` (
+  `shipper_id` int NOT NULL AUTO_INCREMENT,
+  `company_name` varchar(40) DEFAULT NULL,
+  `phone` varchar(24) DEFAULT NULL,
+  PRIMARY KEY (`shipper_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `systems_users`
+-- Table structure for table `suppliers`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `systems_users` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `system_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `system_id` (`system_id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `systems_users_ibfk_1` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`),
-  CONSTRAINT `systems_users_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+CREATE TABLE `suppliers` (
+  `supplier_id` int NOT NULL AUTO_INCREMENT,
+  `company_name` varchar(40) DEFAULT NULL,
+  `contact_name` varchar(30) DEFAULT NULL,
+  `contact_title` varchar(30) DEFAULT NULL,
+  `address` varchar(60) DEFAULT NULL,
+  `city` varchar(15) DEFAULT NULL,
+  `region` varchar(15) DEFAULT NULL,
+  `postal_code` varchar(10) DEFAULT NULL,
+  `country` varchar(15) DEFAULT NULL,
+  `phone` varchar(24) DEFAULT NULL,
+  `fax` varchar(24) DEFAULT NULL,
+  `homepage` text,
+  PRIMARY KEY (`supplier_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `systems_users_permissions`
---
-
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `systems_users_permissions` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `system_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `permission_id` int NOT NULL,
-  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `system_id` (`system_id`),
-  KEY `user_id` (`user_id`),
-  KEY `permission_id` (`permission_id`),
-  CONSTRAINT `systems_users_permissions_ibfk_1` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`),
-  CONSTRAINT `systems_users_permissions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `systems_users_permissions_ibfk_3` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `users`
---
-
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `users` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(20) NOT NULL,
-  `password` varchar(100) NOT NULL,
-  `activation_key` varchar(30) DEFAULT NULL,
-  `reset_key` varchar(30) DEFAULT NULL,
-  `email` varchar(50) NOT NULL,
-  `activated` tinyint(1) NOT NULL DEFAULT '0',
-  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping routines for database 'demo03'
+-- Dumping routines for database 'northwind'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -156,10 +218,12 @@ CREATE TABLE `users` (
 
 LOCK TABLES `schema_migrations` WRITE;
 INSERT INTO `schema_migrations` (version) VALUES
-  ('1764900436061'),
-  ('1764900436062'),
-  ('1764900436063'),
-  ('1764900436064'),
-  ('1764900436065'),
-  ('1764900436066');
+  ('1786844034245'),
+  ('1786844034246'),
+  ('1786844034247'),
+  ('1786844034248'),
+  ('1786844034249'),
+  ('1786844034250'),
+  ('1786844034251'),
+  ('1786844034252');
 UNLOCK TABLES;

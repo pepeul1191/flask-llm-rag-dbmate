@@ -157,8 +157,32 @@
   }
 
   async function runMigrations() {
-    const resp = await executeMigrations(project, migrations);
-    console.log(resp.data);
+    try {
+      const resp = await executeMigrations(project, migrations);
+
+      console.log(resp.data);
+
+      if (!resp.data.success) {
+        showFlashAlert(
+          `${resp.data.message}\n${resp.data.error}`,
+          'error'
+        );
+        return;
+      }
+
+      showFlashAlert('Migraciones ejecutadas correctamente', 'success');
+
+    } catch (error) {
+      console.error('Error ejecutando migraciones:', error);
+
+      const message = error?.data?.message || 'Error al ejecutar migraciones';
+      const detail = error?.data?.error || '';
+
+      showFlashAlert(
+        `${message}\n${detail}`,
+        'error'
+      );
+    }
   }
 
   function showFlashAlert(message, type = "success") {
@@ -174,16 +198,44 @@
     let counter = 1;
     const baseTimestamp = Date.now();
 
+    function formatSql(sql) {
+      let result = '';
+      let parenthesisLevel = 0;
+
+      for (let i = 0; i < sql.length; i++) {
+        const char = sql[i];
+
+        if (char === '(') {
+          parenthesisLevel++;
+          result += char;
+        } 
+        else if (char === ')') {
+          parenthesisLevel--;
+          result += char;
+        } 
+        else if (char === ',' && parenthesisLevel === 1) {
+          result += ',\n   ';
+        } 
+        else {
+          result += char;
+        }
+      }
+
+      return result;
+    }
+
     migrations = detail.data.map((json) => {
       const timestamp = baseTimestamp + counter++;
+
       return {
         ...json,
-        timestamp: timestamp,
+        up: formatSql(json.up),
+        down: formatSql(json.down),
+        timestamp,
         name: generateMigrationName(json, timestamp)
       };
     });
 
-    // Ordenar por timestamp
     migrations.sort((a, b) => a.timestamp - b.timestamp);
   }
 </script>

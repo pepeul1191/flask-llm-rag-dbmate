@@ -11,6 +11,7 @@ from pathlib import Path
 from sqlalchemy.orm import joinedload
 from main.database import session
 from ai.draft import demo
+from ai.main import execute
 
 def build_response(data=None, message="Operación exitosa", success=True):
   return {
@@ -301,7 +302,8 @@ def create_migrations(model, project):
 
     db_type = db_type_dict[project['engine']['name']]
     print('XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
-    data, sucess = demo(folder_path, db_type)
+    # data, sucess = demo(folder_path, db_type)
+    data, sucess = execute(folder_path, db_type)
 
     if sucess:
       return {
