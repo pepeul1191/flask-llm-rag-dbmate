@@ -241,7 +241,7 @@
     <p>Comienza a usar MDE y LLMs para un control de bases de datos inteligente y seguro</p>
     <div class="cta-buttons">
       <button class="cta-primary" on:click={goToProjects}>Crea tu Primer Proyecto</button>
-      <a href="/docs/manual-usuario.pdf" target="_blank" class="btn btn-outline-light btn-lg px-5 py-3 fw-bold cta-secondary">
+      <a href="/user-manual" target="_blank" class="btn btn-outline-light btn-lg px-5 py-3 fw-bold cta-secondary">
         Ver Documentación
       </a>
     </div>

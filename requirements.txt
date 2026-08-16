@@ -35,3 +35,7 @@ seaborn==0.13.2
 
 # tests
 pandas
+
+# documentation
+markdown 
+weasyprint
