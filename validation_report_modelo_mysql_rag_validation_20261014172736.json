@@ -1,0 +1,350 @@
+{
+  "is_valid": false,
+  "missing_tables": [],
+  "extra_tables": [],
+  "missing_columns": {},
+  "extra_columns": {
+    "carrers": [
+      "name"
+    ],
+    "profiles": [
+      "profile_id"
+    ],
+    "semesters": [
+      "name"
+    ],
+    "skills": [
+      "name"
+    ],
+    "skill_levels": [
+      "name"
+    ],
+    "status_applications_students": [
+      "name"
+    ],
+    "workdays": [
+      "name"
+    ],
+    "modalities": [
+      "name"
+    ],
+    "districts": [
+      "name"
+    ],
+    "users": [
+      "email",
+      "password"
+    ],
+    "students": [
+      "names",
+      "last_names",
+      "email"
+    ],
+    "enterprises": [
+      "name"
+    ],
+    "applications": [
+      "title"
+    ],
+    "experiences": [
+      "name"
+    ],
+    "links": [
+      "name"
+    ]
+  },
+  "type_mismatches": {},
+  "pk_mismatches": [],
+  "fk_mismatches": [
+    {
+      "table": "users",
+      "diffs": [
+        {
+          "extra": [
+            "profile_id",
+            "profiles",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "students",
+      "diffs": [
+        {
+          "extra": [
+            "carrere_id",
+            "carrers",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "sementer_id",
+            "semesters",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "user_id",
+            "users",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "district_id",
+            "districts",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "enterprises",
+      "diffs": [
+        {
+          "extra": [
+            "sector_id",
+            "modalities",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "size_id",
+            "skill_levels",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "user_id",
+            "users",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "district_id",
+            "districts",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "applications",
+      "diffs": [
+        {
+          "extra": [
+            "modality_id",
+            "modalities",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "enterprise_id",
+            "enterprises",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "workday_id",
+            "workdays",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "district_id",
+            "districts",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "sementer_id",
+            "semesters",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "experiences",
+      "diffs": [
+        {
+          "extra": [
+            "student_id",
+            "students",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "links",
+      "diffs": [
+        {
+          "extra": [
+            "student_id",
+            "students",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "logs",
+      "diffs": [
+        {
+          "extra": [
+            "user_id",
+            "users",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "students_skills_skill_levels",
+      "diffs": [
+        {
+          "extra": [
+            "student_id",
+            "students",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "skill_level_id",
+            "skill_levels",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "skill_id",
+            "skills",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "applications_skills",
+      "diffs": [
+        {
+          "extra": [
+            "application_id",
+            "applications",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "skill_id",
+            "skills",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "applications_carrers",
+      "diffs": [
+        {
+          "extra": [
+            "application_id",
+            "applications",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "carrer_id",
+            "carrers",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "students_applications_saved",
+      "diffs": [
+        {
+          "extra": [
+            "application_id",
+            "applications",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "student_id",
+            "students",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "applications_students",
+      "diffs": [
+        {
+          "extra": [
+            "application_id",
+            "applications",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "status_applications_student_id",
+            "status_applications_students",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "student_id",
+            "students",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "applications_students_reviews",
+      "diffs": [
+        {
+          "extra": [
+            "applications_students_reviews",
+            "applications_students",
+            "id"
+          ]
+        }
+      ]
+    }
+  ],
+  "nullability_mismatches": {},
+  "stats": {
+    "expected_tables": 22,
+    "generated_tables": 22,
+    "matched_tables": 22,
+    "expected_columns": 102,
+    "generated_columns": 120,
+    "matched_columns": 102,
+    "expected_types": 102,
+    "matched_types": 102,
+    "expected_pks": 22,
+    "matched_pks": 22,
+    "expected_fks": 0,
+    "matched_fks": 0
+  }
+}

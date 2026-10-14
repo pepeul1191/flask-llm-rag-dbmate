@@ -1,0 +1,22 @@
+{
+  "table_accuracy": 0.1818,
+  "column_accuracy": 0.0667,
+  "data_type_accuracy": 1.0,
+  "primary_key_accuracy": 1.0,
+  "foreign_key_accuracy": 0.0,
+  "full_schema_accuracy": 0.0,
+  "precision": 0.5714,
+  "recall": 0.1081,
+  "f1": 0.1818,
+  "counts": {
+    "expected_tables": 22,
+    "generated_tables": 6,
+    "missing_tables": 18,
+    "extra_tables": 2,
+    "missing_columns": 56,
+    "extra_columns": 5,
+    "type_mismatches": 0,
+    "pk_mismatches": 0,
+    "fk_mismatches": 11
+  }
+}

@@ -31,13 +31,11 @@ logger = logging.getLogger(__name__)
 VALID_MODES = ("llm_only", "rag", "rag_validation")
 
 
-def _build_chain(mode: str, vector_db):
-  """Construye la cadena según el modo solicitado."""
+def _build_chain(mode: str, vector_db, puml_file: str):
   if mode == "llm_only":
     return create_direct_chain()
-  retriever = create_retriever(vector_db)
+  retriever = create_retriever(vector_db, source_file=puml_file)
   return create_chain(retriever)
-
 
 def _generate_migrations(mode: str, chain, db_type: str, puml_file: str) -> str:
   """Genera las migraciones según el modo."""
@@ -58,7 +56,6 @@ def _generate_migrations(mode: str, chain, db_type: str, puml_file: str) -> str:
 
 
 def _load_vector_db(puml_file: str):
-  """Carga o recrea la base vectorial."""
   vector_db = check_existing_vector_db()
   if should_recreate_vector_db(puml_file, vector_db):
     print("🔄 Creando nueva base de datos vectorial...")
@@ -67,10 +64,10 @@ def _load_vector_db(puml_file: str):
       return None
     chunks = split_documents(content, puml_file)
     vector_db = create_vector_db(chunks, puml_file)
+    print(f"✅ Vector DB recreada con {len(chunks)} chunks.")
   else:
     print("✅ Usando base de datos vectorial existente.")
   return vector_db
-
 
 def _validate_structure(puml_file: str, complete_migrations: str, db_type: str):
   """Valida la estructura generada contra el modelo PUML esperado."""
@@ -156,7 +153,7 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
     vector_db = _load_vector_db(puml_file)
 
   # 2. Construir cadena
-  chain = _build_chain(mode, vector_db)
+  chain = _build_chain(mode, vector_db, puml_file)
 
   # 3. Generar migraciones
   print(f"🔄 Generando migraciones SQL para {puml_file} (db={db_type}, mode={mode})...")
