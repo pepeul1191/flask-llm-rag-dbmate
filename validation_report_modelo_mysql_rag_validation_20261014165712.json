@@ -1,0 +1,248 @@
+{
+  "is_valid": false,
+  "missing_tables": [],
+  "extra_tables": [
+    "permissions",
+    "roles"
+  ],
+  "missing_columns": {
+    "customers": [
+      "id"
+    ],
+    "employees": [
+      "id"
+    ],
+    "suppliers": [
+      "id"
+    ],
+    "categories": [
+      "id"
+    ],
+    "products": [
+      "id"
+    ],
+    "shippers": [
+      "id"
+    ],
+    "orders": [
+      "id"
+    ],
+    "order_details": [
+      "id"
+    ]
+  },
+  "extra_columns": {
+    "customers": [
+      "customer_id",
+      "company_name",
+      "contact_name",
+      "contact_title",
+      "address",
+      "city"
+    ],
+    "employees": [
+      "employee_id",
+      "last_name",
+      "first_name",
+      "title",
+      "title_of_courtesy",
+      "birth_date",
+      "hire_date",
+      "address",
+      "city"
+    ],
+    "suppliers": [
+      "supplier_id",
+      "company_name",
+      "contact_name",
+      "contact_title",
+      "address",
+      "city"
+    ],
+    "categories": [
+      "category_id",
+      "category_name"
+    ],
+    "products": [
+      "product_id",
+      "product_name"
+    ],
+    "shippers": [
+      "shipper_id",
+      "company_name",
+      "phone"
+    ],
+    "orders": [
+      "order_id"
+    ],
+    "order_details": [
+      "order_id",
+      "product_id"
+    ]
+  },
+  "type_mismatches": {
+    "order_details": [
+      {
+        "column": "quantity",
+        "expected": "smallint",
+        "generated": "int"
+      }
+    ]
+  },
+  "pk_mismatches": [
+    {
+      "table": "customers",
+      "expected": [
+        "id"
+      ],
+      "generated": [
+        "customer_id"
+      ]
+    },
+    {
+      "table": "employees",
+      "expected": [
+        "id"
+      ],
+      "generated": [
+        "employee_id"
+      ]
+    },
+    {
+      "table": "suppliers",
+      "expected": [
+        "id"
+      ],
+      "generated": [
+        "supplier_id"
+      ]
+    },
+    {
+      "table": "categories",
+      "expected": [
+        "id"
+      ],
+      "generated": [
+        "category_id"
+      ]
+    },
+    {
+      "table": "products",
+      "expected": [
+        "id"
+      ],
+      "generated": [
+        "product_id"
+      ]
+    },
+    {
+      "table": "shippers",
+      "expected": [
+        "id"
+      ],
+      "generated": [
+        "shipper_id"
+      ]
+    },
+    {
+      "table": "orders",
+      "expected": [
+        "id"
+      ],
+      "generated": [
+        "order_id"
+      ]
+    },
+    {
+      "table": "order_details",
+      "expected": [
+        "id"
+      ],
+      "generated": [
+        "order_id",
+        "product_id"
+      ]
+    }
+  ],
+  "fk_mismatches": [
+    {
+      "table": "products",
+      "diffs": [
+        {
+          "extra": [
+            "category_id",
+            "categories",
+            "category_id"
+          ]
+        },
+        {
+          "extra": [
+            "supplier_id",
+            "suppliers",
+            "supplier_id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "orders",
+      "diffs": [
+        {
+          "extra": [
+            "shipper_id",
+            "shippers",
+            "shipper_id"
+          ]
+        },
+        {
+          "extra": [
+            "employee_id",
+            "employees",
+            "employee_id"
+          ]
+        },
+        {
+          "extra": [
+            "customer_id",
+            "customers",
+            "customer_id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "order_details",
+      "diffs": [
+        {
+          "extra": [
+            "order_id",
+            "orders",
+            "order_id"
+          ]
+        },
+        {
+          "extra": [
+            "product_id",
+            "products",
+            "product_id"
+          ]
+        }
+      ]
+    }
+  ],
+  "nullability_mismatches": {},
+  "stats": {
+    "expected_tables": 8,
+    "generated_tables": 10,
+    "matched_tables": 8,
+    "expected_columns": 53,
+    "generated_columns": 76,
+    "matched_columns": 45,
+    "expected_types": 45,
+    "matched_types": 44,
+    "expected_pks": 8,
+    "matched_pks": 0,
+    "expected_fks": 0,
+    "matched_fks": 0
+  }
+}

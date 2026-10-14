@@ -238,3 +238,61 @@ def save_migration_files(tables_dict: Dict[int, TableMigration], puml_basename: 
     with open(filename, 'w', encoding='utf-8') as f:
       f.write(table.complete_block)
     print(f"✓ Migración {key} ({table.table_name}) guardada en: {filename}")
+
+def generate_sql_migrations_direct(chain, db_type: str, puml_file: str) -> str:
+  """
+  Igual que generate_sql_migrations_with_rag pero sin retriever.
+  Se usa en el modo llm_only para la comparación pedida por el Reviewer 1.
+  """
+  with open(puml_file, 'r', encoding='utf-8') as f:
+    puml_content = f.read()
+
+  entity_pattern = r'entity\s+(\w+)\s*\{([^}]+)\}'
+  entities = re.findall(entity_pattern, puml_content, re.IGNORECASE | re.DOTALL)
+  entity_info = []
+  for entity_name, entity_content in entities:
+    attributes = re.findall(r'\s*(\w+)\s*:\s*([^\n]+)', entity_content)
+    entity_info.append(f"Entidad: {entity_name}, Atributos: {attributes}")
+  entities_summary = "\n".join(entity_info)
+
+  query = f"""
+ANÁLISIS DE DIAGRAMA UML Y GENERACIÓN DE MIGRACIONES SQL
+
+ARCHIVO: {puml_file}
+TIPO DE BASE DE DATOS: {db_type.upper()}
+
+ENTIDADES ENCONTRADAS EN EL DIAGRAMA:
+{entities_summary}
+
+INSTRUCCIONES ESPECÍFICAS:
+
+1. ANALIZA cada entidad del diagrama UML y conviértela en una sentencia CREATE TABLE
+2. USA el formato EXACTO de migración que se muestra a continuación
+3. PRESERVA los nombres ORIGINALES de las entidades y atributos
+4. GENERA código SQL VÁLIDO para {db_type.upper()}
+
+FORMATO REQUERIDO para CADA tabla:
+
+-- migrate:up
+
+CREATE TABLE nombre_tabla (
+  id TIPO_PRIMARY_KEY,
+  columna1 TIPO_DATO,
+  columna2 TIPO_DATO,
+  PRIMARY KEY (id),
+  FOREIGN KEY (columna_relacionada) REFERENCES tabla_relacionada(id)
+);
+
+-- migrate:down
+
+DROP TABLE nombre_tabla;
+
+RESPONDE ÚNICAMENTE con las sentencias SQL en el formato especificado, sin explicaciones.
+"""
+  logger.info("Generating SQL migrations (direct, no RAG)...")
+  try:
+    response = chain.invoke({"context": "(sin contexto RAG)", "question": query})
+    return response
+  except Exception as e:
+    logger.error(f"Error generating migrations (direct): {e}")
+    return f"Error: {e}"

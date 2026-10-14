@@ -198,3 +198,10 @@ systems_users_permissions -- permissions : "belongs to"
 @enduml
 
 ```
+
+
+# Usar el nuevo ollama
+
+    $ sudo snap stop ollama
+    $ sudo systemctl enable --now ollama
+    $ ollama --version

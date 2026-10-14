@@ -1,0 +1,278 @@
+@startuml
+!define table(x) entity x << (T,#FFAAAA) >>
+!define primary_key(x) <b><color:red>x</color></b>
+!define foreign_key(x) <color:blue>x</color>
+
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ranksep 80
+skinparam nodesep 60
+skinparam entityFontSize 10
+skinparam entityFontStyle bold
+skinparam entityBackgroundColor #FEFECE
+skinparam entityBorderColor #A80036
+
+entity "carrers" as carrers {
+  * id : INT
+  --
+  name : VARCHAR(30)
+}
+
+entity "users" as users {
+  * id : INT
+  --
+  email : VARCHAR(45)
+  password : VARCHAR(100)
+  reset_token : VARCHAR(100)
+  created : DATETIME
+  updated : DATETIME
+  profile_id: INT
+}
+
+entity "students" as students {
+  * id : INT
+  --
+  names : VARCHAR(45)
+  last_names : VARCHAR(100)
+  email: VARCHAR(45)
+  phone: VARCHAR(15)
+  district_id: INT
+  picture_url: VARCHAR(100)
+  summary: TEXT
+  carrere_id: INT
+  sementer_id: INT
+  user_id: INT
+  created : DATETIME
+  updated : DATETIME
+}
+
+entity "students_skills_skill_levels" as students_skills_skill_levels {
+  * id : INT
+  --
+  student_id: INT
+  skill_id: INT
+  skill_level_id: INT
+}
+
+entity "experiences" as experiences {
+  * id : INT
+  --
+  name : VARCHAR(60)
+  enterprise: VARCHAR(60)
+  description: TEXT
+  start_date: DATE
+  end_date: DATE
+  student_id: INT
+}
+
+entity "applications_students" as applications_students {
+  * id : INT
+  --
+  application_id: INT
+  student_id: INT
+  status_applications_student_id: INT
+  notes: TEXT
+  created: DATETIME
+}
+
+entity "applications_students_reviews" as applications_students_reviews {
+  * id : INT
+  --
+  applications_students_reviews: INT
+  points: INT
+  enviroment: INT
+  learning: INT
+  work_load: INT
+  title: VARCHAR(50)
+  comment: TEXT
+  created: DATETIME
+  updated: DATETIME
+  start: DATETIME
+  end: DATETIME
+  anonimous: BOOLEAN
+}
+
+entity "status_applications_students" as status_applications_students {
+  * id : INT
+  --
+  name: VARCHAR(30)
+}
+
+entity "students_applications_saved" as students_applications_saved {
+  * id : INT
+  --
+  created: DATE
+  student_id: INT
+  application_id: INT
+}
+
+entity "links" as links {
+  * id : INT
+  --
+  name : VARCHAR(30)
+  url: VARCHAR(100)
+  student_id: INT
+}
+
+entity "skills" as skills {
+  * id : INT
+  --
+  name : VARCHAR(30)
+}
+
+entity "skill_levels" as skill_levels {
+  * id : INT
+  --
+  name : VARCHAR(30)
+}
+
+entity "enterprises" as enterprises {
+  * id : INT
+  --
+  name : VARCHAR(60)
+  ruc: VARCHAR(11)
+  email: VARCHAR(45)
+  phone: VARCHAR(15)
+  website_url: VARCHAR(100)
+  description: TEXT
+  address: VARCHAR(100)
+  picture_url: VARCHAR(100)
+  district_id: INT
+  sector_id: INT
+  size_id: INT
+  user_id: INT
+  created : DATETIME
+  updated : DATETIME
+}
+
+entity "logs" as logs {
+  * id : INT
+  --
+  user_id : INT
+  description : VARCHAR(100)
+  created : DATETIME
+}
+
+entity "profiles" as profiles {
+  * id : INT
+  --
+  created : DATETIME
+  updated : DATETIME
+}
+
+entity "semesters" as semesters {
+  * id : INT
+  --
+  name : VARCHAR(30)
+}
+
+entity "applications" as applications {
+  * id : INT
+  --
+  title : VARCHAR(40)
+  description: TEXT
+  benefits: TEXT
+  functions: TEXT
+  vacancies: INT
+  created : DATETIME
+  published : DATETIME
+  email_notification: BOOLEAN
+  closed: DATETIME
+  salarry: DECIMAL(10,2)
+  is_draft: BOOLEAN
+  modality_id : INT
+  sementer_id: INT
+  district_id : INT
+  workday_id: INT
+  enterprise_id : INT
+}
+
+entity "applications_skills" as applications_skills {
+  * id : INT
+  --
+  application_id: INT
+  skill_id: INT
+}
+
+entity "workdays" as workdays {
+  * id : INT
+  --
+  name : VARCHAR(40)
+}
+
+entity "applications_carrers" as applications_carrers {
+  * id : INT
+  --
+  application_id: INT
+  carrer_id: INT
+}
+
+entity "modalities" as modalities {
+  * id : INT
+  --
+  name : VARCHAR(40)
+}
+
+entity "districts" as districts {
+  * id : INT
+  --
+  name : VARCHAR(40)
+}
+
+' =========================
+' RELACIONES
+' =========================
+
+' Carreras
+carrers ||--o{ students : "has"
+carrers ||--o{ applications_carrers : "has"
+
+' Usuarios
+users ||--o| students : "has"
+users ||--o{ enterprises : "has"
+users ||--o{ logs : "has"
+profiles ||--o{ users  : "has"
+
+' Estudiantes
+students ||--o{ students_skills_skill_levels : "has"
+students ||--o{ experiences : "has"
+students ||--o{ applications_students : "has"
+students ||--o{ students_applications_saved : "saves"
+students ||--o{ links : "has"
+
+' Habilidades
+skills ||--o{ students_skills_skill_levels : "has"
+skills ||--o{ applications_skills : "required by"
+
+' Niveles de habilidad
+skill_levels ||--o{ students_skills_skill_levels : "has"
+
+' Semestres
+semesters ||--o{ students : "has"
+semesters ||--o{ applications : "has"
+
+' Empresas
+enterprises ||--o{ applications : "publishes"
+
+' Aplicaciones / ofertas
+applications ||--o{ applications_students : "receives"
+applications ||--o{ students_applications_saved : "saved by"
+applications ||--o{ applications_skills : "requires"
+applications ||--o{ applications_carrers : "targets"
+
+' Relación estudiante-oferta
+applications_students ||--o{ applications_students_reviews : "has reviews"
+
+' Modalidad, distrito y jornada
+modalities ||--o{ applications : "has"
+districts ||--o{ applications : "located in"
+districts ||--o{ students : "located in"
+districts ||--o{ enterprises : "located in"
+
+workdays ||--o{ applications : "has"
+
+'' status_applications_students
+status_applications_students ||--o{ applications_students : "has"
+
+@enduml

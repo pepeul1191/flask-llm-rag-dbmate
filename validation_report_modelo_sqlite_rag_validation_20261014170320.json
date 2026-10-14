@@ -1,0 +1,86 @@
+{
+  "is_valid": false,
+  "missing_tables": [
+    "carrers",
+    "students",
+    "students_skills_skill_levels",
+    "experiences",
+    "applications_students",
+    "applications_students_reviews",
+    "status_applications_students",
+    "students_applications_saved",
+    "links",
+    "skills",
+    "skill_levels",
+    "enterprises",
+    "logs",
+    "profiles",
+    "semesters",
+    "applications",
+    "applications_skills",
+    "workdays",
+    "applications_carrers",
+    "modalities",
+    "districts"
+  ],
+  "extra_tables": [
+    "customers",
+    "employees",
+    "systems",
+    "products",
+    "suppliers",
+    "orders",
+    "systems_users",
+    "permissions",
+    "systems_users_permissions",
+    "roles",
+    "order_details",
+    "shippers"
+  ],
+  "missing_columns": {
+    "users": [
+      "reset_token",
+      "profile_id",
+      "profiles_id"
+    ]
+  },
+  "extra_columns": {
+    "users": [
+      "username",
+      "activation_key",
+      "reset_key",
+      "activated"
+    ]
+  },
+  "type_mismatches": {},
+  "pk_mismatches": [],
+  "fk_mismatches": [
+    {
+      "table": "users",
+      "diffs": [
+        {
+          "missing": [
+            "profiles_id",
+            "profiles",
+            "id"
+          ]
+        }
+      ]
+    }
+  ],
+  "nullability_mismatches": {},
+  "stats": {
+    "expected_tables": 22,
+    "generated_tables": 13,
+    "matched_tables": 1,
+    "expected_columns": 8,
+    "generated_columns": 9,
+    "matched_columns": 5,
+    "expected_types": 5,
+    "matched_types": 5,
+    "expected_pks": 1,
+    "matched_pks": 1,
+    "expected_fks": 1,
+    "matched_fks": 0
+  }
+}
