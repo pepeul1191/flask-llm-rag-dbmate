@@ -1,10 +1,7 @@
 {
   "is_valid": false,
   "missing_tables": [],
-  "extra_tables": [
-    "permissions",
-    "roles"
-  ],
+  "extra_tables": [],
   "missing_columns": {
     "customers": [
       "id"
@@ -196,16 +193,16 @@
         },
         {
           "extra": [
-            "employee_id",
-            "employees",
-            "employee_id"
+            "customer_id",
+            "customers",
+            "customer_id"
           ]
         },
         {
           "extra": [
-            "customer_id",
-            "customers",
-            "customer_id"
+            "employee_id",
+            "employees",
+            "employee_id"
           ]
         }
       ]
@@ -233,7 +230,7 @@
   "nullability_mismatches": {},
   "stats": {
     "expected_tables": 8,
-    "generated_tables": 10,
+    "generated_tables": 8,
     "matched_tables": 8,
     "expected_columns": 53,
     "generated_columns": 76,

@@ -1,0 +1,1976 @@
+# main.py
+#!/usr/bin/env python
+import os
+import sys
+import json
+import logging
+import datetime
+
+from ai.services.vector_store import (
+  check_existing_vector_db,
+  should_recreate_vector_db,
+  create_vector_db
+)
+from ai.services.ingestion import ingest_puml, split_documents
+from ai.services.retrieval import create_retriever, create_chain, create_direct_chain
+from ai.services.migration_generator import (
+  generate_sql_migrations_with_rag,
+  generate_sql_migrations_direct,
+  parse_migration_blocks,
+  enforce_original_names,
+  save_migration_files
+)
+from ai.services.fallback import generate_direct_migrations
+from ai.services.puml_parser import parse_puml_schema
+from ai.services.sql_parser import parse_sql_schema
+from ai.services.structural_validator import validate_schema
+from ai.services.evaluation import compute_structural_metrics
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+VALID_MODES = ("llm_only", "rag", "rag_validation")
+
+
+def _build_chain(mode: str, vector_db, puml_file: str):
+  if mode == "llm_only":
+    return create_direct_chain()
+  retriever = create_retriever(vector_db, source_file=puml_file)
+  return create_chain(retriever)
+
+def _generate_migrations(mode: str, chain, db_type: str, puml_file: str) -> str:
+  """Genera las migraciones según el modo."""
+  if mode == "llm_only":
+    return generate_sql_migrations_direct(chain, db_type, puml_file)
+
+  complete = generate_sql_migrations_with_rag(chain, db_type, puml_file)
+
+  refused = (
+    "No puedo cumplir" in complete
+    or "I cannot fulfill" in complete
+    or complete.startswith("Error:")
+  )
+  if refused:
+    print("⚠️ El modelo rechazó generar migraciones. Usando método alternativo...")
+    complete = generate_direct_migrations(puml_file, db_type)
+  return complete
+
+
+def _load_vector_db(puml_file: str):
+  vector_db = check_existing_vector_db()
+  if should_recreate_vector_db(puml_file, vector_db):
+    print("🔄 Creando nueva base de datos vectorial...")
+    content = ingest_puml(puml_file)
+    if not content:
+      return None
+    chunks = split_documents(content, puml_file)
+    vector_db = create_vector_db(chunks, puml_file)
+    print(f"✅ Vector DB recreada con {len(chunks)} chunks.")
+  else:
+    print("✅ Usando base de datos vectorial existente.")
+  return vector_db
+
+def _validate_structure(puml_file: str, complete_migrations: str, db_type: str):
+  """Valida la estructura generada contra el modelo PUML esperado."""
+  print("\n" + "=" * 60)
+  print("VALIDACIÓN ESTRUCTURAL CONTRA EL MODELO PUML")
+  print("=" * 60)
+
+  try:
+    expected_schema = parse_puml_schema(puml_file)
+  except Exception as e:
+    logger.error(f"Error parsing PUML schema: {e}")
+    return None, None
+
+  try:
+    generated_schema = parse_sql_schema(complete_migrations, db_type)
+  except Exception as e:
+    logger.error(f"Error parsing generated SQL: {e}")
+    return expected_schema, None
+
+  report = validate_schema(expected_schema, generated_schema)
+  print(report.summary())
+
+  metrics = compute_structural_metrics(report)
+  print("\n" + "-" * 60)
+  print("MÉTRICAS ESTRUCTURALES")
+  print("-" * 60)
+  for key, value in metrics.items():
+    print(f"  {key}: {value}")
+
+  return report, metrics
+
+
+def _persist_reports(puml_basename: str, mode: str, db_type: str,
+                     report, metrics, tables_dict) -> None:
+  """Guarda el reporte de validación y las métricas en JSON."""
+  ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+  base = f"{puml_basename}_{db_type}_{mode}_{ts}"
+
+  if report is not None:
+    report_file = f"validation_report_{base}.json"
+    with open(report_file, "w", encoding="utf-8") as f:
+      json.dump(report.to_dict(), f, indent=2, ensure_ascii=False)
+    print(f"✓ Reporte de validación guardado en: {report_file}")
+
+  if metrics is not None:
+    metrics_file = f"metrics_{base}.json"
+    with open(metrics_file, "w", encoding="utf-8") as f:
+      json.dump(metrics, f, indent=2, ensure_ascii=False)
+    print(f"✓ Métricas guardadas en: {metrics_file}")
+
+  if tables_dict:
+    dict_file = f"migrations_dict_{base}.json"
+    with open(dict_file, "w", encoding="utf-8") as f:
+      json.dump({k: v.__dict__ for k, v in tables_dict.items()},
+                f, indent=2, ensure_ascii=False)
+    print(f"✓ Diccionario de migraciones guardado en: {dict_file}")
+
+
+def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
+  """
+  Orquesta la generación y validación de migraciones SQL desde PUML.
+
+  Args:
+    folder_path: carpeta que contiene modelo.puml
+    db_type: sqlite | mysql | postgres
+    mode: llm_only | rag | rag_validation
+  Returns:
+    (resultado, exito)
+  """
+  if mode not in VALID_MODES:
+    return f"❌ Modo inválido: {mode}. Use uno de {VALID_MODES}", False
+
+  print(f"DEMO - Generación de migraciones SQL desde PUML (modo={mode})")
+
+  puml_file = os.path.join(folder_path, "modelo.puml")
+  if not os.path.exists(puml_file):
+    print(f"❌ Archivo PUML no encontrado en {puml_file}")
+    return "❌ Archivo no encontrado", False
+
+  # 1. Base vectorial (solo si el modo la requiere)
+  vector_db = None
+  if mode in ("rag", "rag_validation"):
+    vector_db = _load_vector_db(puml_file)
+
+  # 2. Construir cadena
+  chain = _build_chain(mode, vector_db, puml_file)
+
+  # 3. Generar migraciones
+  print(f"🔄 Generando migraciones SQL para {puml_file} (db={db_type}, mode={mode})...")
+  complete_migrations = _generate_migrations(mode, chain, db_type, puml_file)
+
+  if not complete_migrations or complete_migrations.startswith("Error:"):
+    print("❌ No se pudieron generar migraciones.")
+    return "❌ No se pudieron generar migraciones.", False
+
+  # 4. Mostrar resultado
+  print("\n" + "=" * 60)
+  print(f"MIGRACIONES SQL GENERADAS PARA: {puml_file}")
+  print("=" * 60)
+  print(complete_migrations)
+
+  # 5. Parsear y organizar
+  print("\n" + "=" * 60)
+  print("ORGANIZANDO EN DICCIONARIO:")
+  print("=" * 60)
+  tables_dict = parse_migration_blocks(complete_migrations)
+  if not tables_dict:
+    print("❌ No se pudieron parsear las migraciones.")
+    return "❌ No se pudieron parsear las migraciones.", False
+
+  tables_dict = enforce_original_names(puml_file, tables_dict)
+
+  resp = []
+  print(f"\n✅ Se procesaron {len(tables_dict)} tablas ÚNICAS:\n")
+  for key, table in tables_dict.items():
+    print(f"Tabla {key} ({table.table_name}):")
+    print(f"  UP:   {table.up}")
+    print(f"  DOWN: {table.down}")
+    print("-" * 80)
+    resp.append(table.__dict__)
+
+  # 6. Validación estructural (solo en rag_validation)
+  report = None
+  metrics = None
+  if mode == "rag_validation":
+    report, metrics = _validate_structure(puml_file, complete_migrations, db_type)
+    if report is None:
+      print("⚠️ No se pudo completar la validación estructural.")
+    elif report.is_valid:
+      print("✅ Validación estructural: SIN ERRORES detectados.")
+    else:
+      print("⚠️ Validación estructural: se detectaron diferencias.")
+
+  # 7. Guardar archivos
+  puml_basename = os.path.splitext(os.path.basename(puml_file))[0]
+  save_migration_files(tables_dict, puml_basename, db_type, complete_migrations)
+
+  _persist_reports(puml_basename, mode, db_type, report, metrics, tables_dict)
+
+  return resp, True
+
+
+def run_comparison(folder_path: str, db_type: str):
+  """
+  Ejecuta los tres modos sobre el mismo PUML y compara resultados.
+  Útil para responder al Reviewer 1 (LLM vs RAG vs RAG+validación).
+  """
+  results = {}
+  for mode in VALID_MODES:
+    print("\n" + "#" * 70)
+    print(f"# MODO: {mode}")
+    print("#" * 70)
+    resp, ok = execute(folder_path, db_type, mode=mode)
+    results[mode] = {"success": ok, "tables": len(resp) if ok else 0}
+
+  print("\n" + "=" * 70)
+  print("RESUMEN COMPARATIVO")
+  print("=" * 70)
+  for mode, data in results.items():
+    status = "✅" if data["success"] else "❌"
+    print(f"  {status} {mode}: {data['tables']} tablas")
+
+  summary_file = f"comparison_{os.path.basename(folder_path)}_{db_type}.json"
+  with open(summary_file, "w", encoding="utf-8") as f:
+    json.dump(results, f, indent=2, ensure_ascii=False)
+  print(f"\n✓ Resumen comparativo guardado en: {summary_file}")
+  return results
+
+
+if __name__ == "__main__":
+  if len(sys.argv) < 3:
+    print("Uso: python main.py <carpeta_con_puml> <tipo_db> [modo]")
+    print("  modo: llm_only | rag | rag_validation | compare")
+    sys.exit(1)
+
+  folder = sys.argv[1]
+  db = sys.argv[2]
+  mode = sys.argv[3] if len(sys.argv) > 3 else "rag_validation"
+
+  if mode == "compare":
+    run_comparison(folder, db)
+  else:
+    execute(folder, db, mode=mode)
+
+
+# ai/services/__init__.py
+from .vector_store import (
+  check_existing_vector_db,
+  should_recreate_vector_db,
+  create_vector_db,
+  load_vector_db,
+  clear_vector_db,
+  get_puml_file_hash
+)
+from .ingestion import ingest_puml, split_documents
+from .retrieval import create_retriever, create_chain, create_direct_chain
+from .migration_generator import (
+  generate_sql_migrations_with_rag,
+  generate_sql_migrations_direct,
+  parse_migration_blocks,
+  validate_entity_count,
+  enforce_original_names,
+  save_migration_files,
+  extract_table_name
+)
+from .fallback import generate_direct_migrations, map_puml_to_sql
+from .puml_parser import parse_puml_schema
+from .sql_parser import parse_sql_schema
+from .structural_validator import validate_schema, ValidationReport
+from .evaluation import compute_structural_metrics, inject_errors
+
+__all__ = [
+  # vector store
+  "check_existing_vector_db",
+  "should_recreate_vector_db",
+  "create_vector_db",
+  "load_vector_db",
+  "clear_vector_db",
+  "get_puml_file_hash",
+  # ingestion
+  "ingest_puml",
+  "split_documents",
+  # retrieval
+  "create_retriever",
+  "create_chain",
+  "create_direct_chain",
+  # migration generator
+  "generate_sql_migrations_with_rag",
+  "generate_sql_migrations_direct",
+  "parse_migration_blocks",
+  "validate_entity_count",
+  "enforce_original_names",
+  "save_migration_files",
+  "extract_table_name",
+  # fallback
+  "generate_direct_migrations",
+  "map_puml_to_sql",
+  # nuevos
+  "parse_puml_schema",
+  "parse_sql_schema",
+  "validate_schema",
+  "ValidationReport",
+  "compute_structural_metrics",
+  "inject_errors",
+]
+
+
+# ai/services/evaluation.py
+import logging
+from ai.services.structural_validator import ValidationReport
+
+logger = logging.getLogger(__name__)
+
+
+def _safe_div(num: int, den: int) -> float:
+  return round(num / den, 4) if den else 0.0
+
+
+def compute_structural_metrics(report: ValidationReport) -> dict:
+  """
+  Calcula métricas desglosadas a partir de un ValidationReport.
+  Cubre la observación del Reviewer 1 (no basta Table Accuracy).
+  """
+  s = report.stats
+
+  table_acc = _safe_div(s.get('matched_tables', 0), s.get('expected_tables', 0))
+  col_acc = _safe_div(s.get('matched_columns', 0), s.get('expected_columns', 0))
+  type_acc = _safe_div(s.get('matched_types', 0), s.get('expected_types', 0))
+  pk_acc = _safe_div(s.get('matched_pks', 0), s.get('expected_pks', 0))
+  fk_acc = _safe_div(s.get('matched_fks', 0), s.get('expected_fks', 0))
+
+  # Full-schema: sólo correcto si las 5 anteriores son 1.0
+  full_schema = 1.0 if all([
+    table_acc == 1.0,
+    col_acc == 1.0,
+    type_acc == 1.0,
+    pk_acc == 1.0,
+    fk_acc == 1.0
+  ]) else 0.0
+
+  # Precision/Recall a nivel de "unidad estructural"
+  # Tomamos como unidades: columnas + tipos + FKs esperadas
+  expected_units = (
+    s.get('expected_columns', 0)
+    + s.get('expected_types', 0)
+    + s.get('expected_fks', 0)
+  )
+  matched_units = (
+    s.get('matched_columns', 0)
+    + s.get('matched_types', 0)
+    + s.get('matched_fks', 0)
+  )
+
+  # Unidades generadas = mismas que esperadas + extras detectadas
+  extra_cols = sum(len(v) for v in report.extra_columns.values())
+  extra_fks = sum(
+    len([d for d in diff['diffs'] if 'extra' in d])
+    for diff in report.fk_mismatches
+  )
+  generated_units = matched_units + extra_cols + extra_fks
+
+  precision = _safe_div(matched_units, generated_units)
+  recall = _safe_div(matched_units, expected_units)
+  f1 = (
+    round(2 * precision * recall / (precision + recall), 4)
+    if (precision + recall) > 0 else 0.0
+  )
+
+  return {
+    'table_accuracy': table_acc,
+    'column_accuracy': col_acc,
+    'data_type_accuracy': type_acc,
+    'primary_key_accuracy': pk_acc,
+    'foreign_key_accuracy': fk_acc,
+    'full_schema_accuracy': full_schema,
+    'precision': precision,
+    'recall': recall,
+    'f1': f1,
+    'counts': {
+      'expected_tables': s.get('expected_tables', 0),
+      'generated_tables': s.get('generated_tables', 0),
+      'missing_tables': len(report.missing_tables),
+      'extra_tables': len(report.extra_tables),
+      'missing_columns': sum(len(v) for v in report.missing_columns.values()),
+      'extra_columns': extra_cols,
+      'type_mismatches': sum(len(v) for v in report.type_mismatches.values()),
+      'pk_mismatches': len(report.pk_mismatches),
+      'fk_mismatches': sum(len(v['diffs']) for v in report.fk_mismatches),
+    }
+  }
+
+
+def inject_errors(schema, error_types: list[str]):
+  """
+  Devuelve una copia del SchemaModel con errores inyectados.
+  Útil para medir falsos negativos del validador (Reviewer 1).
+  """
+  import copy
+  mutated = copy.deepcopy(schema)
+
+  for etype in error_types:
+    if etype == 'drop_table' and mutated.tables:
+      mutated.tables.pop(next(iter(mutated.tables)))
+    elif etype == 'drop_column':
+      for t in mutated.tables.values():
+        if len(t.columns) > 1:
+          t.columns.pop(next(k for k in t.columns if not t.columns[k].is_pk))
+          break
+    elif etype == 'change_type':
+      for t in mutated.tables.values():
+        for c in t.columns.values():
+          c.type = 'blob'
+          break
+        break
+    elif etype == 'drop_pk':
+      for t in mutated.tables.values():
+        for c in t.columns.values():
+          c.is_pk = False
+        break
+    elif etype == 'drop_fk':
+      for t in mutated.tables.values():
+        if t.foreign_keys:
+          t.foreign_keys.pop()
+          break
+    elif etype == 'rename_table' and mutated.tables:
+      old = next(iter(mutated.tables))
+      table = mutated.tables.pop(old)
+      table.name = table.name + '_x'
+      mutated.tables[table.name.lower()] = table
+
+  return mutated
+
+
+# ai/services/fallback.py
+import re
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def map_puml_to_sql(puml_type: str, db_type: str) -> str:
+  """Mapea tipos PUML a tipos SQL según la base de datos."""
+  puml_type = puml_type.lower().strip()
+  type_mappings = {
+    'sqlite': {
+      'string': 'TEXT', 'int': 'INTEGER', 'integer': 'INTEGER',
+      'boolean': 'INTEGER', 'date': 'TEXT', 'datetime': 'TEXT',
+      'float': 'REAL', 'double': 'REAL', 'text': 'TEXT'
+    },
+    'mysql': {
+      'string': 'VARCHAR(255)', 'int': 'INT', 'integer': 'INT',
+      'boolean': 'BOOLEAN', 'date': 'DATE', 'datetime': 'DATETIME',
+      'float': 'FLOAT', 'double': 'DOUBLE', 'text': 'TEXT'
+    },
+    'postgres': {
+      'string': 'VARCHAR(255)', 'int': 'INTEGER', 'integer': 'INTEGER',
+      'boolean': 'BOOLEAN', 'date': 'DATE', 'datetime': 'TIMESTAMP',
+      'float': 'REAL', 'double': 'DOUBLE PRECISION', 'text': 'TEXT'
+    }
+  }
+  return type_mappings.get(db_type, {}).get(puml_type, 'TEXT')
+
+
+def generate_direct_migrations(puml_file: str, db_type: str) -> str:
+  """Genera migraciones directamente desde el PUML (fallback)."""
+  logger.info("Using direct migration generation as fallback...")
+  try:
+    with open(puml_file, 'r', encoding='utf-8') as f:
+      content = f.read()
+
+    entity_pattern = r'entity\s+(\w+)\s*\{([^}]+)\}'
+    entities = re.findall(entity_pattern, content, re.IGNORECASE | re.DOTALL)
+    migrations = []
+
+    for entity_name, entity_content in entities:
+      attr_pattern = r'\s*(\w+)\s*:\s*([^\n]+)'
+      attributes = re.findall(attr_pattern, entity_content)
+
+      create_lines = [f"CREATE TABLE {entity_name} ("]
+      create_lines.append("  id SERIAL PRIMARY KEY," if db_type == 'postgres' else "  id INTEGER PRIMARY KEY AUTOINCREMENT,")
+
+      for attr_name, attr_type in attributes:
+        sql_type = map_puml_to_sql(attr_type, db_type)
+        create_lines.append(f"  {attr_name} {sql_type},")
+
+      create_lines[-1] = create_lines[-1].rstrip(',')
+      create_lines.append(");")
+      create_stmt = "\n".join(create_lines)
+      drop_stmt = f"DROP TABLE IF EXISTS {entity_name};"
+      migration_block = f"-- migrate:up\n\n{create_stmt}\n\n-- migrate:down\n\n{drop_stmt}\n"
+      migrations.append(migration_block)
+
+    return "\n".join(migrations)
+  except Exception as e:
+    logger.error(f"Error in direct migration generation: {e}")
+    return ""
+
+
+# ai/services/ingestion.py
+import os
+import re
+import hashlib
+import logging
+from langchain_core.documents import Document
+
+logger = logging.getLogger(__name__)
+
+
+def ingest_puml(puml_path: str) -> str | None:
+  """Lee el contenido del archivo PUML."""
+  if os.path.exists(puml_path):
+    with open(puml_path, 'r', encoding='utf-8') as f:
+      content = f.read()
+    logger.info("PUML file loaded successfully.")
+    return content
+  logger.error("PUML file not found at path: %s", puml_path)
+  return None
+
+
+def split_documents(content: str, puml_path: str):
+  """
+  Divide el contenido PUML en fragmentos semánticos.
+  Usa SHA-256 (determinista) para que el hash coincida con vector_store.
+  """
+  file_hash = hashlib.sha256(content.encode('utf-8')).hexdigest()
+  chunks = []
+
+  # 1. Entidades
+  entity_pattern = r'(entity\s+\w+\s*\{[^}]+\})'
+  entities = re.findall(entity_pattern, content, re.IGNORECASE | re.DOTALL)
+  if entities:
+    logger.info("Found %d entities.", len(entities))
+    for entity in entities:
+      chunks.append(Document(
+        page_content=entity,
+        metadata={
+          "source": "puml_file",
+          "chunk_id": len(chunks),
+          "chunk_type": "entity",
+          "source_file": os.path.abspath(puml_path),
+          "source_file_hash": file_hash
+        }
+      ))
+
+  # 2. Relaciones
+  relationship_pattern = r'(\w+\s+--\s+\w+|"\w+"\s+--\s+"\w+")'
+  relationships = re.findall(relationship_pattern, content)
+  if relationships:
+    logger.info("Found %d relationships.", len(relationships))
+    relationship_chunk = "Relationships:\n" + "\n".join(relationships)
+    chunks.append(Document(
+      page_content=relationship_chunk,
+      metadata={
+        "source": "puml_file",
+        "chunk_id": len(chunks),
+        "chunk_type": "relationships",
+        "source_file": os.path.abspath(puml_path),
+        "source_file_hash": file_hash
+      }
+    ))
+
+  # 3. Fallback: dividir por líneas
+  if not chunks:
+    logger.info("Using line-based chunking as fallback.")
+    lines = content.splitlines()
+    chunk_size = 15
+    for i in range(0, len(lines), chunk_size):
+      chunk_text = "\n".join(lines[i:i + chunk_size])
+      chunks.append(Document(
+        page_content=chunk_text,
+        metadata={
+          "source": "puml_file",
+          "chunk_id": len(chunks),
+          "chunk_type": "line_chunk",
+          "source_file": os.path.abspath(puml_path),
+          "source_file_hash": file_hash
+        }
+      ))
+
+  logger.info("PUML content split into %d chunks.", len(chunks))
+  return chunks
+
+
+
+# ai/services/migration_generator.py
+import os
+import re
+import json
+import shutil
+import logging
+import datetime
+from typing import Dict, List, Tuple
+from ..models.migration import TableMigration
+from .fallback import generate_direct_migrations
+
+logger = logging.getLogger(__name__)
+
+
+def generate_sql_migrations_with_rag(chain, db_type: str, puml_file: str) -> str:
+  """Genera migraciones usando la cadena RAG."""
+  with open(puml_file, 'r', encoding='utf-8') as f:
+    puml_content = f.read()
+
+  entity_pattern = r'entity\s+(\w+)\s*\{([^}]+)\}'
+  entities = re.findall(entity_pattern, puml_content, re.IGNORECASE | re.DOTALL)
+  entity_info = []
+  for entity_name, entity_content in entities:
+    attributes = re.findall(r'\s*(\w+)\s*:\s*([^\n]+)', entity_content)
+    entity_info.append(f"Entidad: {entity_name}, Atributos: {attributes}")
+  entities_summary = "\n".join(entity_info)
+
+  query = f"""
+ANÁLISIS DE DIAGRAMA UML Y GENERACIÓN DE MIGRACIONES SQL
+
+ARCHIVO: {puml_file}
+TIPO DE BASE DE DATOS: {db_type.upper()}
+
+ENTIDADES ENCONTRADAS EN EL DIAGRAMA:
+{entities_summary}
+
+INSTRUCCIONES ESPECÍFICAS:
+
+1. ANALIZA cada entidad del diagrama UML y conviértela en una sentencia CREATE TABLE
+2. USA el formato EXACTO de migración que se muestra a continuación
+3. PRESERVA los nombres ORIGINALES de las entidades y atributos
+4. GENERA código SQL VÁLIDO para {db_type.upper()}
+
+FORMATO REQUERIDO para CADA tabla:
+
+-- migrate:up
+
+CREATE TABLE nombre_tabla (
+  id TIPO_PRIMARY_KEY,
+  columna1 TIPO_DATO,
+  columna2 TIPO_DATO,
+  PRIMARY KEY (id),
+  FOREIGN KEY (columna_relacionada) REFERENCES tabla_relacionada(id)
+);
+
+-- migrate:down
+
+DROP TABLE nombre_tabla;
+
+REQUISITOS TÉCNICOS:
+- Para {db_type.upper()}, usa tipos de datos apropiados
+- Incluye PRIMARY KEY autoincremental para cada tabla
+- Incluye FOREIGN KEYS basadas en las relaciones del diagrama
+- Mantén los nombres ORIGINALES en inglés (NO traduzcas)
+- Genera EXACTAMENTE una migración por cada entidad encontrada
+
+RESPONDE ÚNICAMENTE con las sentencias SQL en el formato especificado, sin explicaciones.
+"""
+  logger.info("Generating SQL migrations...")
+  try:
+    response = chain.invoke(query)
+    return response
+  except Exception as e:
+    logger.error(f"Error generating migrations: {e}")
+    return f"Error: {e}"
+
+
+def extract_table_name(sql_statement: str) -> str | None:
+  """Extrae el nombre de la tabla de una sentencia SQL."""
+  patterns = [
+    r'CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`?([^\s`(;]+)`?',
+    r'CREATE TABLE\s+(?:IF NOT EXISTS\s+)?([^\s(;]+)',
+    r'DROP TABLE\s+(?:IF EXISTS\s+)?`?([^\s`;]+)`?',
+  ]
+  for pattern in patterns:
+    match = re.search(pattern, sql_statement, re.IGNORECASE)
+    if match:
+      return match.group(1).strip()
+  return None
+
+
+def parse_migration_blocks(complete_migrations: str) -> Dict[int, TableMigration]:
+  """Parsea el texto de migraciones en un diccionario de TableMigration."""
+  if complete_migrations.startswith("Error:") or "No puedo cumplir" in complete_migrations:
+    logger.error(f"Model refused to generate migrations: {complete_migrations}")
+    return {}
+
+  patterns = [
+    r'--\s*migrate:up\s*(CREATE TABLE[^;]+;)\s*--\s*migrate:down\s*(DROP TABLE[^;]+;)',
+    r'(CREATE TABLE[^;]+;)',
+  ]
+
+  tables = {}
+  seen_tables = set()
+
+  for pattern in patterns:
+    matches = re.findall(pattern, complete_migrations, re.IGNORECASE | re.DOTALL)
+    if matches:
+      logger.info(f"Found {len(matches)} matches using pattern")
+      for i, match in enumerate(matches, len(tables) + 1):
+        if isinstance(match, tuple):
+          create_stmt, drop_stmt = match
+        else:
+          create_stmt = match
+          table_name = extract_table_name(create_stmt)
+          drop_stmt = f"DROP TABLE IF EXISTS {table_name};" if table_name else "DROP TABLE unknown_table;"
+
+        table_name = extract_table_name(create_stmt)
+        if table_name and table_name in seen_tables:
+          logger.info(f"Skipping duplicate table: {table_name}")
+          continue
+        seen_tables.add(table_name)
+
+        clean_create = re.sub(r'\s+', ' ', create_stmt.strip())
+        clean_drop = re.sub(r'\s+', ' ', drop_stmt.strip())
+        complete_block = f"-- migrate:up\n\n{create_stmt.strip()}\n\n-- migrate:down\n\n{drop_stmt.strip()}"
+
+        tables[i] = TableMigration(
+          table_name=table_name,
+          up=clean_create,
+          down=clean_drop,
+          complete_block=complete_block,
+          index=i
+        )
+  logger.info(f"Se encontraron {len(tables)} tablas únicas.")
+  return tables
+
+
+def validate_entity_count(puml_file: str, tables_dict: Dict[int, TableMigration]) -> Tuple[int, int]:
+  """Valida que el número de entidades coincida con el de tablas generadas."""
+  try:
+    with open(puml_file, 'r', encoding='utf-8') as f:
+      content = f.read()
+    entity_pattern = r'entity\s+(\w+)'
+    entities = re.findall(entity_pattern, content, re.IGNORECASE)
+    expected = len(entities)
+    actual = len(tables_dict)
+    logger.info(f"Expected entities: {expected}, Generated tables: {actual}")
+    if expected != actual:
+      print(f"⚠️  ADVERTENCIA: Se esperaban {expected} tablas pero se generaron {actual}")
+      generated = [t.table_name for t in tables_dict.values() if t.table_name]
+      missing = set(entities) - set(generated)
+      if missing:
+        print(f"📋 Entidades faltantes: {', '.join(missing)}")
+      if generated:
+        print(f"📋 Tablas generadas: {', '.join(generated)}")
+    return expected, actual
+  except Exception as e:
+    logger.error(f"Error validating entity count: {e}")
+    return 0, len(tables_dict)
+
+
+def enforce_original_names(puml_file: str, tables_dict: Dict[int, TableMigration]) -> Dict[int, TableMigration]:
+  """Corrige los nombres de tabla para que coincidan exactamente con las entidades del PUML."""
+  try:
+    with open(puml_file, 'r', encoding='utf-8') as f:
+      content = f.read()
+    entity_pattern = r'entity\s+(\w+)'
+    original_entities = re.findall(entity_pattern, content, re.IGNORECASE)
+
+    corrected = {}
+    for key, table in tables_dict.items():
+      current = table.table_name
+      matching = None
+      for entity in original_entities:
+        if entity.lower() == current.lower():
+          matching = entity
+          break
+      if matching and matching != current:
+        corrected_up = re.sub(
+          f'TABLE\\s+{re.escape(current)}',
+          f'TABLE {matching}',
+          table.up,
+          flags=re.IGNORECASE
+        )
+        corrected_down = re.sub(
+          f'TABLE\\s+{re.escape(current)}',
+          f'TABLE {matching}',
+          table.down,
+          flags=re.IGNORECASE
+        )
+        corrected_block = re.sub(
+          f'TABLE\\s+{re.escape(current)}',
+          f'TABLE {matching}',
+          table.complete_block,
+          flags=re.IGNORECASE
+        )
+        corrected[key] = TableMigration(
+          table_name=matching,
+          up=corrected_up,
+          down=corrected_down,
+          complete_block=corrected_block,
+          index=table.index
+        )
+        print(f"✓ Corregido: '{current}' -> '{matching}'")
+      else:
+        corrected[key] = table
+    return corrected
+  except Exception as e:
+    logger.error(f"Error enforcing original names: {e}")
+    return tables_dict
+
+
+def save_migration_files(tables_dict: Dict[int, TableMigration], puml_basename: str, db_type: str, complete_migrations: str):
+  """Guarda las migraciones en archivos individuales y un resumen completo."""
+  if not tables_dict:
+    print("❌ No hay migraciones para guardar.")
+    return
+
+  complete_filename = f"complete_migrations_{puml_basename}_{db_type}.sql"
+  with open(complete_filename, 'w', encoding='utf-8') as f:
+    f.write(f"-- Migraciones generadas desde: {puml_basename}.puml\n")
+    f.write(f"-- Tipo de base de datos: {db_type}\n")
+    f.write(f"-- Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    f.write(f"-- Total de tablas: {len(tables_dict)}\n\n")
+    f.write(complete_migrations)
+  print(f"✓ Migraciones completas guardadas en: {complete_filename}")
+
+  migrations_dir = f"migrations_{puml_basename}_{db_type}"
+  if os.path.exists(migrations_dir):
+    shutil.rmtree(migrations_dir)
+  os.makedirs(migrations_dir, exist_ok=True)
+
+  base_ts = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+  for key, table in tables_dict.items():
+    ts = str(base_ts + key)
+    filename = f"{migrations_dir}/{ts}_create_{table.table_name}.sql"
+    with open(filename, 'w', encoding='utf-8') as f:
+      f.write(table.complete_block)
+    print(f"✓ Migración {key} ({table.table_name}) guardada en: {filename}")
+
+def generate_sql_migrations_direct(chain, db_type: str, puml_file: str) -> str:
+  """
+  Igual que generate_sql_migrations_with_rag pero sin retriever.
+  Se usa en el modo llm_only para la comparación pedida por el Reviewer 1.
+  """
+  with open(puml_file, 'r', encoding='utf-8') as f:
+    puml_content = f.read()
+
+  entity_pattern = r'entity\s+(\w+)\s*\{([^}]+)\}'
+  entities = re.findall(entity_pattern, puml_content, re.IGNORECASE | re.DOTALL)
+  entity_info = []
+  for entity_name, entity_content in entities:
+    attributes = re.findall(r'\s*(\w+)\s*:\s*([^\n]+)', entity_content)
+    entity_info.append(f"Entidad: {entity_name}, Atributos: {attributes}")
+  entities_summary = "\n".join(entity_info)
+
+  query = f"""
+ANÁLISIS DE DIAGRAMA UML Y GENERACIÓN DE MIGRACIONES SQL
+
+ARCHIVO: {puml_file}
+TIPO DE BASE DE DATOS: {db_type.upper()}
+
+ENTIDADES ENCONTRADAS EN EL DIAGRAMA:
+{entities_summary}
+
+INSTRUCCIONES ESPECÍFICAS:
+
+1. ANALIZA cada entidad del diagrama UML y conviértela en una sentencia CREATE TABLE
+2. USA el formato EXACTO de migración que se muestra a continuación
+3. PRESERVA los nombres ORIGINALES de las entidades y atributos
+4. GENERA código SQL VÁLIDO para {db_type.upper()}
+
+FORMATO REQUERIDO para CADA tabla:
+
+-- migrate:up
+
+CREATE TABLE nombre_tabla (
+  id TIPO_PRIMARY_KEY,
+  columna1 TIPO_DATO,
+  columna2 TIPO_DATO,
+  PRIMARY KEY (id),
+  FOREIGN KEY (columna_relacionada) REFERENCES tabla_relacionada(id)
+);
+
+-- migrate:down
+
+DROP TABLE nombre_tabla;
+
+RESPONDE ÚNICAMENTE con las sentencias SQL en el formato especificado, sin explicaciones.
+"""
+  logger.info("Generating SQL migrations (direct, no RAG)...")
+  try:
+    response = chain.invoke({"context": "(sin contexto RAG)", "question": query})
+    return response
+  except Exception as e:
+    logger.error(f"Error generating migrations (direct): {e}")
+    return f"Error: {e}"
+
+
+
+
+# ai/services/puml_parser.py
+import os
+import re
+import logging
+from ai.models.schema import (
+  ColumnSchema,
+  ForeignKeySchema,
+  TableSchema,
+  SchemaModel
+)
+
+logger = logging.getLogger(__name__)
+
+
+# Tipos PUML aceptados -> etiqueta normalizada interna
+PUML_TYPE_ALIASES = {
+  'string': 'string',
+  'varchar': 'string',
+  'text': 'string',
+  'int': 'int',
+  'integer': 'int',
+  'long': 'int',
+  'bigint': 'int',
+  'float': 'float',
+  'double': 'float',
+  'real': 'float',
+  'decimal': 'float',
+  'numeric': 'float',
+  'boolean': 'boolean',
+  'bool': 'boolean',
+  'date': 'date',
+  'datetime': 'datetime',
+  'timestamp': 'datetime',
+  'time': 'time',
+  'uuid': 'uuid',
+  'blob': 'blob'
+}
+
+
+def _normalize_puml_type(raw: str) -> str:
+  """Reduce el tipo PUML a una etiqueta interna."""
+  if not raw:
+    return 'string'
+  clean = raw.strip().lower()
+  # Quitar estereotipos y modificadores
+  clean = re.sub(r'<<[^>]*>>', '', clean).strip()
+  clean = re.sub(r'\{[^}]*\}', '', clean).strip()
+  # Quedarse con la primera palabra (ignora "varchar(255)")
+  clean = re.split(r'[\(\s]', clean)[0]
+  return PUML_TYPE_ALIASES.get(clean, clean or 'string')
+
+
+def _strip_visibility(token: str) -> str:
+  """Quita marcadores de visibilidad y obligatoriedad."""
+  return token.lstrip('+-#~*').strip()
+
+
+def _parse_entity_attributes(body: str) -> list[ColumnSchema]:
+  """Extrae columnas del cuerpo de un entity."""
+  columns: list[ColumnSchema] = []
+  for raw_line in body.splitlines():
+    line = raw_line.strip()
+    if not line:
+      continue
+    if line.startswith('--') or line.startswith('..'):
+      continue
+    if line.startswith("'"):
+      continue
+    # Formato: [visibilidad][*]nombre [: tipo] [<<PK>>] [{PK}]
+    line = line.rstrip(',')
+    if ':' in line:
+      name_part, type_part = line.split(':', 1)
+    else:
+      name_part, type_part = line, ''
+
+    is_pk = bool(
+      re.search(r'<<\s*PK\s*>>', type_part, re.IGNORECASE)
+      or re.search(r'\{\s*PK\s*\}', type_part, re.IGNORECASE)
+      or re.search(r'<<\s*id\s*>>', type_part, re.IGNORECASE)
+    )
+    raw_type = re.sub(r'(<<[^>]*>>|\{[^}]*\})', '', type_part).strip()
+    name = _strip_visibility(name_part.split()[0]) if name_part.split() else ''
+    name = name.split('(')[0].strip()
+    if not name:
+      continue
+
+    normalized_type = _normalize_puml_type(raw_type)
+    if name.lower() == 'id' and not is_pk:
+      is_pk = True
+
+    columns.append(ColumnSchema(
+      name=name,
+      type=normalized_type,
+      is_pk=is_pk,
+      is_nullable=not is_pk
+    ))
+  return columns
+
+
+def _infer_fk_column(ref_table: str) -> str:
+  """Convención: <tabla_referenciada>_id en minúsculas."""
+  return f"{ref_table.lower()}_id"
+
+
+def _parse_relationships(content: str) -> list[tuple[str, str, str, str]]:
+  """
+  Devuelve lista de tuplas (left_table, left_card, right_card, right_table).
+  La cardinalidad usa la notación estándar de PlantUML.
+  """
+  pattern = re.compile(
+    r'([A-Za-z_]\w*)\s+(["\|o\{\}]+)\s*--\s*(["\|o\{\}]+)\s+([A-Za-z_]\w*)'
+    r'(?:\s*:\s*[^\n]+)?',
+    re.IGNORECASE
+  )
+  results = []
+  for m in pattern.finditer(content):
+    left, lcard, rcard, right = m.groups()
+    results.append((left, lcard, rcard, right))
+  return results
+
+
+def _card_is_many(card: str) -> bool:
+  """Detecta si la cardinalidad implica 'muchos' (lleva llave)."""
+  return '{' in card
+
+
+def _apply_relationships(
+  schema: SchemaModel,
+  relationships: list[tuple[str, str, str, str]]
+) -> None:
+  """Añade FKs inferidas a las tablas del lado 'muchos'."""
+  for left, lcard, rcard, right in relationships:
+    left_table = schema.table(left)
+    right_table = schema.table(right)
+    if left_table is None or right_table is None:
+      continue
+
+    if _card_is_many(rcard) and not _card_is_many(lcard):
+      # Right es "muchos" -> FK en right apuntando a left
+      fk_col = _infer_fk_column(left_table.name)
+      _ensure_fk_column(right_table, fk_col, left_table.name)
+      right_table.foreign_keys.append(ForeignKeySchema(
+        column=fk_col,
+        ref_table=left_table.name,
+        ref_column=_primary_key_name(left_table)
+      ))
+    elif _card_is_many(lcard) and not _card_is_many(rcard):
+      # Left es "muchos" -> FK en left apuntando a right
+      fk_col = _infer_fk_column(right_table.name)
+      _ensure_fk_column(left_table, fk_col, right_table.name)
+      left_table.foreign_keys.append(ForeignKeySchema(
+        column=fk_col,
+        ref_table=right_table.name,
+        ref_column=_primary_key_name(right_table)
+      ))
+
+
+def _primary_key_name(table: TableSchema) -> str:
+  for col in table.columns.values():
+    if col.is_pk:
+      return col.name
+  return 'id'
+
+
+def _ensure_fk_column(table: TableSchema, fk_col: str, ref_table: str) -> None:
+  """Si la columna FK no existe, la añade como int nullable."""
+  if fk_col.lower() in table.columns:
+    return
+  table.columns[fk_col.lower()] = ColumnSchema(
+    name=fk_col,
+    type='int',
+    is_pk=False,
+    is_nullable=True
+  )
+
+
+def parse_puml_schema(puml_file: str) -> SchemaModel:
+  """
+  Parsea un archivo PlantUML y devuelve un SchemaModel con:
+    - tablas (entity)
+    - columnas con tipo y PK
+    - FKs inferidas a partir de relaciones 1-N
+  """
+  if not os.path.exists(puml_file):
+    raise FileNotFoundError(f"PUML no encontrado: {puml_file}")
+
+  with open(puml_file, 'r', encoding='utf-8') as f:
+    content = f.read()
+
+  schema = SchemaModel()
+
+  entity_pattern = re.compile(
+    r'entity\s+("?[A-Za-z_]\w*"?)\s*(?:as\s+\w+)?\s*\{([^}]*)\}',
+    re.IGNORECASE | re.DOTALL
+  )
+
+  for match in entity_pattern.finditer(content):
+    raw_name = match.group(1).strip().strip('"')
+    body = match.group(2)
+    columns = _parse_entity_attributes(body)
+
+    # Asegurar PK explícita
+    if not any(c.is_pk for c in columns):
+      for col in columns:
+        if col.name.lower() == 'id':
+          col.is_pk = True
+          col.is_nullable = False
+          break
+      else:
+        columns.insert(0, ColumnSchema(
+          name='id',
+          type='int',
+          is_pk=True,
+          is_nullable=False
+        ))
+
+    table = TableSchema(
+      name=raw_name,
+      columns={c.name.lower(): c for c in columns}
+    )
+    schema.add_table(table)
+
+  relationships = _parse_relationships(content)
+  _apply_relationships(schema, relationships)
+
+  logger.info(
+    "PUML parsed: %d tables, %d relationships",
+    len(schema.tables),
+    len(relationships)
+  )
+  return schema
+
+
+
+
+# ai/services/retrieval.py
+import os
+from langchain_ollama import ChatOllama
+from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from ..prompts.templates import QUERY_PROMPT, CHAIN_PROMPT
+
+MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3.2")
+TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.2"))
+NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "4096"))
+NUM_GPU = int(os.getenv("OLLAMA_NUM_GPU", "99"))
+VERBOSE = os.getenv("OLLAMA_VERBOSE", "true").lower() == "true"
+
+
+def create_llm() -> ChatOllama:
+  return ChatOllama(
+    model=MODEL_NAME,
+    temperature=TEMPERATURE,
+    num_ctx=NUM_CTX,
+    num_gpu=NUM_GPU,
+    verbose=VERBOSE,
+  )
+
+
+def create_retriever(vector_db, source_file: str | None = None):
+  """
+  Retriever que opcionalmente filtra por archivo fuente.
+  Evita devolver chunks de PUMLs anteriores que pudieran quedar en disco.
+  """
+  search_kwargs = {"k": 5}
+  if source_file:
+    search_kwargs["filter"] = {"source_file": os.path.abspath(source_file)}
+
+  base = vector_db.as_retriever(search_kwargs=search_kwargs)
+  llm = create_llm()
+  retriever = MultiQueryRetriever.from_llm(base, llm, prompt=QUERY_PROMPT)
+  return retriever
+
+
+def create_chain(retriever):
+  llm = create_llm()
+  return (
+    {"context": retriever, "question": RunnablePassthrough()}
+    | CHAIN_PROMPT
+    | llm
+    | StrOutputParser()
+  )
+
+
+def create_direct_chain():
+  llm = create_llm()
+  return CHAIN_PROMPT | llm | StrOutputParser()
+
+
+
+# ai/services/sql_parser.py
+import re
+import logging
+from ai.models.schema import (
+  ColumnSchema,
+  ForeignKeySchema,
+  TableSchema,
+  SchemaModel
+)
+
+logger = logging.getLogger(__name__)
+
+
+CONSTRAINT_KEYWORDS = {
+  'PRIMARY', 'NOT', 'NULL', 'UNIQUE', 'DEFAULT',
+  'AUTOINCREMENT', 'AUTO_INCREMENT', 'REFERENCES',
+  'CHECK', 'CONSTRAINT', 'GENERATED', 'COLLATE'
+}
+
+TABLE_CONSTRAINT_PREFIXES = (
+  'PRIMARY KEY',
+  'FOREIGN KEY',
+  'UNIQUE',
+  'CONSTRAINT',
+  'CHECK'
+)
+
+
+def _tokenize(part: str) -> list[str]:
+  """Divide respetando paréntesis balanceados."""
+  tokens, buf, depth = [], '', 0
+  for ch in part:
+    if ch == '(':
+      depth += 1
+      buf += ch
+    elif ch == ')':
+      depth -= 1
+      buf += ch
+    elif ch.isspace() and depth == 0:
+      if buf:
+        tokens.append(buf)
+        buf = ''
+    else:
+      buf += ch
+  if buf:
+    tokens.append(buf)
+  return tokens
+
+
+def _split_top_level(body: str) -> list[str]:
+  """Separa por comas de primer nivel."""
+  parts, current, depth = [], [], 0
+  for ch in body:
+    if ch == '(':
+      depth += 1
+      current.append(ch)
+    elif ch == ')':
+      depth -= 1
+      current.append(ch)
+    elif ch == ',' and depth == 0:
+      parts.append(''.join(current).strip())
+      current = []
+    else:
+      current.append(ch)
+  if current:
+    parts.append(''.join(current).strip())
+  return [p for p in parts if p]
+
+
+def _normalize_sql_type(raw: str) -> str:
+  """Normaliza el tipo SQL a una etiqueta comparable con el PUML."""
+  if not raw:
+    return 'string'
+  t = raw.strip().lower()
+  t = re.sub(r'\(.*\)', '', t).strip()  # quitar tamaño
+  aliases = {
+    'varchar': 'string',
+    'char': 'string',
+    'nvarchar': 'string',
+    'text': 'string',
+    'string': 'string',
+    'int': 'int',
+    'integer': 'int',
+    'bigint': 'int',
+    'smallint': 'int',
+    'serial': 'int',
+    'bigserial': 'int',
+    'float': 'float',
+    'double': 'float',
+    'double precision': 'float',
+    'real': 'float',
+    'decimal': 'float',
+    'numeric': 'float',
+    'boolean': 'boolean',
+    'bool': 'boolean',
+    'date': 'date',
+    'datetime': 'datetime',
+    'timestamp': 'datetime',
+    'time': 'time',
+    'uuid': 'uuid',
+    'blob': 'blob',
+  }
+  return aliases.get(t, t)
+
+
+def _parse_column_definition(part: str) -> ColumnSchema | None:
+  """Convierte una definición de columna en ColumnSchema."""
+  tokens = _tokenize(part)
+  if len(tokens) < 2:
+    return None
+  name = tokens[0].strip('`"[]').strip()
+  if not name:
+    return None
+
+  type_tokens = []
+  rest_tokens = []
+  i = 1
+  while i < len(tokens):
+    tok_upper = tokens[i].upper()
+    if tok_upper in CONSTRAINT_KEYWORDS:
+      break
+    type_tokens.append(tokens[i])
+    i += 1
+  rest_tokens = tokens[i:]
+
+  raw_type = ' '.join(type_tokens) if type_tokens else 'text'
+  rest = ' '.join(rest_tokens).upper()
+
+  is_pk = 'PRIMARY KEY' in rest
+  is_not_null = 'NOT NULL' in rest
+  is_unique = 'UNIQUE' in rest
+  default_match = re.search(r'DEFAULT\s+(.+?)(?:\s+(?:NOT|NULL|UNIQUE|PRIMARY|REFERENCES|CHECK)\b|$)', rest)
+  default_value = default_match.group(1) if default_match else None
+
+  return ColumnSchema(
+    name=name,
+    type=_normalize_sql_type(raw_type),
+    is_pk=is_pk,
+    is_nullable=not is_not_null and not is_pk,
+    is_unique=is_unique,
+    default=default_value
+  )
+
+
+def _parse_primary_key_constraint(part: str) -> list[str]:
+  m = re.search(r'PRIMARY\s+KEY\s*\(([^)]+)\)', part, re.IGNORECASE)
+  if not m:
+    return []
+  return [c.strip().strip('`"[]') for c in m.group(1).split(',')]
+
+
+def _parse_foreign_key_constraint(part: str) -> ForeignKeySchema | None:
+  m = re.search(
+    r'FOREIGN\s+KEY\s*\(\s*[`"\[]?(\w+)[`"\]]?\s*\)\s*'
+    r'REFERENCES\s+[`"\[]?(\w+)[`"\]]?\s*\(\s*[`"\[]?(\w+)[`"\]]?\s*\)',
+    part,
+    re.IGNORECASE
+  )
+  if not m:
+    return None
+  return ForeignKeySchema(column=m.group(1), ref_table=m.group(2), ref_column=m.group(3))
+
+
+def _parse_create_body(table_name: str, body: str) -> TableSchema:
+  """Construye TableSchema a partir del cuerpo de un CREATE TABLE."""
+  table = TableSchema(name=table_name)
+  column_pks = []
+  table_level_pks = []
+
+  for part in _split_top_level(body):
+    upper = part.upper().lstrip()
+    if upper.startswith('PRIMARY KEY'):
+      table_level_pks.extend(_parse_primary_key_constraint(part))
+      continue
+    if upper.startswith('FOREIGN KEY'):
+      fk = _parse_foreign_key_constraint(part)
+      if fk:
+        table.foreign_keys.append(fk)
+      continue
+    if upper.startswith('CONSTRAINT'):
+      # CONSTRAINT name FOREIGN KEY (...) REFERENCES ...
+      fk = _parse_foreign_key_constraint(part)
+      if fk:
+        table.foreign_keys.append(fk)
+      pks = _parse_primary_key_constraint(part)
+      if pks:
+        table_level_pks.extend(pks)
+      continue
+    if upper.startswith('UNIQUE') or upper.startswith('CHECK'):
+      continue
+
+    col = _parse_column_definition(part)
+    if col is None:
+      continue
+    table.columns[col.name.lower()] = col
+    if col.is_pk:
+      column_pks.append(col.name)
+
+  # Si hay PK a nivel tabla, marcar las columnas
+  for pk_name in set(table_level_pks + column_pks):
+    key = pk_name.lower()
+    if key in table.columns:
+      table.columns[key].is_pk = True
+      table.columns[key].is_nullable = False
+    else:
+      table.columns[key] = ColumnSchema(
+        name=pk_name, type='int', is_pk=True, is_nullable=False
+      )
+
+  return table
+
+
+def _extract_create_statements(sql_text: str) -> list[tuple[str, str]]:
+  """Devuelve [(nombre_tabla, cuerpo_create)] de todo el SQL."""
+  pattern = re.compile(
+    r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?'
+    r'[`"\[]?(\w+)[`"\]]?\s*\((.*?)\)\s*;',
+    re.IGNORECASE | re.DOTALL
+  )
+  results = []
+  for m in pattern.finditer(sql_text):
+    results.append((m.group(1), m.group(2)))
+  return results
+
+
+def parse_sql_schema(sql_text: str, db_type: str = 'sqlite') -> SchemaModel:
+  """Parsea el SQL generado y devuelve un SchemaModel."""
+  schema = SchemaModel()
+  if not sql_text:
+    return schema
+
+  for table_name, body in _extract_create_statements(sql_text):
+    try:
+      table = _parse_create_body(table_name, body)
+      schema.add_table(table)
+    except Exception as e:
+      logger.warning("Error parseando tabla %s: %s", table_name, e)
+
+  logger.info("SQL parsed: %d tables", len(schema.tables))
+  return schema
+
+
+
+# ai/services/structural_validator.py
+import logging
+from dataclasses import dataclass, field
+from ai.models.schema import SchemaModel
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ValidationReport:
+  """Resultado de comparar el esquema esperado vs el generado."""
+  # Tablas
+  missing_tables: list[str] = field(default_factory=list)
+  extra_tables: list[str] = field(default_factory=list)
+  # Columnas
+  missing_columns: dict[str, list[str]] = field(default_factory=dict)
+  extra_columns: dict[str, list[str]] = field(default_factory=dict)
+  # Tipos
+  type_mismatches: dict[str, list[dict]] = field(default_factory=dict)
+  # PKs
+  pk_mismatches: list[dict] = field(default_factory=list)
+  # FKs
+  fk_mismatches: list[dict] = field(default_factory=list)
+  # Not-null / unique (opcional, útil para el paper)
+  nullability_mismatches: dict[str, list[dict]] = field(default_factory=dict)
+
+  # Estadísticas
+  stats: dict = field(default_factory=dict)
+
+  @property
+  def is_valid(self) -> bool:
+    return not any([
+      self.missing_tables,
+      self.extra_tables,
+      self.missing_columns,
+      self.extra_columns,
+      self.type_mismatches,
+      self.pk_mismatches,
+      self.fk_mismatches,
+      self.nullability_mismatches,
+    ])
+
+  def summary(self) -> str:
+    lines = []
+    if self.is_valid:
+      lines.append("✅ Sin errores estructurales detectados.")
+      return "\n".join(lines)
+
+    if self.missing_tables:
+      lines.append(f"  • Tablas faltantes: {', '.join(self.missing_tables)}")
+    if self.extra_tables:
+      lines.append(f"  • Tablas extra: {', '.join(self.extra_tables)}")
+    for t, cols in self.missing_columns.items():
+      lines.append(f"  • [{t}] columnas faltantes: {', '.join(cols)}")
+    for t, cols in self.extra_columns.items():
+      lines.append(f"  • [{t}] columnas extra: {', '.join(cols)}")
+    for t, diffs in self.type_mismatches.items():
+      for d in diffs:
+        lines.append(
+          f"  • [{t}] tipo de '{d['column']}': "
+          f"esperado={d['expected']} generado={d['generated']}"
+        )
+    for diff in self.pk_mismatches:
+      lines.append(
+        f"  • [{diff['table']}] PK esperada={diff['expected']} "
+        f"generada={diff['generated']}"
+      )
+    for diff in self.fk_mismatches:
+      for d in diff['diffs']:
+        kind = 'faltante' if 'missing' in d else 'extra'
+        lines.append(f"  • [{diff['table']}] FK {kind}: {d.get('missing') or d.get('extra')}")
+    for t, diffs in self.nullability_mismatches.items():
+      for d in diffs:
+        lines.append(
+          f"  • [{t}] nullability de '{d['column']}': "
+          f"esperado={'NULL' if d['expected'] else 'NOT NULL'} "
+          f"generado={'NULL' if d['generated'] else 'NOT NULL'}"
+        )
+    return "\n".join(lines)
+
+  def to_dict(self) -> dict:
+    return {
+      'is_valid': self.is_valid,
+      'missing_tables': self.missing_tables,
+      'extra_tables': self.extra_tables,
+      'missing_columns': self.missing_columns,
+      'extra_columns': self.extra_columns,
+      'type_mismatches': self.type_mismatches,
+      'pk_mismatches': self.pk_mismatches,
+      'fk_mismatches': self.fk_mismatches,
+      'nullability_mismatches': self.nullability_mismatches,
+      'stats': self.stats
+    }
+
+
+def _normalize(name: str) -> str:
+  return name.strip().strip('`"[]').lower()
+
+
+def validate_schema(expected: SchemaModel, generated: SchemaModel) -> ValidationReport:
+  """Compara dos SchemaModel y devuelve un ValidationReport detallado."""
+  report = ValidationReport()
+
+  exp_tables = {k.lower(): v for k, v in expected.tables.items()}
+  gen_tables = {k.lower(): v for k, v in generated.tables.items()}
+
+  # ----- Tablas -----
+  matched_tables = 0
+  for tname in exp_tables:
+    if tname not in gen_tables:
+      report.missing_tables.append(exp_tables[tname].name)
+    else:
+      matched_tables += 1
+  for tname in gen_tables:
+    if tname not in exp_tables:
+      report.extra_tables.append(gen_tables[tname].name)
+
+  # Contadores para métricas
+  stats = {
+    'expected_tables': len(exp_tables),
+    'generated_tables': len(gen_tables),
+    'matched_tables': matched_tables,
+    'expected_columns': 0,
+    'generated_columns': 0,
+    'matched_columns': 0,
+    'expected_types': 0,
+    'matched_types': 0,
+    'expected_pks': 0,
+    'matched_pks': 0,
+    'expected_fks': 0,
+    'matched_fks': 0,
+  }
+
+  # ----- Por tabla -----
+  for tname, exp_table in exp_tables.items():
+    if tname not in gen_tables:
+      continue
+    gen_table = gen_tables[tname]
+
+    exp_cols = {k.lower(): v for k, v in exp_table.columns.items()}
+    gen_cols = {k.lower(): v for k, v in gen_table.columns.items()}
+
+    stats['expected_columns'] += len(exp_cols)
+    stats['generated_columns'] += len(gen_cols)
+
+    missing = [exp_cols[c].name for c in exp_cols if c not in gen_cols]
+    extra = [gen_cols[c].name for c in gen_cols if c not in exp_cols]
+    if missing:
+      report.missing_columns[exp_table.name] = missing
+    if extra:
+      report.extra_columns[exp_table.name] = extra
+
+    # Tipos y nullability en las columnas coincidentes
+    type_diffs = []
+    null_diffs = []
+    for ckey in exp_cols:
+      if ckey not in gen_cols:
+        continue
+      stats['matched_columns'] += 1
+      ec = exp_cols[ckey]
+      gc = gen_cols[ckey]
+      stats['expected_types'] += 1
+      if _normalize(ec.type) == _normalize(gc.type):
+        stats['matched_types'] += 1
+      else:
+        type_diffs.append({
+          'column': ec.name,
+          'expected': ec.type,
+          'generated': gc.type
+        })
+      if bool(ec.is_nullable) != bool(gc.is_nullable):
+        null_diffs.append({
+          'column': ec.name,
+          'expected': ec.is_nullable,
+          'generated': gc.is_nullable
+        })
+    if type_diffs:
+      report.type_mismatches[exp_table.name] = type_diffs
+    if null_diffs:
+      report.nullability_mismatches[exp_table.name] = null_diffs
+
+    # ----- PKs -----
+    exp_pks = sorted([c.name.lower() for c in exp_table.columns.values() if c.is_pk])
+    gen_pks = sorted([c.name.lower() for c in gen_table.columns.values() if c.is_pk])
+    if exp_pks:
+      stats['expected_pks'] += 1
+      if exp_pks == gen_pks:
+        stats['matched_pks'] += 1
+      else:
+        report.pk_mismatches.append({
+          'table': exp_table.name,
+          'expected': exp_pks,
+          'generated': gen_pks
+        })
+
+    # ----- FKs -----
+    exp_fk_set = {
+      (fk.column.lower(), fk.ref_table.lower(), fk.ref_column.lower())
+      for fk in exp_table.foreign_keys
+    }
+    gen_fk_set = {
+      (fk.column.lower(), fk.ref_table.lower(), fk.ref_column.lower())
+      for fk in gen_table.foreign_keys
+    }
+    stats['expected_fks'] += len(exp_fk_set)
+    stats['matched_fks'] += len(exp_fk_set & gen_fk_set)
+
+    fk_diffs = []
+    for fk in exp_fk_set - gen_fk_set:
+      fk_diffs.append({'missing': list(fk)})
+    for fk in gen_fk_set - exp_fk_set:
+      fk_diffs.append({'extra': list(fk)})
+    if fk_diffs:
+      report.fk_mismatches.append({
+        'table': exp_table.name,
+        'diffs': fk_diffs
+      })
+
+  report.stats = stats
+  logger.info("Structural validation finished. Valid=%s", report.is_valid)
+  return report
+
+
+
+
+# ai/services/vector_store.py
+import os
+import json
+import shutil
+import hashlib
+import logging
+from langchain_ollama import OllamaEmbeddings
+from langchain_community.vectorstores import Chroma
+
+EMBEDDING_MODEL = "nomic-embed-text"
+VECTOR_STORE_NAME = "puml-rag"
+PERSIST_DIRECTORY = "./chroma_db"
+META_FILE = os.path.join(PERSIST_DIRECTORY, "meta.json")
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Hash determinista del PUML
+# ---------------------------------------------------------------------------
+def get_puml_file_hash(puml_path: str) -> str | None:
+  """
+  SHA-256 del contenido del PUML. Determinista entre procesos
+  (a diferencia de hash() que usa PYTHONHASHSEED aleatorio).
+  """
+  if not os.path.exists(puml_path):
+    return None
+  with open(puml_path, 'rb') as f:
+    return hashlib.sha256(f.read()).hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# Metadata persistida (archivo + hash del último ingest)
+# ---------------------------------------------------------------------------
+def _read_meta() -> dict:
+  if os.path.exists(META_FILE):
+    try:
+      with open(META_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+    except Exception:
+      return {}
+  return {}
+
+
+def _write_meta(data: dict) -> None:
+  os.makedirs(PERSIST_DIRECTORY, exist_ok=True)
+  with open(META_FILE, 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+# ---------------------------------------------------------------------------
+# Decisión de recrear
+# ---------------------------------------------------------------------------
+def should_recreate_vector_db(puml_file: str, vector_db) -> bool:
+  """
+  Recrea si:
+    - no hay DB,
+    - el hash del PUML cambió,
+    - cambió la ruta del PUML,
+    - la metadata no existe (DB creada por versión antigua).
+  """
+  if vector_db is None:
+    logger.info("No vector DB found -> recreate.")
+    return True
+
+  current_hash = get_puml_file_hash(puml_file)
+  if current_hash is None:
+    logger.warning("PUML no encontrado al calcular hash.")
+    return True
+
+  meta = _read_meta()
+  stored_hash = meta.get("source_file_hash")
+  stored_file = meta.get("source_file")
+
+  if stored_hash is None:
+    logger.info("No metadata found -> recreate (old DB).")
+    return True
+
+  if stored_hash != current_hash:
+    logger.info(
+      "PUML changed (hash %s -> %s) -> recreate.",
+      stored_hash[:8], current_hash[:8]
+    )
+    return True
+
+  if stored_file and os.path.abspath(stored_file) != os.path.abspath(puml_file):
+    logger.info(
+      "Different PUML file (%s -> %s) -> recreate.",
+      stored_file, puml_file
+    )
+    return True
+
+  logger.info("Vector DB is up-to-date (hash %s).", current_hash[:8])
+  return False
+
+
+# ---------------------------------------------------------------------------
+# Limpieza
+# ---------------------------------------------------------------------------
+def clear_vector_db() -> bool:
+  """Elimina el directorio de la base vectorial de forma segura."""
+  if not os.path.exists(PERSIST_DIRECTORY):
+    return True
+  try:
+    shutil.rmtree(PERSIST_DIRECTORY)
+    logger.info("Cleared existing vector database.")
+    return True
+  except Exception as e:
+    logger.error("Error clearing vector DB: %s", e)
+    try:
+      import subprocess
+      subprocess.run(['rm', '-rf', PERSIST_DIRECTORY], check=True)
+      logger.info("Cleared vector database using alternative method.")
+      return True
+    except Exception as e2:
+      logger.error("Failed to clear vector database: %s", e2)
+      return False
+
+
+# ---------------------------------------------------------------------------
+# Carga / creación
+# ---------------------------------------------------------------------------
+def check_existing_vector_db():
+  """Carga la base vectorial existente si existe y tiene documentos."""
+  if not os.path.exists(PERSIST_DIRECTORY):
+    return None
+  try:
+    vector_db = Chroma(
+      persist_directory=PERSIST_DIRECTORY,
+      embedding_function=OllamaEmbeddings(model=EMBEDDING_MODEL),
+      collection_name=VECTOR_STORE_NAME
+    )
+    count = vector_db._collection.count()
+    if count > 0:
+      logger.info("Found existing vector database with %d documents.", count)
+      return vector_db
+    logger.info("Existing vector DB is empty.")
+  except Exception as e:
+    logger.warning("Existing DB issue: %s", e)
+  return None
+
+
+def create_vector_db(chunks, puml_path: str):
+  """
+  Crea la base vectorial desde cero.
+  SIEMPRE limpia el directorio antes para evitar mezclar PUMLs.
+  """
+  logger.info("Recreating vector DB from scratch (%d chunks).", len(chunks))
+
+  # Borrado total para no arrastrar embeddings viejos
+  if not clear_vector_db():
+    logger.error("No se pudo limpiar la DB. Abortando para evitar mezcla.")
+    raise RuntimeError("No se pudo limpiar chroma_db")
+
+  embedding = OllamaEmbeddings(model=EMBEDDING_MODEL)
+
+  try:
+    os.makedirs(PERSIST_DIRECTORY, exist_ok=True, mode=0o755)
+    vector_db = Chroma.from_documents(
+      documents=chunks,
+      embedding=embedding,
+      collection_name=VECTOR_STORE_NAME,
+      persist_directory=PERSIST_DIRECTORY
+    )
+    vector_db.persist()
+
+    # Verificación de conteo
+    count = vector_db._collection.count()
+    if count != len(chunks):
+      logger.warning(
+        "Chunks esperados=%d, persistidos=%d", len(chunks), count
+      )
+
+    # Guardar metadata con el hash del PUML
+    _write_meta({
+      "source_file": os.path.abspath(puml_path),
+      "source_file_hash": get_puml_file_hash(puml_path),
+      "chunk_count": count,
+    })
+
+    logger.info("Vector DB created for %s (%d chunks).", puml_path, count)
+    return vector_db
+
+  except Exception as e:
+    logger.error("Error creating persistent vector DB: %s", e)
+    # Fallback en memoria (no persiste, evita el problema de mezcla)
+    return Chroma.from_documents(
+      documents=chunks,
+      embedding=embedding,
+      collection_name=VECTOR_STORE_NAME
+    )
+
+
+def load_vector_db():
+  """Carga la base vectorial desde disco."""
+  try:
+    return Chroma(
+      persist_directory=PERSIST_DIRECTORY,
+      embedding_function=OllamaEmbeddings(model=EMBEDDING_MODEL),
+      collection_name=VECTOR_STORE_NAME
+    )
+  except Exception as e:
+    logger.error("Error loading vector DB: %s", e)
+    return None
+
+
+# ai/prompts/__init__.py
+from .templates import QUERY_PROMPT, CHAIN_PROMPT
+
+__all__ = ["QUERY_PROMPT", "CHAIN_PROMPT"]
+
+
+# ai/prompts/templates.py
+from langchain.prompts import PromptTemplate, ChatPromptTemplate
+
+# Plantilla para generar variaciones de preguntas (MultiQueryRetriever)
+QUERY_PROMPT = PromptTemplate(
+  input_variables=["question"],
+  template="""Eres un asistente especializado en diagramas UML y bases de datos. 
+  Genera 3 versiones diferentes de la siguiente pregunta para mejorar la búsqueda de información relevante.
+  
+  Pregunta original: {question}
+  
+  Genera 3 variaciones diferentes:"""
+)
+
+# Plantilla principal para la cadena RAG (generación de SQL)
+CHAIN_TEMPLATE = """Eres un experto en bases de datos y diagramas UML. 
+Tu tarea es ANALIZAR el diagrama PUML proporcionado y GENERAR código SQL.
+
+CONTEXTO del diagrama PUML:
+{context}
+
+INSTRUCCIONES para la pregunta: {question}
+
+- Analiza las entidades (entity) y sus relaciones del diagrama
+- Genera código SQL funcional y válido
+- Especifica el tipo de base de datos objetivo
+- Incluye todas las tablas, relaciones y constraints necesarios
+- SÉ ESPECÍFICO y PRÁCTICO"""
+
+CHAIN_PROMPT = ChatPromptTemplate.from_template(template=CHAIN_TEMPLATE)
+
+
+
+
+# ai/models/__init__.py
+from .migration import TableMigration
+from .schema import (
+  ColumnSchema,
+  ForeignKeySchema,
+  TableSchema,
+  SchemaModel
+)
+
+__all__ = [
+  "TableMigration",
+  "ColumnSchema",
+  "ForeignKeySchema",
+  "TableSchema",
+  "SchemaModel"
+]
+
+
+
+# ai/models/migration.py
+from dataclasses import dataclass
+
+
+@dataclass
+class TableMigration:
+  """Representa una migración para una tabla."""
+  table_name: str
+  up: str          # sentencia CREATE TABLE
+  down: str        # sentencia DROP TABLE
+  complete_block: str  # bloque completo con -- migrate:up/down
+  index: int = 0   # orden de aparición
+
+
+
+# ai/models/schema.py
+from dataclasses import dataclass, field
+
+@dataclass
+class ColumnSchema:
+  """Columna dentro de una tabla."""
+  name: str
+  type: str
+  is_pk: bool = False
+  is_nullable: bool = True
+  is_unique: bool = False
+  default: str | None = None
+
+
+@dataclass
+class ForeignKeySchema:
+  """Relación de clave foránea."""
+  column: str
+  ref_table: str
+  ref_column: str
+
+
+@dataclass
+class TableSchema:
+  """Tabla con sus columnas y FKs."""
+  name: str
+  columns: dict[str, ColumnSchema] = field(default_factory=dict)
+  foreign_keys: list[ForeignKeySchema] = field(default_factory=list)
+
+
+@dataclass
+class SchemaModel:
+  """Modelo de esquema completo (esperado o generado)."""
+  tables: dict[str, TableSchema] = field(default_factory=dict)
+
+  def table(self, name: str) -> TableSchema | None:
+    return self.tables.get(name.lower())
+
+  def add_table(self, table: TableSchema) -> None:
+    self.tables[table.name.lower()] = table

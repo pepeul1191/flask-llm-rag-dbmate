@@ -8,6 +8,7 @@ import datetime
 from typing import Dict, List, Tuple
 from ..models.migration import TableMigration
 from .fallback import generate_direct_migrations
+from ai.paths import under_output
 
 logger = logging.getLogger(__name__)
 
@@ -211,13 +212,13 @@ def enforce_original_names(puml_file: str, tables_dict: Dict[int, TableMigration
     return tables_dict
 
 
-def save_migration_files(tables_dict: Dict[int, TableMigration], puml_basename: str, db_type: str, complete_migrations: str):
-  """Guarda las migraciones en archivos individuales y un resumen completo."""
+def save_migration_files(tables_dict, puml_basename, db_type, complete_migrations):
+  """Guarda las migraciones en tmp/ (archivo completo + carpeta por tabla)."""
   if not tables_dict:
     print("❌ No hay migraciones para guardar.")
     return
 
-  complete_filename = f"complete_migrations_{puml_basename}_{db_type}.sql"
+  complete_filename = under_output(f"complete_migrations_{puml_basename}_{db_type}.sql")
   with open(complete_filename, 'w', encoding='utf-8') as f:
     f.write(f"-- Migraciones generadas desde: {puml_basename}.puml\n")
     f.write(f"-- Tipo de base de datos: {db_type}\n")
@@ -226,7 +227,7 @@ def save_migration_files(tables_dict: Dict[int, TableMigration], puml_basename: 
     f.write(complete_migrations)
   print(f"✓ Migraciones completas guardadas en: {complete_filename}")
 
-  migrations_dir = f"migrations_{puml_basename}_{db_type}"
+  migrations_dir = under_output(f"migrations_{puml_basename}_{db_type}")
   if os.path.exists(migrations_dir):
     shutil.rmtree(migrations_dir)
   os.makedirs(migrations_dir, exist_ok=True)
@@ -234,7 +235,7 @@ def save_migration_files(tables_dict: Dict[int, TableMigration], puml_basename: 
   base_ts = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
   for key, table in tables_dict.items():
     ts = str(base_ts + key)
-    filename = f"{migrations_dir}/{ts}_create_{table.table_name}.sql"
+    filename = os.path.join(migrations_dir, f"{ts}_create_{table.table_name}.sql")
     with open(filename, 'w', encoding='utf-8') as f:
       f.write(table.complete_block)
     print(f"✓ Migración {key} ({table.table_name}) guardada en: {filename}")

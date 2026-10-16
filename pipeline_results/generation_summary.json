@@ -1,0 +1,26 @@
+[
+  {
+    "input": "./schemas/basico.puml",
+    "puml": "modelo.puml",
+    "db_type": "sqlite",
+    "mode": "llm_only",
+    "success": true,
+    "tables": 6
+  },
+  {
+    "input": "./schemas/basico.puml",
+    "puml": "modelo.puml",
+    "db_type": "sqlite",
+    "mode": "rag",
+    "success": true,
+    "tables": 6
+  },
+  {
+    "input": "./schemas/basico.puml",
+    "puml": "modelo.puml",
+    "db_type": "sqlite",
+    "mode": "rag_validation",
+    "success": true,
+    "tables": 6
+  }
+]

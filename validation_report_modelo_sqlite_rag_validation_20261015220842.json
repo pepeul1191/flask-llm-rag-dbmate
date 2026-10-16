@@ -1,0 +1,139 @@
+{
+  "is_valid": false,
+  "missing_tables": [],
+  "extra_tables": [],
+  "missing_columns": {},
+  "extra_columns": {
+    "users": [
+      "username",
+      "password",
+      "activation_key",
+      "reset_key",
+      "email",
+      "activated",
+      "created",
+      "updated"
+    ],
+    "systems": [
+      "name",
+      "description",
+      "repository",
+      "created",
+      "updated"
+    ],
+    "roles": [
+      "name",
+      "created",
+      "updated",
+      "system_id"
+    ],
+    "permissions": [
+      "name",
+      "created",
+      "updated",
+      "role_id"
+    ],
+    "systems_users": [
+      "system_id",
+      "user_id",
+      "created"
+    ],
+    "systems_users_permissions": [
+      "system_id",
+      "user_id",
+      "permission_id",
+      "created"
+    ],
+    "carrere_grades": [
+      "name"
+    ]
+  },
+  "type_mismatches": {},
+  "pk_mismatches": [],
+  "fk_mismatches": [
+    {
+      "table": "roles",
+      "diffs": [
+        {
+          "extra": [
+            "system_id",
+            "systems",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "permissions",
+      "diffs": [
+        {
+          "extra": [
+            "role_id",
+            "roles",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "systems_users",
+      "diffs": [
+        {
+          "extra": [
+            "user_id",
+            "users",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "system_id",
+            "systems",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "systems_users_permissions",
+      "diffs": [
+        {
+          "extra": [
+            "user_id",
+            "users",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "system_id",
+            "systems",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "permission_id",
+            "permissions",
+            "id"
+          ]
+        }
+      ]
+    }
+  ],
+  "nullability_mismatches": {},
+  "stats": {
+    "expected_tables": 7,
+    "generated_tables": 7,
+    "matched_tables": 7,
+    "expected_columns": 7,
+    "generated_columns": 36,
+    "matched_columns": 7,
+    "expected_types": 7,
+    "matched_types": 7,
+    "expected_pks": 7,
+    "matched_pks": 7,
+    "expected_fks": 0,
+    "matched_fks": 0
+  }
+}

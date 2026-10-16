@@ -34,6 +34,8 @@ Instalar modelo
 
     #### DBMATE
     DB=sqlite:db/app.db
+    #### IA
+    OLLAMA_MODEL=llama3.2||
 
 ### Migraciones con DBMATE
 
@@ -205,3 +207,4 @@ systems_users_permissions -- permissions : "belongs to"
     $ sudo snap stop ollama
     $ sudo systemctl enable --now ollama
     $ ollama --version
+    $ ollama run qwen2.5:3b && ollama run gemma2:2b && ollama run phi3 && ollama run deepseek-r1:1.5b-q8_0

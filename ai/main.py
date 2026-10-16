@@ -5,6 +5,7 @@ import json
 import logging
 import datetime
 
+from ai.paths import output_base, under_output
 from ai.services.vector_store import (
   check_existing_vector_db,
   should_recreate_vector_db,
@@ -102,24 +103,24 @@ def _validate_structure(puml_file: str, complete_migrations: str, db_type: str):
 
 def _persist_reports(puml_basename: str, mode: str, db_type: str,
                      report, metrics, tables_dict) -> None:
-  """Guarda el reporte de validación y las métricas en JSON."""
+  """Guarda el reporte de validación y las métricas en JSON dentro de tmp/."""
   ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
   base = f"{puml_basename}_{db_type}_{mode}_{ts}"
 
   if report is not None:
-    report_file = f"validation_report_{base}.json"
+    report_file = under_output(f"validation_report_{base}.json")
     with open(report_file, "w", encoding="utf-8") as f:
       json.dump(report.to_dict(), f, indent=2, ensure_ascii=False)
     print(f"✓ Reporte de validación guardado en: {report_file}")
 
   if metrics is not None:
-    metrics_file = f"metrics_{base}.json"
+    metrics_file = under_output(f"metrics_{base}.json")
     with open(metrics_file, "w", encoding="utf-8") as f:
       json.dump(metrics, f, indent=2, ensure_ascii=False)
     print(f"✓ Métricas guardadas en: {metrics_file}")
 
   if tables_dict:
-    dict_file = f"migrations_dict_{base}.json"
+    dict_file = under_output(f"migrations_dict_{base}.json")
     with open(dict_file, "w", encoding="utf-8") as f:
       json.dump({k: v.__dict__ for k, v in tables_dict.items()},
                 f, indent=2, ensure_ascii=False)
@@ -239,8 +240,8 @@ def run_comparison(folder_path: str, db_type: str):
 
 if __name__ == "__main__":
   if len(sys.argv) < 3:
-    print("Uso: python main.py <carpeta_con_puml> <tipo_db> [modo]")
-    print("  modo: llm_only | rag | rag_validation | compare")
+    print("Uso: python -m ai.main <carpeta_o_puml> <tipo_db> [modo]")
+    print("  modo: llm_only | rag | rag_validation | compare | errors | pipeline")
     sys.exit(1)
 
   folder = sys.argv[1]
@@ -249,5 +250,18 @@ if __name__ == "__main__":
 
   if mode == "compare":
     run_comparison(folder, db)
+  elif mode == "errors":
+    from ai.pipeline import run_structural_validation_tests
+    result = run_structural_validation_tests(folder, db)
+    print("\n" + "=" * 60)
+    print("RESULTADO DE TESTS DE VALIDACIÓN ESTRUCTURAL")
+    print("=" * 60)
+    print("Aggregate:", result["aggregate"])
+    for etype, m in result["per_error_type"].items():
+      print(f"  {etype}: {m}")
+  elif mode == "pipeline":
+    from ai.pipeline import run_from_config                                       
+    cfg_path = sys.argv[4] if len(sys.argv) > 4 else "pipeline_config.json"
+    run_from_config(cfg_path)
   else:
-    execute(folder, db, mode=mode)
+    execute(folder, db, mode=mode)                                                                                                                                                                      

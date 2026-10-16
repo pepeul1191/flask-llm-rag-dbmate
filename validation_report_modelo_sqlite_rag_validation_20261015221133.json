@@ -1,0 +1,238 @@
+{
+  "is_valid": false,
+  "missing_tables": [
+    "internals",
+    "external_workers"
+  ],
+  "extra_tables": [
+    "programs_participants",
+    "workers_participants",
+    "nations_participants",
+    "mentors_participants"
+  ],
+  "missing_columns": {
+    "mentors_spcialisms": [
+      "mentors_id",
+      "specialisms_id"
+    ]
+  },
+  "extra_columns": {
+    "document_types": [
+      "name"
+    ],
+    "industries": [
+      "name"
+    ],
+    "specialisms": [
+      "name"
+    ],
+    "carrere_grades": [
+      "name"
+    ],
+    "carreres": [
+      "name"
+    ],
+    "program_types": [
+      "name"
+    ],
+    "dni_types": [
+      "name"
+    ],
+    "nations": [
+      "name"
+    ],
+    "periods": [
+      "name",
+      "init_date",
+      "end_date"
+    ],
+    "programs": [
+      "name",
+      "description",
+      "image_url",
+      "pdf_url",
+      "max_participant_team",
+      "created_at",
+      "updated_at",
+      "program_type_id",
+      "period_id"
+    ],
+    "phases": [
+      "name"
+    ],
+    "participants": [
+      "code",
+      "participant_id",
+      "period_id",
+      "carrere_id"
+    ],
+    "externals": [
+      "participant_id"
+    ],
+    "workers": [
+      "names",
+      "last_names",
+      "email",
+      "phone",
+      "created_at",
+      "updated_at",
+      "user_id"
+    ],
+    "internal_workers": [
+      "worker_id",
+      "code"
+    ],
+    "mentors": [
+      "worker_id"
+    ],
+    "mentors_spcialisms": [
+      "mentor_id",
+      "specialism_id"
+    ]
+  },
+  "type_mismatches": {},
+  "pk_mismatches": [],
+  "fk_mismatches": [
+    {
+      "table": "programs",
+      "diffs": [
+        {
+          "extra": [
+            "program_type_id",
+            "program_types",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "period_id",
+            "periods",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "participants",
+      "diffs": [
+        {
+          "extra": [
+            "participant_id",
+            "programs",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "period_id",
+            "periods",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "carrere_id",
+            "carreres",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "externals",
+      "diffs": [
+        {
+          "extra": [
+            "participant_id",
+            "programs",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "workers",
+      "diffs": [
+        {
+          "extra": [
+            "user_id",
+            "users",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "internal_workers",
+      "diffs": [
+        {
+          "extra": [
+            "worker_id",
+            "workers",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "mentors",
+      "diffs": [
+        {
+          "extra": [
+            "worker_id",
+            "workers",
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "table": "mentors_spcialisms",
+      "diffs": [
+        {
+          "missing": [
+            "mentors_id",
+            "mentors",
+            "id"
+          ]
+        },
+        {
+          "missing": [
+            "specialisms_id",
+            "specialisms",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "mentor_id",
+            "mentors",
+            "id"
+          ]
+        },
+        {
+          "extra": [
+            "specialism_id",
+            "specialisms",
+            "id"
+          ]
+        }
+      ]
+    }
+  ],
+  "nullability_mismatches": {},
+  "stats": {
+    "expected_tables": 19,
+    "generated_tables": 21,
+    "matched_tables": 17,
+    "expected_columns": 19,
+    "generated_columns": 55,
+    "matched_columns": 17,
+    "expected_types": 17,
+    "matched_types": 17,
+    "expected_pks": 17,
+    "matched_pks": 17,
+    "expected_fks": 2,
+    "matched_fks": 0
+  }
+}

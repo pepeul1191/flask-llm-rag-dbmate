@@ -1,0 +1,31 @@
+{
+  "inputs": [
+    "./schemas/basico.puml",
+    "./schemas/ejemplo.puml",
+    "./schemas/innova.puml",
+    "./schemas/nortwind.puml",
+    "./schemas/postulaciones.puml",
+    "./schemas/postulaciones_v2.puml"
+  ],
+  "db_types": ["sqlite"],
+  "modes": ["llm_only", "rag", "rag_validation"],
+
+  "generation_stages": [
+    "execute",
+    "retrieval_metrics",
+    "execution_metrics",
+    "nlg_metrics",
+    "faithfulness"
+  ],
+  "error_stages": ["inject_and_validate", "measure_detection"],
+
+  "error_types": ["drop_table", "drop_column", "change_type",
+                  "drop_pk", "drop_fk", "rename_table"],
+  "include_clean_baseline": true,
+
+  "benchmark_dir": "./benchmarks",
+  "retrieval_k": 10,
+
+  "output_dir": "./pipeline_results",
+  "save_individual_reports": true
+}

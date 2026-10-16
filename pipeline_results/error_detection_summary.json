@@ -1,0 +1,305 @@
+[
+  {
+    "input": "./schemas/basico.puml",
+    "puml": "modelo.puml",
+    "db_type": "sqlite",
+    "detection_metrics": {
+      "per_error_type": {
+        "clean": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_column": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "change_type": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_pk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_fk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "rename_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        }
+      },
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "samples": [
+        {
+          "error_type": "clean",
+          "detected": false,
+          "report_dict": {
+            "is_valid": true,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 34,
+              "matched_columns": 34,
+              "expected_types": 34,
+              "matched_types": 34,
+              "expected_pks": 6,
+              "matched_pks": 6,
+              "expected_fks": 1,
+              "matched_fks": 1
+            }
+          }
+        },
+        {
+          "error_type": "drop_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "users"
+            ],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 5,
+              "matched_tables": 5,
+              "expected_columns": 25,
+              "generated_columns": 25,
+              "matched_columns": 25,
+              "expected_types": 25,
+              "matched_types": 25,
+              "expected_pks": 5,
+              "matched_pks": 5,
+              "expected_fks": 1,
+              "matched_fks": 1
+            }
+          }
+        },
+        {
+          "error_type": "drop_column",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {
+              "users": [
+                "username"
+              ]
+            },
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 33,
+              "matched_columns": 33,
+              "expected_types": 33,
+              "matched_types": 33,
+              "expected_pks": 6,
+              "matched_pks": 6,
+              "expected_fks": 1,
+              "matched_fks": 1
+            }
+          }
+        },
+        {
+          "error_type": "change_type",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {
+              "users": [
+                {
+                  "column": "id",
+                  "expected": "int",
+                  "generated": "blob"
+                }
+              ]
+            },
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 34,
+              "matched_columns": 34,
+              "expected_types": 34,
+              "matched_types": 33,
+              "expected_pks": 6,
+              "matched_pks": 6,
+              "expected_fks": 1,
+              "matched_fks": 1
+            }
+          }
+        },
+        {
+          "error_type": "drop_pk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [
+              {
+                "table": "users",
+                "expected": [
+                  "id"
+                ],
+                "generated": []
+              }
+            ],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 34,
+              "matched_columns": 34,
+              "expected_types": 34,
+              "matched_types": 34,
+              "expected_pks": 6,
+              "matched_pks": 5,
+              "expected_fks": 1,
+              "matched_fks": 1
+            }
+          }
+        },
+        {
+          "error_type": "drop_fk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [
+              {
+                "table": "permissions",
+                "diffs": [
+                  {
+                    "missing": [
+                      "role_id",
+                      "roles",
+                      "id"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 34,
+              "matched_columns": 34,
+              "expected_types": 34,
+              "matched_types": 34,
+              "expected_pks": 6,
+              "matched_pks": 6,
+              "expected_fks": 1,
+              "matched_fks": 0
+            }
+          }
+        },
+        {
+          "error_type": "rename_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "users"
+            ],
+            "extra_tables": [
+              "users_x"
+            ],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 5,
+              "expected_columns": 25,
+              "generated_columns": 25,
+              "matched_columns": 25,
+              "expected_types": 25,
+              "matched_types": 25,
+              "expected_pks": 5,
+              "matched_pks": 5,
+              "expected_fks": 1,
+              "matched_fks": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+]

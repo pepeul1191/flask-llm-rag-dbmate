@@ -77,15 +77,15 @@
       "diffs": [
         {
           "extra": [
-            "system_id",
-            "systems",
+            "user_id",
+            "users",
             "id"
           ]
         },
         {
           "extra": [
-            "user_id",
-            "users",
+            "system_id",
+            "systems",
             "id"
           ]
         }
@@ -96,15 +96,15 @@
       "diffs": [
         {
           "extra": [
-            "system_id",
-            "systems",
+            "user_id",
+            "users",
             "id"
           ]
         },
         {
           "extra": [
-            "user_id",
-            "users",
+            "system_id",
+            "systems",
             "id"
           ]
         },

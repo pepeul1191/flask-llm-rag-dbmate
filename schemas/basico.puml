@@ -1,0 +1,72 @@
+@startuml
+
+entity users {
+  * id : INTEGER
+  --
+  * username : VARCHAR(20)
+  * password : VARCHAR(100)
+  * activation_key : VARCHAR(30)
+  * reset_key : VARCHAR(30)
+  * email : VARCHAR(50)
+  * activated : BOOLEAN
+  * created : DATETIME
+  * updated : DATETIME
+}
+
+entity systems {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+  * description : TEXT
+  * repository : VARCHAR(100)
+  * created : DATETIME
+  * updated : DATETIME
+}
+
+entity roles {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+  * created : DATETIME
+  * updated : DATETIME
+  * system_id : INTEGER
+}
+
+entity permissions {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+  * created : DATETIME
+  * updated : DATETIME
+  * role_id : INTEGER
+}
+
+entity systems_users {
+  * id : INTEGER
+  --
+  * system_id : INTEGER
+  * user_id : INTEGER
+  * created : DATETIME
+}
+
+entity systems_users_permissions {
+  * id : INTEGER
+  --
+  * system_id : INTEGER
+  * user_id : INTEGER
+  * permission_id : INTEGER
+  * created : DATETIME
+}
+
+' Relaciones
+systems_users }|--|| users : "has many"
+systems_users }|--|| systems : "belongs to"
+systems_users }|--|| users : "belongs to"
+roles ||--|{ permissions : "has many"
+permissions }|--|| roles : "belongs to"
+roles }|--|| systems : "belongs to"
+systems_users_permissions }|--|| systems : "belongs to"
+systems_users_permissions }|--|| users : "belongs to"
+systems_users_permissions }|--|| permissions : "belongs to"
+
+@enduml

@@ -35,6 +35,9 @@ seaborn==0.13.2
 
 # tests
 pandas
+bert_score
+sacrebleu
+rouge_score
 
 # documentation
 markdown 

@@ -79,7 +79,8 @@ def _parse_entity_attributes(body: str) -> list[ColumnSchema]:
       or re.search(r'<<\s*id\s*>>', type_part, re.IGNORECASE)
     )
     raw_type = re.sub(r'(<<[^>]*>>|\{[^}]*\})', '', type_part).strip()
-    name = _strip_visibility(name_part.split()[0]) if name_part.split() else ''
+    clean_name = _strip_visibility(name_part)
+    name = clean_name.split()[0] if clean_name.split() else ''
     name = name.split('(')[0].strip()
     if not name:
       continue
@@ -101,6 +102,15 @@ def _infer_fk_column(ref_table: str) -> str:
   """Convención: <tabla_referenciada>_id en minúsculas."""
   return f"{ref_table.lower()}_id"
 
+def _find_existing_fk(table: TableSchema, ref_table: str) -> str | None:
+    """Busca una columna existente que parezca FK hacia ref_table."""
+    ref = ref_table.lower()
+    singular = ref[:-1] if ref.endswith('s') else ref
+    candidates = [f"{ref}_id", f"{singular}_id"]
+    for cand in candidates:
+        if cand in table.columns:
+            return cand
+    return None
 
 def _parse_relationships(content: str) -> list[tuple[str, str, str, str]]:
   """
@@ -136,23 +146,23 @@ def _apply_relationships(
       continue
 
     if _card_is_many(rcard) and not _card_is_many(lcard):
-      # Right es "muchos" -> FK en right apuntando a left
-      fk_col = _infer_fk_column(left_table.name)
-      _ensure_fk_column(right_table, fk_col, left_table.name)
-      right_table.foreign_keys.append(ForeignKeySchema(
-        column=fk_col,
-        ref_table=left_table.name,
-        ref_column=_primary_key_name(left_table)
-      ))
+        existing = _find_existing_fk(right_table, left_table.name)
+        fk_col = existing or _infer_fk_column(left_table.name)
+        _ensure_fk_column(right_table, fk_col, left_table.name)
+        right_table.foreign_keys.append(ForeignKeySchema(
+            column=fk_col,
+            ref_table=left_table.name,
+            ref_column=_primary_key_name(left_table)
+        ))
     elif _card_is_many(lcard) and not _card_is_many(rcard):
-      # Left es "muchos" -> FK en left apuntando a right
-      fk_col = _infer_fk_column(right_table.name)
-      _ensure_fk_column(left_table, fk_col, right_table.name)
-      left_table.foreign_keys.append(ForeignKeySchema(
-        column=fk_col,
-        ref_table=right_table.name,
-        ref_column=_primary_key_name(right_table)
-      ))
+        existing = _find_existing_fk(left_table, right_table.name)
+        fk_col = existing or _infer_fk_column(right_table.name)
+        _ensure_fk_column(left_table, fk_col, right_table.name)
+        left_table.foreign_keys.append(ForeignKeySchema(
+            column=fk_col,
+            ref_table=right_table.name,
+            ref_column=_primary_key_name(right_table)
+        ))
 
 
 def _primary_key_name(table: TableSchema) -> str:

@@ -12,6 +12,12 @@ VECTOR_STORE_NAME = "puml-rag"
 PERSIST_DIRECTORY = "./chroma_db"
 META_FILE = os.path.join(PERSIST_DIRECTORY, "meta.json")
 
+from ai.paths import output_base
+import os
+
+PERSIST_DIRECTORY = os.path.join(output_base(), "chroma_db")
+META_FILE = os.path.join(PERSIST_DIRECTORY, "meta.json")
+
 logger = logging.getLogger(__name__)
 
 
