@@ -2,8 +2,10 @@
 import os
 import sys
 import json
+import time
 import logging
 import datetime
+from ai import env
 
 from ai.paths import output_base, under_output
 from ai.services.vector_store import (
@@ -30,6 +32,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 VALID_MODES = ("llm_only", "rag", "rag_validation")
+
+_AI_TIMING = os.getenv("AI_TIMING", "0") == "1"
+
+def _timed(label, fn, *args, **kwargs):
+    if not _AI_TIMING:
+        return fn(*args, **kwargs)
+    t0 = time.perf_counter()
+    try:
+        return fn(*args, **kwargs)
+    finally:
+        print(f"⏱ [timing] {label}: {time.perf_counter()-t0:.3f}s")
 
 
 def _build_chain(mode: str, vector_db, puml_file: str):
@@ -104,8 +117,13 @@ def _validate_structure(puml_file: str, complete_migrations: str, db_type: str):
 def _persist_reports(puml_basename: str, mode: str, db_type: str,
                      report, metrics, tables_dict) -> None:
   """Guarda el reporte de validación y las métricas en JSON dentro de tmp/."""
-  ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-  base = f"{puml_basename}_{db_type}_{mode}_{ts}"
+  # Si el pipeline nos pasó un run_id, compartimos timestamp
+  run_id = os.getenv("AI_RUN_ID")
+  if run_id:
+    base = f"{run_id}_{puml_basename}_{db_type}_{mode}"
+  else:
+    ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    base = f"{puml_basename}_{db_type}_{mode}_{ts}"
 
   if report is not None:
     report_file = under_output(f"validation_report_{base}.json")
@@ -158,7 +176,11 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
 
   # 3. Generar migraciones
   print(f"🔄 Generando migraciones SQL para {puml_file} (db={db_type}, mode={mode})...")
-  complete_migrations = _generate_migrations(mode, chain, db_type, puml_file)
+  #complete_migrations = _generate_migrations(mode, chain, db_type, puml_file)
+  complete_migrations = _timed(
+    "llm_generation",
+    _generate_migrations, mode, chain, db_type, puml_file
+  )
 
   if not complete_migrations or complete_migrations.startswith("Error:"):
     print("❌ No se pudieron generar migraciones.")
@@ -193,17 +215,21 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
   # 6. Validación estructural (solo en rag_validation)
   report = None
   metrics = None
-  if mode == "rag_validation":
-    report, metrics = _validate_structure(puml_file, complete_migrations, db_type)
-    if report is None:
-      print("⚠️ No se pudo completar la validación estructural.")
-    elif report.is_valid:
-      print("✅ Validación estructural: SIN ERRORES detectados.")
-    else:
-      print("⚠️ Validación estructural: se detectaron diferencias.")
+  # report, metrics = _validate_structure(puml_file, complete_migrations, db_type)
+  report, metrics = _timed(
+    "structural_validation",
+    _validate_structure, puml_file, complete_migrations, db_type
+  )
+  if report is None:
+    print("⚠️ No se pudo completar la validación estructural.")
+  elif report.is_valid:
+    print("✅ Validación estructural: SIN ERRORES detectados.")
+  else:
+    print("⚠️ Validación estructural: se detectaron diferencias.")
 
   # 7. Guardar archivos
-  puml_basename = os.path.splitext(os.path.basename(puml_file))[0]
+  puml_basename = os.getenv("AI_PUML_BASENAME") or \
+                os.path.splitext(os.path.basename(puml_file))[0]
   save_migration_files(tables_dict, puml_basename, db_type, complete_migrations)
 
   _persist_reports(puml_basename, mode, db_type, report, metrics, tables_dict)

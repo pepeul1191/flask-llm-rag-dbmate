@@ -246,51 +246,54 @@ entity applications_students_reviews {
 ' ==========================================
 
 ' Carreras
-carrers -- students : "has many"
-carrers -- applications_carrers : "has many"
+carrers ||--o{ students : "has"
+carrers ||--o{ applications_carrers : "has"
 
-' Perfiles y usuarios
-profiles -- users : "has many"
-users -- students : "has one"
-users -- enterprises : "has many"
-users -- logs : "has many"
+' Usuarios
+users ||--o| students : "has"
+users ||--o{ enterprises : "has"
+users ||--o{ logs : "has"
+profiles ||--o{ users  : "has"
 
 ' Estudiantes
-students -- students_skills_skill_levels : "has many"
-students -- experiences : "has many"
-students -- applications_students : "has many"
-students -- students_applications_saved : "has many"
-students -- links : "has many"
+students ||--o{ students_skills_skill_levels : "has"
+students ||--o{ experiences : "has"
+students ||--o{ applications_students : "has"
+students ||--o{ students_applications_saved : "saves"
+students ||--o{ links : "has"
 
-' Habilidades y niveles
-skills -- students_skills_skill_levels : "has many"
-skills -- applications_skills : "has many"
-skill_levels -- students_skills_skill_levels : "has many"
+' Habilidades
+skills ||--o{ students_skills_skill_levels : "has"
+skills ||--o{ applications_skills : "required by"
+
+' Niveles de habilidad
+skill_levels ||--o{ students_skills_skill_levels : "has"
 
 ' Semestres
-semesters -- students : "has many"
-semesters -- applications : "has many"
+semesters ||--o{ students : "has"
+semesters ||--o{ applications : "has"
 
-' Empresas y ofertas
-enterprises -- applications : "has many"
+' Empresas
+enterprises ||--o{ applications : "publishes"
 
-' Aplicaciones
-applications -- applications_students : "has many"
-applications -- students_applications_saved : "has many"
-applications -- applications_skills : "has many"
-applications -- applications_carrers : "has many"
+' Aplicaciones / ofertas
+applications ||--o{ applications_students : "receives"
+applications ||--o{ students_applications_saved : "saved by"
+applications ||--o{ applications_skills : "requires"
+applications ||--o{ applications_carrers : "targets"
 
-' Reseñas de postulaciones
-applications_students -- applications_students_reviews : "has many"
+' Relación estudiante-oferta
+applications_students ||--o{ applications_students_reviews : "has reviews"
 
 ' Modalidad, distrito y jornada
-modalities -- applications : "has many"
-districts -- applications : "has many"
-districts -- students : "has many"
-districts -- enterprises : "has many"
-workdays -- applications : "has many"
+modalities ||--o{ applications : "has"
+districts ||--o{ applications : "located in"
+districts ||--o{ students : "located in"
+districts ||--o{ enterprises : "located in"
 
-' Estado de postulación
-status_applications_students -- applications_students : "has many"
+workdays ||--o{ applications : "has"
+
+'' status_applications_students
+status_applications_students ||--o{ applications_students : "has"
 
 @enduml

@@ -15,8 +15,15 @@ from itertools import product
 from typing import Dict, Callable
 import shutil
 import tempfile
+import datetime
 from contextlib import contextmanager
 from pathlib import Path
+
+from ai import env 
+
+from ai.services.retrieval import MODEL_NAME as LLM_MODEL_NAME
+
+from ai.pipeline.timing import TimingCollector
 
 from ai.services.puml_parser import parse_puml_schema
 from ai.services.structural_validator import validate_schema
@@ -32,6 +39,38 @@ from .config import PipelineConfig
 
 logger = logging.getLogger(__name__)
 
+
+
+
+## Generador de archivos de resultados
+
+def _make_run_id(config, phase: str) -> str:
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    model = LLM_MODEL_NAME or env.get_model_name() or "unknown"
+    model = "".join(c if c.isalnum() or c in "-_." else "_" for c in model)
+    if phase == "generation":
+        test_type = "-".join(config.modes) if config.modes else "none"
+    elif phase == "error_detection":
+        test_type = "errors"
+    else:
+        test_type = phase
+    return f"{ts}_{model}_{test_type}"
+
+
+def _make_summary_filename(config, phase: str, run_id: str) -> str:
+    """Devuelve la ruta completa del summary con nombre descriptivo."""
+    prefix = "generation_summary" if phase == "generation" else "error_detection_summary"
+    filename = f"{prefix}_{run_id}.json"
+    return os.path.join(config.output_dir, filename)
+
+
+def _add_run_metadata(item: dict, run_id: str, phase: str) -> dict:
+    item["run_id"] = run_id
+    parts = run_id.split("_")
+    item["run_timestamp"] = f"{parts[0]}_{parts[1]}" if len(parts) >= 2 else run_id
+    item["phase"] = phase
+    item["model"] = LLM_MODEL_NAME or "unknown"
+    return item
 
 # ---------------------------------------------------------------------------
 # Registro de stages
@@ -112,9 +151,21 @@ def err_stage(name: str):
 # ---------------------------------------------------------------------------
 @gen_stage("execute")
 def execute_stage(ctx, config):
-    from ai.main import execute   # import diferido para evitar ciclos
+    from ai.main import execute
 
-    resp, ok = execute(ctx["folder"], ctx["db_type"], mode=ctx["mode"])
+    original = ctx.get("input_path") or ctx["puml_file"]
+    basename = os.path.splitext(os.path.basename(original))[0]
+
+    # Inyectar variables para que main.execute las use
+    os.environ["AI_RUN_ID"] = ctx["run_id"]          # mismo para toda la corrida
+    os.environ["AI_PUML_BASENAME"] = basename        # basico, innova, ...
+
+    try:
+        resp, ok = execute(ctx["folder"], ctx["db_type"], mode=ctx["mode"])
+    finally:
+        os.environ.pop("AI_RUN_ID", None)
+        os.environ.pop("AI_PUML_BASENAME", None)
+
     ctx["execute_ok"] = ok
     ctx["execute_tables"] = len(resp) if ok else 0
 
@@ -233,9 +284,10 @@ def _save(path, payload):
         json.dump(payload, f, indent=2, ensure_ascii=False)
     logger.info("Guardado: %s", path)
 
-
 def run_generation(config: PipelineConfig, write_summary: bool = True):
+    run_id = _make_run_id(config, "generation")
     results = []
+
     for input_path, db_type, mode in product(
         config.inputs, config.db_types, config.modes
     ):
@@ -243,44 +295,54 @@ def run_generation(config: PipelineConfig, write_summary: bool = True):
             with resolve_input_to_folder(input_path) as folder:
                 puml_file = os.path.join(folder, "modelo.puml")
                 ctx = {
+                    "run_id": run_id,  
                     "input_path": input_path,
                     "folder": folder,
                     "puml_file": puml_file,
                     "db_type": db_type,
                     "mode": mode,
+                    "timings": TimingCollector(),
                 }
+
                 for name in config.generation_stages:
                     fn = GENERATION_STAGES.get(name)
                     if fn is None:
                         logger.warning("Stage desconocido: %s", name)
                         continue
                     logger.info("[gen] %s (%s / %s)", name, mode, db_type)
-                    try:
-                        fn(ctx, config)
-                    except Exception as e:
-                        logger.error("Stage '%s' falló: %s", name, e)
-                        break
+                    with ctx["timings"].time(name):
+                        try:
+                            fn(ctx, config)
+                        except Exception as e:
+                            logger.error("Stage '%s' falló: %s", name, e)
+                            break
 
-                results.append({
+                item = {
                     "input": input_path,
                     "puml": os.path.basename(puml_file),
                     "db_type": db_type,
                     "mode": mode,
                     "success": ctx.get("execute_ok"),
                     "tables": ctx.get("execute_tables"),
-                })
+                    "timings": ctx["timings"].summary(),
+                }
+                results.append(_add_run_metadata(item, run_id, "generation"))
         except FileNotFoundError as e:
             logger.warning("%s", e)
             continue
 
+    summary_path = None
     if write_summary:
-        _save(os.path.join(config.output_dir, "generation_summary.json"),
-              results)
-    return results
+        summary_path = _make_summary_filename(config, "generation", run_id)
+        _save(summary_path, results)
+        logger.info("Summary guardado: %s", summary_path)
 
+    return {"run_id": run_id, "results": results, "summary_path": summary_path}
 
 def run_error_detection(config: PipelineConfig, write_summary: bool = True):
+    run_id = _make_run_id(config, "error_detection")
     results = []
+
     for input_path, db_type in product(config.inputs, config.db_types):
         try:
             with resolve_input_to_folder(input_path) as folder:
@@ -290,29 +352,37 @@ def run_error_detection(config: PipelineConfig, write_summary: bool = True):
                     "folder": folder,
                     "puml_file": puml_file,
                     "db_type": db_type,
+                    "timings": TimingCollector(),
                 }
+
                 for name in config.error_stages:
                     fn = ERROR_STAGES.get(name)
                     if fn is None:
                         logger.warning("Stage desconocido: %s", name)
                         continue
                     logger.info("[err] %s", name)
-                    fn(ctx, config)
+                    with ctx["timings"].time(name):
+                        fn(ctx, config)
 
-                results.append({
+                item = {
                     "input": input_path,
                     "puml": os.path.basename(puml_file),
                     "db_type": db_type,
                     "detection_metrics": ctx.get("detection_metrics"),
-                })
+                    "timings": ctx["timings"].summary(),
+                }
+                results.append(_add_run_metadata(item, run_id, "error_detection"))
         except FileNotFoundError as e:
             logger.warning("%s", e)
             continue
 
+    summary_path = None
     if write_summary:
-        _save(os.path.join(config.output_dir, "error_detection_summary.json"),
-              results)
-    return results
+        summary_path = _make_summary_filename(config, "error_detection", run_id)
+        _save(summary_path, results)
+        logger.info("Summary guardado: %s", summary_path)
+
+    return {"run_id": run_id, "results": results, "summary_path": summary_path}
 
 # ---------------------------------------------------------------------------
 # API pública de alto nivel
@@ -320,10 +390,26 @@ def run_error_detection(config: PipelineConfig, write_summary: bool = True):
 def run_from_config(config_path: str) -> None:
     cfg = PipelineConfig.from_json(config_path)
     logger.info("Config cargada: %s", config_path)
+
     print("=== Fase 1: generación (delegada a main.execute) ===")
-    run_generation(cfg)
+    gen = run_generation(cfg)
+    print(f"  run_id: {gen['run_id']}")
+    print(f"  summary: {gen['summary_path']}")
+
+    # NUEVO: export de métricas Flores
+    from ai.pipeline.flores_export import export_flores_metrics
+    flores_path = export_flores_metrics(
+        generation_items=gen["results"],
+        output_dir=cfg.output_dir,
+        run_id=gen["run_id"],
+    )
+    if flores_path:
+        print(f"  flores: {flores_path}")
+
     print("=== Fase 2: detección de errores inyectados ===")
-    run_error_detection(cfg)
+    err = run_error_detection(cfg)
+    print(f"  run_id: {err['run_id']}")
+    print(f"  summary: {err['summary_path']}")
 
 @gen_stage("retrieval_metrics")
 def retrieval_metrics_stage(ctx, config):

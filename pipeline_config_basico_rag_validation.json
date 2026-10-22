@@ -1,6 +1,6 @@
 {
   "inputs": [
-    "./schemas/basico.puml"
+    "./schemas/postulaciones_v2.puml"
   ],
   "db_types": ["sqlite"],
   "modes": ["llm_only", "rag", "rag_validation"],
@@ -22,6 +22,6 @@
   "benchmark_dir": "./benchmarks",
   "retrieval_k": 10,
 
-  "output_dir": "./pipeline_results",
+  "output_dir": "./tmp/pipeline_results",
   "save_individual_reports": true
 }

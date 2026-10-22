@@ -218,23 +218,46 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
     print("❌ No hay migraciones para guardar.")
     return
 
-  complete_filename = under_output(f"complete_migrations_{puml_basename}_{db_type}.sql")
+  run_id = os.getenv("AI_RUN_ID")
+  # Si el pipeline nos pasó un run_id, lo usamos para agrupar todo
+  if run_id:
+    complete_filename = under_output(
+      f"complete_migrations_{run_id}_{puml_basename}_{db_type}.sql"
+    )
+    migrations_dir = under_output(
+      f"migrations_{run_id}_{puml_basename}_{db_type}"
+    )
+    # ts base estable por corrida (mismo para todas las tablas)
+    base_ts = run_id  # ya tiene formato YYYYMMDD_HHMMSS
+  else:
+    complete_filename = under_output(
+      f"complete_migrations_{puml_basename}_{db_type}.sql"
+    )
+    migrations_dir = under_output(
+      f"migrations_{puml_basename}_{db_type}"
+    )
+    base_ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
   with open(complete_filename, 'w', encoding='utf-8') as f:
     f.write(f"-- Migraciones generadas desde: {puml_basename}.puml\n")
     f.write(f"-- Tipo de base de datos: {db_type}\n")
+    if run_id:
+      f.write(f"-- Run ID: {run_id}\n")
     f.write(f"-- Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     f.write(f"-- Total de tablas: {len(tables_dict)}\n\n")
     f.write(complete_migrations)
   print(f"✓ Migraciones completas guardadas en: {complete_filename}")
 
-  migrations_dir = under_output(f"migrations_{puml_basename}_{db_type}")
   if os.path.exists(migrations_dir):
     shutil.rmtree(migrations_dir)
   os.makedirs(migrations_dir, exist_ok=True)
 
-  base_ts = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
   for key, table in tables_dict.items():
-    ts = str(base_ts + key)
+    # Con run_id, ts es un prefijo estable; sin él, se le suma el índice
+    if run_id:
+      ts = f"{base_ts}_{key:02d}"
+    else:
+      ts = str(int(base_ts) + key)
     filename = os.path.join(migrations_dir, f"{ts}_create_{table.table_name}.sql")
     with open(filename, 'w', encoding='utf-8') as f:
       f.write(table.complete_block)

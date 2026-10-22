@@ -6,6 +6,7 @@ plantuml==0.3.0
 mysql
 pymysql
 psycopg2
+python-dotenv
 
 # ai
 ollama==0.6.0

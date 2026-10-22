@@ -17,11 +17,11 @@ def run_structural_validation_tests(
     db_type: str = "sqlite",
     error_types=None,
     include_clean_baseline: bool = True,
-    output_dir: str = "./pipeline_results",
+    output_dir: str = "./tmp/pipeline_results",
     write_summary: bool = True,
 ) -> dict:
     cfg = PipelineConfig(
-        inputs=[folder_path],     # <-- acepta carpeta o .puml
+        inputs=[folder_path],
         db_types=[db_type],
         generation_stages=[],
         error_stages=["inject_and_validate", "measure_detection"],
@@ -31,22 +31,26 @@ def run_structural_validation_tests(
     if error_types:
         cfg.error_types = list(error_types)
 
-    results = run_error_detection(cfg, write_summary=write_summary)
-    if not results:
-        raise FileNotFoundError(
-            f"Entrada no válida o sin .puml: {folder_path}"
-        )
-    payload = results[0]
+    puml_file = os.path.join(folder_path, "modelo.puml")
+    if not os.path.exists(puml_file):
+        raise FileNotFoundError(f"PUML no encontrado: {puml_file}")
+
+    result = run_error_detection(cfg, write_summary=write_summary)
+    results_list = result["results"]
+    if not results_list:
+        raise RuntimeError(f"No se generaron resultados para {puml_file}")
+
+    payload = results_list[0]
     metrics = payload.get("detection_metrics") or {}
+
     return {
+        "run_id": result["run_id"],
         "input": payload["input"],
         "puml": payload["puml"],
         "db_type": payload["db_type"],
         "per_error_type": metrics.get("per_error_type", {}),
         "aggregate": metrics.get("aggregate", {}),
         "samples": metrics.get("samples", []),
-        "summary_path": (
-            os.path.join(output_dir, "error_detection_summary.json")
-            if write_summary else None
-        ),
+        "timings": payload.get("timings", {}),
+        "summary_path": result["summary_path"],
     }
