@@ -34,8 +34,18 @@ Instalar modelo
 
     #### DBMATE
     DB=sqlite:db/app.db
-    #### IA
-    OLLAMA_MODEL=llama3.2||
+    OLLAMA_MODEL=qwen2.5:3b
+    OLLAMA_NUM_CTX=4096
+    OLLAMA_NUM_GPU=5
+    OLLAMA_TEMPERATURE=0.2
+    APP_OUTPUT_DIR=./tmp
+    AI_TIMING=1
+    # ¿qué métricas de Flores activar?
+    AI_FLORES_EXPORT=1
+    AI_FLORES_RETRIEVAL=1
+    AI_FLORES_EXECUTION=1
+    AI_FLORES_NLG=1
+    AI_FLORES_FAITHFULNESS=1
 
 ### Migraciones con DBMATE
 
@@ -214,3 +224,23 @@ systems_users_permissions -- permissions : "belongs to"
 python -m ai.main schemas/basico.puml sqlite pipeline pipeline_config_rag_validation.json
 
 python -m ai.main schemas/basico.puml sqlite pipeline pipeline_config_basico_rag_validation.json
+
+python -m ai.main schemas/postulaciones_v2.puml sqlite pipeline pipeline_config_basico_rag_validation.json 2>&1 | tee run_v3_fixed.log
+
+Ver metricas
+
+(venv) pepe@pepe-30fns02m00:~/Documents/UNMSM/2025-2/Semanario de Tesis 3/herramienta$ cat $(ls -t tmp/pipeline_results/flores_metrics_*.json | head -1) | python -c "
+import json, sys
+d = json.load(sys.stdin)
+print(f\"{'Mode':<16} {'F1':<8} {'FK':<8} {'MAP':<8} {'EX':<6} {'FLEX':<6} {'BLEU':<8} {'Faith':<8}\")
+print('-' * 80)
+for r in d['runs']:
+    f = r['flores']
+    st = f.get('structural') or {}
+    rt = f.get('retrieval') or {}
+    ex = f.get('execution') or {}
+    nl = f.get('nlg') or {}
+    fa = f.get('faithfulness') or {}
+    print(f\"{r['mode']:<16} {st.get('f1','-'):<8} {st.get('foreign_key_accuracy','-'):<8} {rt.get('MAP','-'):<8} {ex.get('EX','-'):<6} {ex.get('FLEX','-'):<6} {nl.get('BLEU','-'):<8} {fa.get('faithfulness','-'):<8}\")
+"
+

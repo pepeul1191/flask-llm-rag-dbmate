@@ -1,3 +1,4 @@
+# ai/pipeline/runner.py
 """
 Pipeline construido ENCIMA de main.execute.
 
@@ -10,26 +11,23 @@ Reglas de oro:
 import os
 import json
 import copy
+import glob
 import logging
-from itertools import product
-from typing import Dict, Callable
 import shutil
 import tempfile
 import datetime
+from itertools import product
+from typing import Dict, Callable
 from contextlib import contextmanager
 from pathlib import Path
 
-from ai import env 
-
+from ai import env
 from ai.services.retrieval import MODEL_NAME as LLM_MODEL_NAME
-
 from ai.pipeline.timing import TimingCollector
-
 from ai.services.puml_parser import parse_puml_schema
 from ai.services.structural_validator import validate_schema
 from ai.services.evaluation import inject_errors
 
-import json
 from ai.evaluation.retrieval_metrics import compute_retrieval_metrics
 from ai.evaluation.migration_metrics import compute_execution_metrics
 from ai.evaluation.nlg_metrics import compute_nlg_metrics
@@ -40,10 +38,9 @@ from .config import PipelineConfig
 logger = logging.getLogger(__name__)
 
 
-
-
-## Generador de archivos de resultados
-
+# ---------------------------------------------------------------------------
+# Helpers de nombres / metadata
+# ---------------------------------------------------------------------------
 def _make_run_id(config, phase: str) -> str:
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     model = LLM_MODEL_NAME or env.get_model_name() or "unknown"
@@ -58,10 +55,8 @@ def _make_run_id(config, phase: str) -> str:
 
 
 def _make_summary_filename(config, phase: str, run_id: str) -> str:
-    """Devuelve la ruta completa del summary con nombre descriptivo."""
     prefix = "generation_summary" if phase == "generation" else "error_detection_summary"
-    filename = f"{prefix}_{run_id}.json"
-    return os.path.join(config.output_dir, filename)
+    return os.path.join(config.output_dir, f"{prefix}_{run_id}.json")
 
 
 def _add_run_metadata(item: dict, run_id: str, phase: str) -> dict:
@@ -72,38 +67,51 @@ def _add_run_metadata(item: dict, run_id: str, phase: str) -> dict:
     item["model"] = LLM_MODEL_NAME or "unknown"
     return item
 
-# ---------------------------------------------------------------------------
-# Registro de stages
-# ---------------------------------------------------------------------------
-GENERATION_STAGES: Dict[str, Callable] = {}
-ERROR_STAGES: Dict[str, Callable] = {}
 
 def _benchmark_base(ctx) -> str:
-    """
-    Nombre base para benchmarks. Usa el input original ('schemas/basico.puml'
-    -> 'basico') en lugar del tempfile ('modelo.puml' -> 'modelo').
-    """
+    """Nombre base para benchmarks: 'basico', 'innova', ... (no 'modelo')."""
     original = ctx.get("input_path") or ctx["puml_file"]
     return os.path.splitext(os.path.basename(original))[0]
 
+
+def _load_latest_metrics(puml_basename: str, db_type: str, mode: str):
+    """Lee el metrics_*.json más reciente escrito por main._persist_reports."""
+    tmp_dir = os.getenv("APP_OUTPUT_DIR", "./tmp")
+    pattern = os.path.join(tmp_dir, f"metrics_*{puml_basename}_{db_type}_{mode}.json")
+    files = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
+    if not files:
+        return None
+    with open(files[0], "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _load_latest_complete_sql(puml_basename: str, db_type: str, mode: str):
+    """Lee el complete_migrations_*.sql más reciente para este basename+db+mode."""
+    tmp_dir = os.getenv("APP_OUTPUT_DIR", "./tmp")
+    # Buscar primero con el sufijo del modo (si aplicaste el fix opcional)
+    patterns = [
+        os.path.join(tmp_dir, f"complete_migrations_*{puml_basename}_{db_type}_{mode}.sql"),
+        os.path.join(tmp_dir, f"complete_migrations_*{puml_basename}_{db_type}.sql"),
+    ]
+    for pattern in patterns:
+        files = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
+        if files:
+            with open(files[0], "r", encoding="utf-8") as f:
+                return f.read(), files[0]
+    return None, None
+
+
+# ---------------------------------------------------------------------------
+# Resolver de input a carpeta con modelo.puml
+# ---------------------------------------------------------------------------
 @contextmanager
 def resolve_input_to_folder(input_path: str):
-    """
-    Normaliza cualquier entrada a una carpeta que contiene 'modelo.puml'.
-
-    - Si input_path es una carpeta con modelo.puml -> la usa tal cual.
-    - Si input_path es un .puml suelto -> copia a tmp dir como modelo.puml.
-    - Si input_path es una carpeta con .puml pero sin modelo.puml -> toma el
-      primer .puml que encuentre y lo copia como modelo.puml en tmp.
-    """
     p = Path(input_path).resolve()
 
-    # Caso 1: carpeta con modelo.puml
     if p.is_dir() and (p / "modelo.puml").exists():
         yield str(p)
         return
 
-    # Caso 2: carpeta con algún .puml (no se llama modelo.puml)
     if p.is_dir():
         pumls = list(p.glob("*.puml")) + list(p.glob("*.plantuml"))
         if pumls:
@@ -115,7 +123,6 @@ def resolve_input_to_folder(input_path: str):
                 shutil.rmtree(tmpdir, ignore_errors=True)
             return
 
-    # Caso 3: archivo .puml suelto
     if p.is_file() and p.suffix.lower() in (".puml", ".plantuml", ".pu"):
         tmpdir = tempfile.mkdtemp(prefix="pipeline_puml_")
         shutil.copy(p, os.path.join(tmpdir, "modelo.puml"))
@@ -126,10 +133,16 @@ def resolve_input_to_folder(input_path: str):
         return
 
     raise FileNotFoundError(
-        f"Entrada no reconocida: {input_path}. "
-        f"Debe ser una carpeta con modelo.puml, una carpeta con algún .puml, "
-        f"o un archivo .puml."
+        f"Entrada no reconocida: {input_path}. Debe ser una carpeta con "
+        f"modelo.puml, una carpeta con algún .puml, o un archivo .puml."
     )
+
+
+# ---------------------------------------------------------------------------
+# Registro de stages
+# ---------------------------------------------------------------------------
+GENERATION_STAGES: Dict[str, Callable] = {}
+ERROR_STAGES: Dict[str, Callable] = {}
 
 
 def gen_stage(name: str):
@@ -146,8 +159,15 @@ def err_stage(name: str):
     return deco
 
 
+def _save(path, payload):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+    logger.info("Guardado: %s", path)
+
+
 # ---------------------------------------------------------------------------
-# STAGE "execute" — delega en main.execute sin tocarlo
+# STAGE: execute (delega en main.execute, luego carga SQL + métricas)
 # ---------------------------------------------------------------------------
 @gen_stage("execute")
 def execute_stage(ctx, config):
@@ -156,24 +176,183 @@ def execute_stage(ctx, config):
     original = ctx.get("input_path") or ctx["puml_file"]
     basename = os.path.splitext(os.path.basename(original))[0]
 
-    # Inyectar variables para que main.execute las use
-    os.environ["AI_RUN_ID"] = ctx["run_id"]          # mismo para toda la corrida
-    os.environ["AI_PUML_BASENAME"] = basename        # basico, innova, ...
+    os.environ["AI_RUN_ID"] = ctx["run_id"]
+    os.environ["AI_PUML_BASENAME"] = basename
+    os.environ["AI_MODE"] = ctx["mode"]
 
     try:
         resp, ok = execute(ctx["folder"], ctx["db_type"], mode=ctx["mode"])
     finally:
         os.environ.pop("AI_RUN_ID", None)
         os.environ.pop("AI_PUML_BASENAME", None)
+        os.environ.pop("AI_MODE", None)
 
     ctx["execute_ok"] = ok
     ctx["execute_tables"] = len(resp) if ok else 0
 
+    # Cargar el SQL completo y el metrics_*.json recién escritos
+    sql_text, sql_path = _load_latest_complete_sql(
+        basename, ctx["db_type"], ctx["mode"]
+    )
+    if sql_text:
+        ctx["migrations_text"] = sql_text
+        logger.info("migrations_text cargado (%d chars) desde %s",
+                    len(sql_text), sql_path)
+    else:
+        ctx["migrations_text"] = None
+        logger.warning("No se encontró complete_migrations_*.sql para %s", basename)
+
+    ctx["structural_metrics"] = _load_latest_metrics(
+        basename, ctx["db_type"], ctx["mode"]
+    )
+    if ctx["structural_metrics"]:
+        logger.info("structural_metrics cargado para mode=%s", ctx["mode"])
+
 
 # ---------------------------------------------------------------------------
-# STAGES: detección de errores inyectados (Reviewer 1)
+# STAGE: build_retriever (robusto contra ChromaDB vacío/corrupto)
 # ---------------------------------------------------------------------------
-# Qué campo del ValidationReport debe quedar NO vacío para "detectado".
+@gen_stage("build_retriever")
+def build_retriever_stage(ctx, config):
+    if ctx["mode"] == "llm_only":
+        ctx["retriever"] = None
+        return
+
+    from ai.services.retrieval import create_retriever
+    from ai.services.vector_store import (
+        check_existing_vector_db, create_vector_db,
+        should_recreate_vector_db, clear_vector_db,
+    )
+    from ai.services.ingestion import ingest_puml, split_documents
+
+    puml_file = ctx["puml_file"]
+
+    try:
+        vdb = check_existing_vector_db()
+    except Exception as e:
+        logger.warning("ChromaDB corrupta: %s. Recreando...", e)
+        clear_vector_db()
+        vdb = None
+
+    if vdb is None or should_recreate_vector_db(puml_file, vdb):
+        content = ingest_puml(puml_file)
+        if not content:
+            ctx["retriever"] = None
+            return
+        chunks = split_documents(content, puml_file)
+        vdb = create_vector_db(chunks, puml_file)
+
+    ctx["retriever"] = create_retriever(vdb, source_file=puml_file)
+
+
+# ---------------------------------------------------------------------------
+# STAGES: métricas Flores
+# ---------------------------------------------------------------------------
+@gen_stage("retrieval_metrics")
+def retrieval_metrics_stage(ctx, config):
+    if ctx["mode"] == "llm_only":
+        return  # no aplica, sin warning
+
+    if not config.benchmark_dir:
+        return
+
+    path = os.path.join(
+        config.benchmark_dir,
+        f"{_benchmark_base(ctx)}_retrieval.json"
+    )
+    if not os.path.exists(path):
+        logger.warning("Sin benchmark de retrieval: %s", path)
+        return
+
+    with open(path, encoding="utf-8") as f:
+        bench = json.load(f)
+
+    retriever = ctx.get("retriever")
+    if retriever is None:
+        logger.warning("No hay retriever en ctx; se omite retrieval_metrics.")
+        return
+
+    try:
+        ctx["retrieval_metrics"] = compute_retrieval_metrics(
+            bench["queries"], retriever, k=config.retrieval_k
+        )
+    except Exception as e:
+        logger.error("retrieval_metrics falló: %s", e)
+
+
+@gen_stage("execution_metrics")
+def execution_metrics_stage(ctx, config):
+    if not config.benchmark_dir or not ctx.get("migrations_text"):
+        return
+
+    path = os.path.join(
+        config.benchmark_dir,
+        f"{_benchmark_base(ctx)}_gold.json"
+    )
+    if not os.path.exists(path):
+        logger.warning("Sin benchmark de gold migrations: %s", path)
+        return
+
+    with open(path, encoding="utf-8") as f:
+        bench = json.load(f)
+
+    samples = [{
+        "id": s.get("id"),
+        "generated": ctx["migrations_text"],
+        "gold": s["gold"],
+    } for s in bench["samples"]]
+
+    from ai.services.retrieval import create_flex_chain
+    chain = create_flex_chain()
+
+    try:
+        ctx["execution_metrics"] = compute_execution_metrics(
+            samples, ctx["db_type"], chain=chain
+        )
+    except Exception as e:
+        logger.error("execution_metrics falló: %s", e)
+
+
+@gen_stage("nlg_metrics")
+def nlg_metrics_stage(ctx, config):
+    if not config.benchmark_dir or not ctx.get("migrations_text"):
+        return
+
+    path = os.path.join(
+        config.benchmark_dir,
+        f"{_benchmark_base(ctx)}_gold.json"
+    )
+    if not os.path.exists(path):
+        return
+
+    with open(path, encoding="utf-8") as f:
+        bench = json.load(f)
+
+    golds = [s["gold"] for s in bench["samples"]]
+    gens = [ctx["migrations_text"]] * len(golds)
+
+    try:
+        ctx["nlg_metrics"] = compute_nlg_metrics(gens, golds)
+    except Exception as e:
+        logger.error("nlg_metrics falló: %s", e)
+
+
+@gen_stage("faithfulness")
+def faithfulness_stage(ctx, config):
+    if not ctx.get("migrations_text"):
+        return
+
+    try:
+        ctx["faithfulness"] = compute_faithfulness(
+            ctx["migrations_text"], ctx["puml_file"], ctx["db_type"]
+        )
+    except Exception as e:
+        logger.error("faithfulness falló: %s", e)
+
+
+# ---------------------------------------------------------------------------
+# STAGES: detección de errores inyectados
+# ---------------------------------------------------------------------------
 DETECTION_RULES = {
     "drop_table":   lambda r: bool(r.missing_tables),
     "drop_column":  lambda r: bool(r.missing_columns),
@@ -196,12 +375,11 @@ def inject_and_validate(ctx, config):
 
     samples = []
 
-    # Baseline: schema contra sí mismo. Idealmente is_valid=True (0 FP).
     if config.include_clean_baseline:
         r = validate_schema(expected, copy.deepcopy(expected))
         samples.append({
             "error_type": "clean",
-            "detected": not r.is_valid,       # True aquí = falso positivo
+            "detected": not r.is_valid,
             "report_dict": r.to_dict(),
         })
 
@@ -209,7 +387,6 @@ def inject_and_validate(ctx, config):
         before = copy.deepcopy(expected)
         mutated = inject_errors(expected, [etype])
 
-        # Si la inyección no cambió nada (p.ej. drop_fk sin FKs) -> skip
         if mutated == before:
             samples.append({
                 "error_type": etype,
@@ -234,11 +411,6 @@ def inject_and_validate(ctx, config):
 
 @err_stage("measure_detection")
 def measure_detection(ctx, config):
-    """
-    TP: error inyectado y detectado.
-    FN: error inyectado y NO detectado.
-    FP: baseline limpio pero el validador reporta diferencias.
-    """
     samples = ctx.get("error_results", [])
     per_type = {}
 
@@ -278,12 +450,6 @@ def measure_detection(ctx, config):
 # ---------------------------------------------------------------------------
 # Runners
 # ---------------------------------------------------------------------------
-def _save(path, payload):
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
-    logger.info("Guardado: %s", path)
-
 def run_generation(config: PipelineConfig, write_summary: bool = True):
     run_id = _make_run_id(config, "generation")
     results = []
@@ -295,7 +461,7 @@ def run_generation(config: PipelineConfig, write_summary: bool = True):
             with resolve_input_to_folder(input_path) as folder:
                 puml_file = os.path.join(folder, "modelo.puml")
                 ctx = {
-                    "run_id": run_id,  
+                    "run_id": run_id,
                     "input_path": input_path,
                     "folder": folder,
                     "puml_file": puml_file,
@@ -325,6 +491,13 @@ def run_generation(config: PipelineConfig, write_summary: bool = True):
                     "success": ctx.get("execute_ok"),
                     "tables": ctx.get("execute_tables"),
                     "timings": ctx["timings"].summary(),
+                    # --- Métricas Flores (todas) ---
+                    "structural_metrics": ctx.get("structural_metrics"),
+                    "retrieval_metrics": ctx.get("retrieval_metrics"),
+                    "execution_metrics": ctx.get("execution_metrics"),
+                    "nlg_metrics": ctx.get("nlg_metrics"),
+                    "faithfulness": ctx.get("faithfulness"),
+                    "migrations_text_len": len(ctx.get("migrations_text") or ""),
                 }
                 results.append(_add_run_metadata(item, run_id, "generation"))
         except FileNotFoundError as e:
@@ -338,6 +511,7 @@ def run_generation(config: PipelineConfig, write_summary: bool = True):
         logger.info("Summary guardado: %s", summary_path)
 
     return {"run_id": run_id, "results": results, "summary_path": summary_path}
+
 
 def run_error_detection(config: PipelineConfig, write_summary: bool = True):
     run_id = _make_run_id(config, "error_detection")
@@ -384,6 +558,7 @@ def run_error_detection(config: PipelineConfig, write_summary: bool = True):
 
     return {"run_id": run_id, "results": results, "summary_path": summary_path}
 
+
 # ---------------------------------------------------------------------------
 # API pública de alto nivel
 # ---------------------------------------------------------------------------
@@ -396,118 +571,28 @@ def run_from_config(config_path: str) -> None:
     print(f"  run_id: {gen['run_id']}")
     print(f"  summary: {gen['summary_path']}")
 
-    # NUEVO: export de métricas Flores
+    # Export métricas Flores
     from ai.pipeline.flores_export import export_flores_metrics
+
+    # Construir structural_metrics_by_run por (run_id, mode)
+    structural_by_run = {}
+    for item in gen["results"]:
+        if item.get("structural_metrics"):
+            key = f"{item['run_id']}__{item['mode']}"
+            structural_by_run[key] = item["structural_metrics"]
+
     flores_path = export_flores_metrics(
         generation_items=gen["results"],
+        structural_metrics_by_run=structural_by_run,
         output_dir=cfg.output_dir,
         run_id=gen["run_id"],
     )
     if flores_path:
         print(f"  flores: {flores_path}")
+    else:
+        print("  flores: (no generado — revisa AI_FLORES_EXPORT en .env)")
 
     print("=== Fase 2: detección de errores inyectados ===")
     err = run_error_detection(cfg)
     print(f"  run_id: {err['run_id']}")
     print(f"  summary: {err['summary_path']}")
-
-@gen_stage("retrieval_metrics")
-def retrieval_metrics_stage(ctx, config):
-    """
-    Requiere un benchmark JSON:
-    {"queries": [{"query": "...", "relevant_chunks": [...]}, ...]}
-    Se busca en config.benchmark_dir/<puml_basename>_retrieval.json
-    """
-    if not config.benchmark_dir:
-        return
-    path = os.path.join(
-        config.benchmark_dir,
-        f"{_benchmark_base(ctx)}_retrieval.json"
-    )
-    if not os.path.exists(path):
-        logger.warning("Sin benchmark de retrieval: %s", path)
-        return
-
-    with open(path, encoding="utf-8") as f:
-        bench = json.load(f)
-
-    retriever = ctx.get("retriever")
-    if retriever is None:
-        logger.warning("No hay retriever en ctx; se omite retrieval_metrics.")
-        return
-
-    ctx["retrieval_metrics"] = compute_retrieval_metrics(
-        bench["queries"], retriever, k=config.retrieval_k
-    )
-
-
-@gen_stage("execution_metrics")
-def execution_metrics_stage(ctx, config):
-    """
-    Requiere benchmark:
-    {"samples": [{"id": "...", "gold": "<SQL gold>"}, ...]}
-    Compara cada migración generada contra la gold del mismo id.
-    """
-    if not config.benchmark_dir or not ctx.get("migrations_text"):
-        return
-    path = os.path.join(
-        config.benchmark_dir,
-        f"{_benchmark_base(ctx)}_gold.json"
-    )
-    if not os.path.exists(path):
-        logger.warning("Sin benchmark de gold migrations: %s", path)
-        return
-
-    with open(path, encoding="utf-8") as f:
-        bench = json.load(f)
-
-    samples = [{
-        "id": s.get("id"),
-        "generated": ctx["migrations_text"],
-        "gold": s["gold"],
-    } for s in bench["samples"]]
-
-    from ai.services.retrieval import create_direct_chain
-    chain = create_direct_chain()
-    ctx["execution_metrics"] = compute_execution_metrics(
-        samples, ctx["db_type"], chain=chain
-    )
-
-@gen_stage("build_retriever")
-def build_retriever_stage(ctx, config):
-    """Construye el retriever y lo deja en ctx para los stages de métricas."""
-    if ctx["mode"] == "llm_only":
-        ctx["retriever"] = None
-        return
-    from ai.services.retrieval import create_retriever
-    from ai.services.vector_store import check_existing_vector_db
-    vdb = check_existing_vector_db()
-    if vdb is None:
-        ctx["retriever"] = None
-        return
-    ctx["retriever"] = create_retriever(vdb, source_file=ctx["puml_file"])
-
-@gen_stage("nlg_metrics")
-def nlg_metrics_stage(ctx, config):
-    if not config.benchmark_dir or not ctx.get("migrations_text"):
-        return
-    path = os.path.join(
-        config.benchmark_dir,
-        f"{_benchmark_base(ctx)}_gold.json"
-    )
-    if not os.path.exists(path):
-        return
-    with open(path, encoding="utf-8") as f:
-        bench = json.load(f)
-    golds = [s["gold"] for s in bench["samples"]]
-    gens = [ctx["migrations_text"]] * len(golds)
-    ctx["nlg_metrics"] = compute_nlg_metrics(gens, golds)
-
-
-@gen_stage("faithfulness")
-def faithfulness_stage(ctx, config):
-    if not ctx.get("migrations_text"):
-        return
-    ctx["faithfulness"] = compute_faithfulness(
-        ctx["migrations_text"], ctx["puml_file"], ctx["db_type"]
-    )

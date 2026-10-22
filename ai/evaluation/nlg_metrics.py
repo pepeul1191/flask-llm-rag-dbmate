@@ -14,7 +14,14 @@ def compute_nlg_metrics(generations: list[str], references: list[str]) -> dict:
     out = {}
     try:
         from bert_score import score as bscore
-        P, R, F1 = bscore(generations, references, lang="en", verbose=False)
+        # Forzar CPU y modelo pequeño
+        P, R, F1 = bscore(
+            generations, references,
+            lang="en",
+            verbose=False,
+            device="cpu",                          # ← CPU en lugar de GPU
+            model_type="distilbert-base-uncased",  # ← modelo 6x más pequeño
+        )
         out["BERTScore_F1"] = round(float(F1.mean()), 4)
     except Exception as e:
         logger.warning("BERTScore no disponible: %s", e)

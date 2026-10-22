@@ -68,12 +68,15 @@ Responde SOLO con una palabra: EQUIVALENTES o DIFERENTES."""
 def compute_flex(generated_sql: str, gold_sql: str, chain) -> int:
     """
     FLEX=1 si el LLM juzga que ambas migraciones son semánticamente equivalentes.
-    `chain` es cualquier cadena LangChain invocable.
+    `chain` es la cadena LangChain (CHAIN_PROMPT | llm | StrOutputParser).
     """
     try:
-        verdict = chain.invoke(FLEX_PROMPT.format(
-            gold=gold_sql, generated=generated_sql
-        ))
+        prompt = FLEX_PROMPT.format(gold=gold_sql, generated=generated_sql)
+        # CHAIN_PROMPT espera {"context": ..., "question": ...}
+        verdict = chain.invoke({
+            "context": "(sin contexto RAG, evaluación de equivalencia semántica)",
+            "question": prompt,
+        })
     except Exception as e:
         logger.error("FLEX invoke error: %s", e)
         return 0

@@ -98,8 +98,8 @@ entity students {
   district_id : INTEGER
   picture_url : VARCHAR(100)
   summary : TEXT
-  carrere_id : INTEGER
-  sementer_id : INTEGER
+  carrer_id : INTEGER
+  semester_id : INTEGER
   user_id : INTEGER
   created : DATETIME
   updated : DATETIME
@@ -142,8 +142,8 @@ entity applications {
   closed : DATETIME
   salarry : DECIMAL(10,2)
   is_draft : BOOLEAN
-  modality_id : INTEGER
-  sementer_id : INTEGER
+  modalities_id : INTEGER
+  semester_id : INTEGER
   district_id : INTEGER
   workday_id : INTEGER
   enterprise_id : INTEGER
@@ -227,7 +227,7 @@ entity applications_students {
 entity applications_students_reviews {
   * id : INTEGER
   --
-  applications_students_reviews : INTEGER
+  applications_students_id : INTEGER
   points : INTEGER
   enviroment : INTEGER
   learning : INTEGER

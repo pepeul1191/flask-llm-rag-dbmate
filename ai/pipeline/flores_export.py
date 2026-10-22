@@ -20,7 +20,14 @@ from ai import env
 
 
 def _flores_bundle_for_item(item: dict, structural: dict | None) -> dict:
-    """Agrupa todo lo tipo Flores que exista en el ctx/item."""
+    """
+    Agrupa las métricas Flores del item, tolerando ausencias.
+    Prioriza los datos del item sobre el argumento `structural`.
+    """
+    # Preferir el structural del item (cada modo tiene el suyo)
+    if not structural:
+        structural = item.get("structural_metrics")
+
     bundle = {
         "structural": structural or {},
         "retrieval": item.get("retrieval_metrics") or {},
@@ -29,12 +36,21 @@ def _flores_bundle_for_item(item: dict, structural: dict | None) -> dict:
         "faithfulness": item.get("faithfulness") or {},
         "timings": item.get("timings") or {},
     }
-    # Filtrar según lo que esté activado en .env
-    return {
-        k: v for k, v in bundle.items()
-        if k == "structural" or env.flores_enabled(k) or k == "timings"
-    }
 
+    # Filtrar solo si el .env explícitamente desactiva algo.
+    # Por defecto (sin .env) se incluyen todas.
+    import os
+    filtered = {}
+    for k, v in bundle.items():
+        if k in ("structural", "timings"):
+            filtered[k] = v
+            continue
+        key = f"AI_FLORES_{k.upper()}"
+        flag = os.getenv(key, "1").strip().lower()
+        if flag in ("1", "true", "yes"):
+            filtered[k] = v
+
+    return filtered
 
 def export_flores_metrics(
     generation_items: list[dict],

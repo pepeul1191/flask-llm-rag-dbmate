@@ -1,0 +1,12 @@
+{
+  "queries": [
+    { "query": "¿Qué atributos tiene la entidad users?", "relevant_chunks": [9] },
+    { "query": "¿Qué columnas tiene la tabla students?", "relevant_chunks": [10] },
+    { "query": "¿Qué representa enterprises?", "relevant_chunks": [11] },
+    { "query": "¿Qué campos tiene applications?", "relevant_chunks": [12] },
+    { "query": "¿Cómo se estructura applications_students_reviews?", "relevant_chunks": [21] },
+    { "query": "¿Qué relaciones existen entre todas las tablas?", "relevant_chunks": [22] },
+    { "query": "¿Qué tablas dependen de applications?", "relevant_chunks": [16, 17, 18, 20, 22] },
+    { "query": "¿Cómo se conectan students y skills?", "relevant_chunks": [15, 22] }
+  ]
+}

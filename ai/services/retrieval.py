@@ -57,3 +57,10 @@ def create_chain(retriever):
 def create_direct_chain():
   llm = create_llm()
   return CHAIN_PROMPT | llm | StrOutputParser()
+
+def create_flex_chain():
+    """Chain simple que recibe {"input": str} para el juez FLEX."""
+    from langchain.prompts import ChatPromptTemplate
+    llm = create_llm()
+    tmpl = ChatPromptTemplate.from_template("{input}")
+    return tmpl | llm | StrOutputParser()
