@@ -130,8 +130,8 @@ def _parse_relationships(content: str) -> list[tuple[str, str, str, str]]:
 
 
 def _card_is_many(card: str) -> bool:
-  """Detecta si la cardinalidad implica 'muchos' (lleva llave)."""
-  return '{' in card
+  """Detecta si la cardinalidad implica 'muchos' (acepta '{' o '}')."""
+  return '{' in card or '}' in card
 
 
 def _apply_relationships(

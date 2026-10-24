@@ -1,0 +1,127 @@
+{
+  "queries": [
+    {
+      "query": "What are the columns of the users entity?",
+      "relevant_chunks": [
+        0
+      ]
+    },
+    {
+      "query": "What are the columns of the countries entity?",
+      "relevant_chunks": [
+        1
+      ]
+    },
+    {
+      "query": "What are the columns of the devices entity?",
+      "relevant_chunks": [
+        2
+      ]
+    },
+    {
+      "query": "What are the columns of the books entity?",
+      "relevant_chunks": [
+        3
+      ]
+    },
+    {
+      "query": "What are the columns of the publishers entity?",
+      "relevant_chunks": [
+        4
+      ]
+    },
+    {
+      "query": "What are the columns of the authors entity?",
+      "relevant_chunks": [
+        5
+      ]
+    },
+    {
+      "query": "What are the columns of the genres entity?",
+      "relevant_chunks": [
+        6
+      ]
+    },
+    {
+      "query": "What are the columns of the reviews entity?",
+      "relevant_chunks": [
+        7
+      ]
+    },
+    {
+      "query": "What are the columns of the books_authors entity?",
+      "relevant_chunks": [
+        8
+      ]
+    },
+    {
+      "query": "What are the columns of the books_genres entity?",
+      "relevant_chunks": [
+        9
+      ]
+    },
+    {
+      "query": "How is users related to countries?",
+      "relevant_chunks": [
+        0,
+        1
+      ]
+    },
+    {
+      "query": "How is devices related to users?",
+      "relevant_chunks": [
+        0,
+        2
+      ]
+    },
+    {
+      "query": "How is books related to publishers?",
+      "relevant_chunks": [
+        3,
+        4
+      ]
+    },
+    {
+      "query": "How is reviews related to users?",
+      "relevant_chunks": [
+        0,
+        7
+      ]
+    },
+    {
+      "query": "How is reviews related to books?",
+      "relevant_chunks": [
+        3,
+        7
+      ]
+    },
+    {
+      "query": "How is books_authors related to books?",
+      "relevant_chunks": [
+        3,
+        8
+      ]
+    },
+    {
+      "query": "How is books_authors related to authors?",
+      "relevant_chunks": [
+        5,
+        8
+      ]
+    },
+    {
+      "query": "How is books_genres related to books?",
+      "relevant_chunks": [
+        3,
+        9
+      ]
+    },
+    {
+      "query": "How is books_genres related to genres?",
+      "relevant_chunks": [
+        6,
+        9
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "queries": [
+    {
+      "query": "What are the columns of the customers entity?",
+      "relevant_chunks": [
+        0
+      ]
+    },
+    {
+      "query": "What are the columns of the employees entity?",
+      "relevant_chunks": [
+        1
+      ]
+    },
+    {
+      "query": "What are the columns of the suppliers entity?",
+      "relevant_chunks": [
+        2
+      ]
+    },
+    {
+      "query": "What are the columns of the categories entity?",
+      "relevant_chunks": [
+        3
+      ]
+    },
+    {
+      "query": "What are the columns of the products entity?",
+      "relevant_chunks": [
+        4
+      ]
+    },
+    {
+      "query": "What are the columns of the shippers entity?",
+      "relevant_chunks": [
+        5
+      ]
+    },
+    {
+      "query": "What are the columns of the orders entity?",
+      "relevant_chunks": [
+        6
+      ]
+    },
+    {
+      "query": "What are the columns of the order_details entity?",
+      "relevant_chunks": [
+        7
+      ]
+    },
+    {
+      "query": "How is customers related to orders?",
+      "relevant_chunks": [
+        0,
+        6
+      ]
+    },
+    {
+      "query": "How is employees related to orders?",
+      "relevant_chunks": [
+        1,
+        6
+      ]
+    },
+    {
+      "query": "How is employees related to employees?",
+      "relevant_chunks": [
+        1
+      ]
+    },
+    {
+      "query": "How is suppliers related to products?",
+      "relevant_chunks": [
+        2,
+        4
+      ]
+    },
+    {
+      "query": "How is categories related to products?",
+      "relevant_chunks": [
+        3,
+        4
+      ]
+    },
+    {
+      "query": "How is products related to order_details?",
+      "relevant_chunks": [
+        4,
+        7
+      ]
+    },
+    {
+      "query": "How is shippers related to orders?",
+      "relevant_chunks": [
+        5,
+        6
+      ]
+    },
+    {
+      "query": "How is orders related to order_details?",
+      "relevant_chunks": [
+        6,
+        7
+      ]
+    }
+  ]
+}

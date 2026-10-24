@@ -50,8 +50,10 @@ class PipelineConfig:
     # Fase 1: generación + validación + métricas tipo Flores et al.
     generation_stages: List[str] = field(default_factory=lambda: [
         "execute",
+        "build_retriever",
         # Los siguientes requieren benchmarks en benchmark_dir.
         # Si no existen, el stage se salta silenciosamente.
+        "build_retriever",
         "retrieval_metrics",
         "execution_metrics",
         "nlg_metrics",

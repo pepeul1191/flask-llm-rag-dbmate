@@ -244,3 +244,42 @@ for r in d['runs']:
     print(f\"{r['mode']:<16} {st.get('f1','-'):<8} {st.get('foreign_key_accuracy','-'):<8} {rt.get('MAP','-'):<8} {ex.get('EX','-'):<6} {ex.get('FLEX','-'):<6} {nl.get('BLEU','-'):<8} {fa.get('faithfulness','-'):<8}\")
 "
 
+ahora tengo estos 3 archivos
+
+pipeline_mysql.json
+pipeline_postgres.json
+pipeline_sqlite.json
+
+son iguales al anterior json, solo que cambia el motor, 
+
+adapta este codigo para ejecutar un pipeline json tras otro por cada esquema incluyendo eso en el nombre del tipo de motor sql en la variable base, o
+
+for puml in schemas/*.puml; do
+  base=$(basename "$puml" .puml)
+  echo "=== $base ==="
+  OLLAMA_MODEL=llama3.2 \
+    python -m ai.main "$puml" sqlite pipeline pipeline_config_basico_rag_validation.json \
+    > "runs/full_${base}.log" 2>&1
+  
+  # Añadir tabla de métricas al mismo log
+  {
+    echo ""
+    echo "========================================"
+    echo "TABLA DE MÉTRICAS FINALES — $base"
+    echo "========================================"
+    cat $(ls -t tmp/pipeline_results/flores_metrics_*.json | head -1) | python -c "..."
+  } >> "runs/full_${base}.log"
+done
+
+y tambein con estos llms
+
+deepseek-r1:1.5b-qwen-distill-q8_0
+phi3
+gemma2:2b
+qwen2.5:3b
+llama3.2
+
+## scre
+
+python tools/apply_updates.py
+python tools/make_benchmarks.py --force

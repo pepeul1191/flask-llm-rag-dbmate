@@ -12,6 +12,9 @@ NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "4096"))
 NUM_GPU = int(os.getenv("OLLAMA_NUM_GPU", "99"))
 VERBOSE = os.getenv("OLLAMA_VERBOSE", "true").lower() == "true"
 
+print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+print(f"              {MODEL_NAME}               ")
+print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
 def create_llm() -> ChatOllama:
   return ChatOllama(

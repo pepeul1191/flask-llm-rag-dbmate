@@ -1,0 +1,188 @@
+{
+  "queries": [
+    {
+      "query": "What are the columns of the document_types entity?",
+      "relevant_chunks": [
+        0
+      ]
+    },
+    {
+      "query": "What are the columns of the industries entity?",
+      "relevant_chunks": [
+        1
+      ]
+    },
+    {
+      "query": "What are the columns of the specialisms entity?",
+      "relevant_chunks": [
+        2
+      ]
+    },
+    {
+      "query": "What are the columns of the carrere_grades entity?",
+      "relevant_chunks": [
+        3
+      ]
+    },
+    {
+      "query": "What are the columns of the carreres entity?",
+      "relevant_chunks": [
+        4
+      ]
+    },
+    {
+      "query": "What are the columns of the program_types entity?",
+      "relevant_chunks": [
+        5
+      ]
+    },
+    {
+      "query": "What are the columns of the dni_types entity?",
+      "relevant_chunks": [
+        6
+      ]
+    },
+    {
+      "query": "What are the columns of the nations entity?",
+      "relevant_chunks": [
+        7
+      ]
+    },
+    {
+      "query": "What are the columns of the periods entity?",
+      "relevant_chunks": [
+        8
+      ]
+    },
+    {
+      "query": "What are the columns of the programs entity?",
+      "relevant_chunks": [
+        9
+      ]
+    },
+    {
+      "query": "What are the columns of the phases entity?",
+      "relevant_chunks": [
+        10
+      ]
+    },
+    {
+      "query": "What are the columns of the participants entity?",
+      "relevant_chunks": [
+        11
+      ]
+    },
+    {
+      "query": "What are the columns of the internals entity?",
+      "relevant_chunks": [
+        12
+      ]
+    },
+    {
+      "query": "What are the columns of the externals entity?",
+      "relevant_chunks": [
+        13
+      ]
+    },
+    {
+      "query": "What are the columns of the workers entity?",
+      "relevant_chunks": [
+        14
+      ]
+    },
+    {
+      "query": "What are the columns of the external_workers entity?",
+      "relevant_chunks": [
+        15
+      ]
+    },
+    {
+      "query": "What are the columns of the internal_workers entity?",
+      "relevant_chunks": [
+        16
+      ]
+    },
+    {
+      "query": "What are the columns of the mentors entity?",
+      "relevant_chunks": [
+        17
+      ]
+    },
+    {
+      "query": "What are the columns of the mentors_spcialisms entity?",
+      "relevant_chunks": [
+        18
+      ]
+    },
+    {
+      "query": "How is carreres related to carrere_grades?",
+      "relevant_chunks": [
+        3,
+        4
+      ]
+    },
+    {
+      "query": "How is programs related to periods?",
+      "relevant_chunks": [
+        8,
+        9
+      ]
+    },
+    {
+      "query": "How is programs related to program_types?",
+      "relevant_chunks": [
+        5,
+        9
+      ]
+    },
+    {
+      "query": "How is phases related to programs?",
+      "relevant_chunks": [
+        9,
+        10
+      ]
+    },
+    {
+      "query": "How is participants related to dni_types?",
+      "relevant_chunks": [
+        6,
+        11
+      ]
+    },
+    {
+      "query": "How is participants related to nations?",
+      "relevant_chunks": [
+        7,
+        11
+      ]
+    },
+    {
+      "query": "How is internals related to carreres?",
+      "relevant_chunks": [
+        4,
+        12
+      ]
+    },
+    {
+      "query": "How is internals related to periods?",
+      "relevant_chunks": [
+        8,
+        12
+      ]
+    },
+    {
+      "query": "How is mentors_spcialisms related to mentors?",
+      "relevant_chunks": [
+        17,
+        18
+      ]
+    },
+    {
+      "query": "How is mentors_spcialisms related to specialisms?",
+      "relevant_chunks": [
+        2,
+        18
+      ]
+    }
+  ]
+}

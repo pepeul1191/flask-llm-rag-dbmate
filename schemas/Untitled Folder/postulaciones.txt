@@ -1,0 +1,299 @@
+@startuml
+
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ranksep 80
+skinparam nodesep 60
+skinparam entityFontSize 10
+skinparam entityFontStyle bold
+skinparam entityBackgroundColor #FEFECE
+skinparam entityBorderColor #A80036
+
+' ==========================================
+' NIVEL 1: ENTIDADES INDEPENDIENTES
+' ==========================================
+
+entity carrers {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity profiles {
+  * id : INTEGER
+  --
+  created : DATETIME
+  updated : DATETIME
+}
+
+entity semesters {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity skills {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity skill_levels {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity status_applications_students {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity workdays {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+}
+
+entity modalities {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+}
+
+entity districts {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+}
+
+' ==========================================
+' NIVEL 2: USUARIOS
+' ==========================================
+
+entity users {
+  * id : INTEGER
+  --
+  * email : VARCHAR(45)
+  * password : VARCHAR(100)
+  reset_token : VARCHAR(100)
+  created : DATETIME
+  updated : DATETIME
+  profile_id : INTEGER
+}
+
+' ==========================================
+' NIVEL 3: ESTUDIANTES Y EMPRESAS
+' ==========================================
+
+entity students {
+  * id : INTEGER
+  --
+  * names : VARCHAR(45)
+  * last_names : VARCHAR(100)
+  * email : VARCHAR(45)
+  phone : VARCHAR(15)
+  district_id : INTEGER
+  picture_url : VARCHAR(100)
+  summary : TEXT
+  carrer_id : INTEGER
+  semester_id : INTEGER
+  user_id : INTEGER
+  created : DATETIME
+  updated : DATETIME
+}
+
+entity enterprises {
+  * id : INTEGER
+  --
+  * name : VARCHAR(60)
+  ruc : VARCHAR(11)
+  email : VARCHAR(45)
+  phone : VARCHAR(15)
+  website_url : VARCHAR(100)
+  description : TEXT
+  address : VARCHAR(100)
+  picture_url : VARCHAR(100)
+  district_id : INTEGER
+  sector_id : INTEGER
+  size_id : INTEGER
+  user_id : INTEGER
+  created : DATETIME
+  updated : DATETIME
+}
+
+' ==========================================
+' NIVEL 4: OFERTAS Y REGISTROS DEPENDIENTES
+' ==========================================
+
+entity applications {
+  * id : INTEGER
+  --
+  * title : VARCHAR(40)
+  description : TEXT
+  benefits : TEXT
+  functions : TEXT
+  vacancies : INTEGER
+  created : DATETIME
+  published : DATETIME
+  email_notification : BOOLEAN
+  closed : DATETIME
+  salarry : DECIMAL(10,2)
+  is_draft : BOOLEAN
+  modalities_id : INTEGER
+  semester_id : INTEGER
+  district_id : INTEGER
+  workday_id : INTEGER
+  enterprise_id : INTEGER
+}
+
+entity experiences {
+  * id : INTEGER
+  --
+  * name : VARCHAR(60)
+  enterprise : VARCHAR(60)
+  description : TEXT
+  start_date : DATE
+  end_date : DATE
+  student_id : INTEGER
+}
+
+entity links {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+  url : VARCHAR(100)
+  student_id : INTEGER
+}
+
+entity logs {
+  * id : INTEGER
+  --
+  user_id : INTEGER
+  description : VARCHAR(100)
+  created : DATETIME
+}
+
+' ==========================================
+' NIVEL 5: TABLAS INTERMEDIAS
+' ==========================================
+
+entity students_skills_skill_levels {
+  * id : INTEGER
+  --
+  student_id : INTEGER
+  skill_id : INTEGER
+  skill_level_id : INTEGER
+}
+
+entity applications_skills {
+  * id : INTEGER
+  --
+  application_id : INTEGER
+  skill_id : INTEGER
+}
+
+entity applications_carrers {
+  * id : INTEGER
+  --
+  application_id : INTEGER
+  carrer_id : INTEGER
+}
+
+entity students_applications_saved {
+  * id : INTEGER
+  --
+  created : DATE
+  student_id : INTEGER
+  application_id : INTEGER
+}
+
+entity applications_students {
+  * id : INTEGER
+  --
+  application_id : INTEGER
+  student_id : INTEGER
+  status_applications_student_id : INTEGER
+  notes : TEXT
+  created : DATETIME
+}
+
+' ==========================================
+' NIVEL 6: RESEÑAS
+' ==========================================
+
+entity applications_students_reviews {
+  * id : INTEGER
+  --
+  applications_students_id : INTEGER
+  points : INTEGER
+  enviroment : INTEGER
+  learning : INTEGER
+  work_load : INTEGER
+  title : VARCHAR(50)
+  comment : TEXT
+  created : DATETIME
+  updated : DATETIME
+  start : DATETIME
+  end : DATETIME
+  anonimous : BOOLEAN
+}
+
+' ==========================================
+' RELACIONES
+' ==========================================
+
+' Carreras
+carrers ||--o{ students : "has"
+carrers ||--o{ applications_carrers : "has"
+
+' Usuarios
+users ||--o| students : "has"
+users ||--o{ enterprises : "has"
+users ||--o{ logs : "has"
+profiles ||--o{ users  : "has"
+
+' Estudiantes
+students ||--o{ students_skills_skill_levels : "has"
+students ||--o{ experiences : "has"
+students ||--o{ applications_students : "has"
+students ||--o{ students_applications_saved : "saves"
+students ||--o{ links : "has"
+
+' Habilidades
+skills ||--o{ students_skills_skill_levels : "has"
+skills ||--o{ applications_skills : "required by"
+
+' Niveles de habilidad
+skill_levels ||--o{ students_skills_skill_levels : "has"
+
+' Semestres
+semesters ||--o{ students : "has"
+semesters ||--o{ applications : "has"
+
+' Empresas
+enterprises ||--o{ applications : "publishes"
+
+' Aplicaciones / ofertas
+applications ||--o{ applications_students : "receives"
+applications ||--o{ students_applications_saved : "saved by"
+applications ||--o{ applications_skills : "requires"
+applications ||--o{ applications_carrers : "targets"
+
+' Relación estudiante-oferta
+applications_students ||--o{ applications_students_reviews : "has reviews"
+
+' Modalidad, distrito y jornada
+modalities ||--o{ applications : "has"
+districts ||--o{ applications : "located in"
+districts ||--o{ students : "located in"
+districts ||--o{ enterprises : "located in"
+
+workdays ||--o{ applications : "has"
+
+'' status_applications_students
+status_applications_students ||--o{ applications_students : "has"
+
+@enduml

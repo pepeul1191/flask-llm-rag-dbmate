@@ -28,7 +28,7 @@ def split_documents(content: str, puml_path: str):
   chunks = []
 
   # 1. Entidades
-  entity_pattern = r'(entity\s+\w+\s*\{[^}]+\})'
+  entity_pattern = r'(entity\s+"?[A-Za-z_]\w*"?\s*(?:as\s+\w+)?\s*\{[^}]+\})'
   entities = re.findall(entity_pattern, content, re.IGNORECASE | re.DOTALL)
   if entities:
     logger.info("Found %d entities.", len(entities))

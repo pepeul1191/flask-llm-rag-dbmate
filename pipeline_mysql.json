@@ -1,6 +1,6 @@
 {
   "inputs": [
-    "./schemas/postulaciones_v2.puml"
+    "./schemas/postulaciones.puml"
   ],
   "db_types": ["mysql"],
   "modes": ["llm_only", "rag", "rag_validation"],

@@ -1,44 +1,103 @@
 {
   "queries": [
     {
-      "query": "¿Qué atributos tiene la entidad users?",
-      "relevant_chunks": [0]
+      "query": "What are the columns of the users entity?",
+      "relevant_chunks": [
+        0
+      ]
     },
     {
-      "query": "¿Qué columnas tiene la tabla systems?",
-      "relevant_chunks": [1]
+      "query": "What are the columns of the systems entity?",
+      "relevant_chunks": [
+        1
+      ]
     },
     {
-      "query": "¿Qué campos definen a roles?",
-      "relevant_chunks": [2]
+      "query": "What are the columns of the roles entity?",
+      "relevant_chunks": [
+        2
+      ]
     },
     {
-      "query": "¿Cómo se estructura la tabla permissions?",
-      "relevant_chunks": [3]
+      "query": "What are the columns of the permissions entity?",
+      "relevant_chunks": [
+        3
+      ]
     },
     {
-      "query": "¿Qué columnas tiene la tabla puente systems_users?",
-      "relevant_chunks": [4]
+      "query": "What are the columns of the systems_users entity?",
+      "relevant_chunks": [
+        4
+      ]
     },
     {
-      "query": "¿Qué atributos tiene systems_users_permissions?",
-      "relevant_chunks": [5]
+      "query": "What are the columns of the systems_users_permissions entity?",
+      "relevant_chunks": [
+        5
+      ]
     },
     {
-      "query": "¿Qué relaciones existen entre las tablas del esquema?",
-      "relevant_chunks": [6]
+      "query": "How is roles related to systems?",
+      "relevant_chunks": [
+        1,
+        2
+      ]
     },
     {
-      "query": "¿Cómo se relacionan users y systems?",
-      "relevant_chunks": [4, 6]
+      "query": "How is permissions related to roles?",
+      "relevant_chunks": [
+        2,
+        3
+      ]
     },
     {
-      "query": "¿Qué tablas dependen de systems?",
-      "relevant_chunks": [2, 4, 5, 6]
+      "query": "How is permissions related to roles?",
+      "relevant_chunks": [
+        2,
+        3
+      ]
     },
     {
-      "query": "¿Qué entidades referencian a permissions?",
-      "relevant_chunks": [5, 6]
+      "query": "How is systems_users related to users?",
+      "relevant_chunks": [
+        0,
+        4
+      ]
+    },
+    {
+      "query": "How is systems_users related to systems?",
+      "relevant_chunks": [
+        1,
+        4
+      ]
+    },
+    {
+      "query": "How is systems_users related to users?",
+      "relevant_chunks": [
+        0,
+        4
+      ]
+    },
+    {
+      "query": "How is systems_users_permissions related to systems?",
+      "relevant_chunks": [
+        1,
+        5
+      ]
+    },
+    {
+      "query": "How is systems_users_permissions related to users?",
+      "relevant_chunks": [
+        0,
+        5
+      ]
+    },
+    {
+      "query": "How is systems_users_permissions related to permissions?",
+      "relevant_chunks": [
+        3,
+        5
+      ]
     }
   ]
 }

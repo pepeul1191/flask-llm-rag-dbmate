@@ -20,7 +20,8 @@ def compute_structural_metrics(report: ValidationReport) -> dict:
   col_acc = _safe_div(s.get('matched_columns', 0), s.get('expected_columns', 0))
   type_acc = _safe_div(s.get('matched_types', 0), s.get('expected_types', 0))
   pk_acc = _safe_div(s.get('matched_pks', 0), s.get('expected_pks', 0))
-  fk_acc = _safe_div(s.get('matched_fks', 0), s.get('expected_fks', 0))
+  fk_acc = _safe_div(s.get('matched_fks', 0), s.get('expected_fks', 0)) \
+         if s.get('expected_fks', 0) else None
 
   # Full-schema: sólo correcto si las 5 anteriores son 1.0
   full_schema = 1.0 if all([

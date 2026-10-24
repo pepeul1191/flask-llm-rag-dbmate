@@ -69,7 +69,6 @@ def _add_run_metadata(item: dict, run_id: str, phase: str) -> dict:
 
 
 def _benchmark_base(ctx) -> str:
-    """Nombre base para benchmarks: 'basico', 'innova', ... (no 'modelo')."""
     original = ctx.get("input_path") or ctx["puml_file"]
     return os.path.splitext(os.path.basename(original))[0]
 

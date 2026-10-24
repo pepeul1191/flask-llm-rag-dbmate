@@ -1,0 +1,325 @@
+{
+  "queries": [
+    {
+      "query": "What are the columns of the carrers entity?",
+      "relevant_chunks": [
+        0
+      ]
+    },
+    {
+      "query": "What are the columns of the profiles entity?",
+      "relevant_chunks": [
+        1
+      ]
+    },
+    {
+      "query": "What are the columns of the semesters entity?",
+      "relevant_chunks": [
+        2
+      ]
+    },
+    {
+      "query": "What are the columns of the skills entity?",
+      "relevant_chunks": [
+        3
+      ]
+    },
+    {
+      "query": "What are the columns of the skill_levels entity?",
+      "relevant_chunks": [
+        4
+      ]
+    },
+    {
+      "query": "What are the columns of the status_applications_students entity?",
+      "relevant_chunks": [
+        5
+      ]
+    },
+    {
+      "query": "What are the columns of the workdays entity?",
+      "relevant_chunks": [
+        6
+      ]
+    },
+    {
+      "query": "What are the columns of the modalities entity?",
+      "relevant_chunks": [
+        7
+      ]
+    },
+    {
+      "query": "What are the columns of the districts entity?",
+      "relevant_chunks": [
+        8
+      ]
+    },
+    {
+      "query": "What are the columns of the users entity?",
+      "relevant_chunks": [
+        9
+      ]
+    },
+    {
+      "query": "What are the columns of the students entity?",
+      "relevant_chunks": [
+        10
+      ]
+    },
+    {
+      "query": "What are the columns of the enterprises entity?",
+      "relevant_chunks": [
+        11
+      ]
+    },
+    {
+      "query": "What are the columns of the applications entity?",
+      "relevant_chunks": [
+        12
+      ]
+    },
+    {
+      "query": "What are the columns of the experiences entity?",
+      "relevant_chunks": [
+        13
+      ]
+    },
+    {
+      "query": "What are the columns of the links entity?",
+      "relevant_chunks": [
+        14
+      ]
+    },
+    {
+      "query": "What are the columns of the logs entity?",
+      "relevant_chunks": [
+        15
+      ]
+    },
+    {
+      "query": "What are the columns of the students_skills_skill_levels entity?",
+      "relevant_chunks": [
+        16
+      ]
+    },
+    {
+      "query": "What are the columns of the applications_skills entity?",
+      "relevant_chunks": [
+        17
+      ]
+    },
+    {
+      "query": "What are the columns of the applications_carrers entity?",
+      "relevant_chunks": [
+        18
+      ]
+    },
+    {
+      "query": "What are the columns of the students_applications_saved entity?",
+      "relevant_chunks": [
+        19
+      ]
+    },
+    {
+      "query": "What are the columns of the applications_students entity?",
+      "relevant_chunks": [
+        20
+      ]
+    },
+    {
+      "query": "What are the columns of the applications_students_reviews entity?",
+      "relevant_chunks": [
+        21
+      ]
+    },
+    {
+      "query": "How is users related to profiles?",
+      "relevant_chunks": [
+        1,
+        9
+      ]
+    },
+    {
+      "query": "How is students related to carrers?",
+      "relevant_chunks": [
+        0,
+        10
+      ]
+    },
+    {
+      "query": "How is students related to semesters?",
+      "relevant_chunks": [
+        2,
+        10
+      ]
+    },
+    {
+      "query": "How is students related to districts?",
+      "relevant_chunks": [
+        8,
+        10
+      ]
+    },
+    {
+      "query": "How is enterprises related to users?",
+      "relevant_chunks": [
+        9,
+        11
+      ]
+    },
+    {
+      "query": "How is enterprises related to districts?",
+      "relevant_chunks": [
+        8,
+        11
+      ]
+    },
+    {
+      "query": "How is applications related to semesters?",
+      "relevant_chunks": [
+        2,
+        12
+      ]
+    },
+    {
+      "query": "How is applications related to enterprises?",
+      "relevant_chunks": [
+        11,
+        12
+      ]
+    },
+    {
+      "query": "How is applications related to modalities?",
+      "relevant_chunks": [
+        7,
+        12
+      ]
+    },
+    {
+      "query": "How is applications related to districts?",
+      "relevant_chunks": [
+        8,
+        12
+      ]
+    },
+    {
+      "query": "How is applications related to workdays?",
+      "relevant_chunks": [
+        6,
+        12
+      ]
+    },
+    {
+      "query": "How is experiences related to students?",
+      "relevant_chunks": [
+        10,
+        13
+      ]
+    },
+    {
+      "query": "How is links related to students?",
+      "relevant_chunks": [
+        10,
+        14
+      ]
+    },
+    {
+      "query": "How is logs related to users?",
+      "relevant_chunks": [
+        9,
+        15
+      ]
+    },
+    {
+      "query": "How is students_skills_skill_levels related to students?",
+      "relevant_chunks": [
+        10,
+        16
+      ]
+    },
+    {
+      "query": "How is students_skills_skill_levels related to skills?",
+      "relevant_chunks": [
+        3,
+        16
+      ]
+    },
+    {
+      "query": "How is students_skills_skill_levels related to skill_levels?",
+      "relevant_chunks": [
+        4,
+        16
+      ]
+    },
+    {
+      "query": "How is applications_skills related to skills?",
+      "relevant_chunks": [
+        3,
+        17
+      ]
+    },
+    {
+      "query": "How is applications_skills related to applications?",
+      "relevant_chunks": [
+        12,
+        17
+      ]
+    },
+    {
+      "query": "How is applications_carrers related to carrers?",
+      "relevant_chunks": [
+        0,
+        18
+      ]
+    },
+    {
+      "query": "How is applications_carrers related to applications?",
+      "relevant_chunks": [
+        12,
+        18
+      ]
+    },
+    {
+      "query": "How is students_applications_saved related to students?",
+      "relevant_chunks": [
+        10,
+        19
+      ]
+    },
+    {
+      "query": "How is students_applications_saved related to applications?",
+      "relevant_chunks": [
+        12,
+        19
+      ]
+    },
+    {
+      "query": "How is applications_students related to students?",
+      "relevant_chunks": [
+        10,
+        20
+      ]
+    },
+    {
+      "query": "How is applications_students related to applications?",
+      "relevant_chunks": [
+        12,
+        20
+      ]
+    },
+    {
+      "query": "How is applications_students related to status_applications_students?",
+      "relevant_chunks": [
+        5,
+        20
+      ]
+    },
+    {
+      "query": "How is applications_students_reviews related to applications_students?",
+      "relevant_chunks": [
+        20,
+        21
+      ]
+    }
+  ]
+}
