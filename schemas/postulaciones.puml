@@ -1,7 +1,4 @@
 @startuml
-!define table(x) entity x << (T,#FFAAAA) >>
-!define primary_key(x) <b><color:red>x</color></b>
-!define foreign_key(x) <color:blue>x</color>
 
 skinparam linetype ortho
 skinparam packageStyle rectangle
@@ -13,216 +10,240 @@ skinparam entityFontStyle bold
 skinparam entityBackgroundColor #FEFECE
 skinparam entityBorderColor #A80036
 
-entity "carrers" as carrers {
-  * id : INT
+' ==========================================
+' NIVEL 1: ENTIDADES INDEPENDIENTES
+' ==========================================
+
+entity carrers {
+  * id : INTEGER
   --
-  name : VARCHAR(30)
+  * name : VARCHAR(30)
 }
 
-entity "users" as users {
-  * id : INT
+entity profiles {
+  * id : INTEGER
   --
-  email : VARCHAR(45)
-  password : VARCHAR(100)
+  created : DATETIME
+  updated : DATETIME
+}
+
+entity semesters {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity skills {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity skill_levels {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity status_applications_students {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+}
+
+entity workdays {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+}
+
+entity modalities {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+}
+
+entity districts {
+  * id : INTEGER
+  --
+  * name : VARCHAR(40)
+}
+
+' ==========================================
+' NIVEL 2: USUARIOS
+' ==========================================
+
+entity users {
+  * id : INTEGER
+  --
+  * email : VARCHAR(45)
+  * password : VARCHAR(100)
   reset_token : VARCHAR(100)
   created : DATETIME
   updated : DATETIME
-  profile_id: INT
+  profile_id : INTEGER
 }
 
-entity "students" as students {
-  * id : INT
+' ==========================================
+' NIVEL 3: ESTUDIANTES Y EMPRESAS
+' ==========================================
+
+entity students {
+  * id : INTEGER
   --
-  names : VARCHAR(45)
-  last_names : VARCHAR(100)
-  email: VARCHAR(45)
-  phone: VARCHAR(15)
-  district_id: INT
-  picture_url: VARCHAR(100)
-  summary: TEXT
-  carrere_id: INT
-  sementer_id: INT
-  user_id: INT
+  * names : VARCHAR(45)
+  * last_names : VARCHAR(100)
+  * email : VARCHAR(45)
+  phone : VARCHAR(15)
+  district_id : INTEGER
+  picture_url : VARCHAR(100)
+  summary : TEXT
+  carrer_id : INTEGER
+  semester_id : INTEGER
+  user_id : INTEGER
   created : DATETIME
   updated : DATETIME
 }
 
-entity "students_skills_skill_levels" as students_skills_skill_levels {
-  * id : INT
+entity enterprises {
+  * id : INTEGER
   --
-  student_id: INT
-  skill_id: INT
-  skill_level_id: INT
-}
-
-entity "experiences" as experiences {
-  * id : INT
-  --
-  name : VARCHAR(60)
-  enterprise: VARCHAR(60)
-  description: TEXT
-  start_date: DATE
-  end_date: DATE
-  student_id: INT
-}
-
-entity "applications_students" as applications_students {
-  * id : INT
-  --
-  application_id: INT
-  student_id: INT
-  status_applications_student_id: INT
-  notes: TEXT
-  created: DATETIME
-}
-
-entity "applications_students_reviews" as applications_students_reviews {
-  * id : INT
-  --
-  applications_students_reviews: INT
-  points: INT
-  enviroment: INT
-  learning: INT
-  work_load: INT
-  title: VARCHAR(50)
-  comment: TEXT
-  created: DATETIME
-  updated: DATETIME
-  start: DATETIME
-  end: DATETIME
-  anonimous: BOOLEAN
-}
-
-entity "status_applications_students" as status_applications_students {
-  * id : INT
-  --
-  name: VARCHAR(30)
-}
-
-entity "students_applications_saved" as students_applications_saved {
-  * id : INT
-  --
-  created: DATE
-  student_id: INT
-  application_id: INT
-}
-
-entity "links" as links {
-  * id : INT
-  --
-  name : VARCHAR(30)
-  url: VARCHAR(100)
-  student_id: INT
-}
-
-entity "skills" as skills {
-  * id : INT
-  --
-  name : VARCHAR(30)
-}
-
-entity "skill_levels" as skill_levels {
-  * id : INT
-  --
-  name : VARCHAR(30)
-}
-
-entity "enterprises" as enterprises {
-  * id : INT
-  --
-  name : VARCHAR(60)
-  ruc: VARCHAR(11)
-  email: VARCHAR(45)
-  phone: VARCHAR(15)
-  website_url: VARCHAR(100)
-  description: TEXT
-  address: VARCHAR(100)
-  picture_url: VARCHAR(100)
-  district_id: INT
-  sector_id: INT
-  size_id: INT
-  user_id: INT
+  * name : VARCHAR(60)
+  ruc : VARCHAR(11)
+  email : VARCHAR(45)
+  phone : VARCHAR(15)
+  website_url : VARCHAR(100)
+  description : TEXT
+  address : VARCHAR(100)
+  picture_url : VARCHAR(100)
+  district_id : INTEGER
+  sector_id : INTEGER
+  size_id : INTEGER
+  user_id : INTEGER
   created : DATETIME
   updated : DATETIME
 }
 
-entity "logs" as logs {
-  * id : INT
+' ==========================================
+' NIVEL 4: OFERTAS Y REGISTROS DEPENDIENTES
+' ==========================================
+
+entity applications {
+  * id : INTEGER
   --
-  user_id : INT
+  * title : VARCHAR(40)
+  description : TEXT
+  benefits : TEXT
+  functions : TEXT
+  vacancies : INTEGER
+  created : DATETIME
+  published : DATETIME
+  email_notification : BOOLEAN
+  closed : DATETIME
+  salarry : DECIMAL(10,2)
+  is_draft : BOOLEAN
+  modalities_id : INTEGER
+  semester_id : INTEGER
+  district_id : INTEGER
+  workday_id : INTEGER
+  enterprise_id : INTEGER
+}
+
+entity experiences {
+  * id : INTEGER
+  --
+  * name : VARCHAR(60)
+  enterprise : VARCHAR(60)
+  description : TEXT
+  start_date : DATE
+  end_date : DATE
+  student_id : INTEGER
+}
+
+entity links {
+  * id : INTEGER
+  --
+  * name : VARCHAR(30)
+  url : VARCHAR(100)
+  student_id : INTEGER
+}
+
+entity logs {
+  * id : INTEGER
+  --
+  user_id : INTEGER
   description : VARCHAR(100)
   created : DATETIME
 }
 
-entity "profiles" as profiles {
-  * id : INT
+' ==========================================
+' NIVEL 5: TABLAS INTERMEDIAS
+' ==========================================
+
+entity students_skills_skill_levels {
+  * id : INTEGER
   --
+  student_id : INTEGER
+  skill_id : INTEGER
+  skill_level_id : INTEGER
+}
+
+entity applications_skills {
+  * id : INTEGER
+  --
+  application_id : INTEGER
+  skill_id : INTEGER
+}
+
+entity applications_carrers {
+  * id : INTEGER
+  --
+  application_id : INTEGER
+  carrer_id : INTEGER
+}
+
+entity students_applications_saved {
+  * id : INTEGER
+  --
+  created : DATE
+  student_id : INTEGER
+  application_id : INTEGER
+}
+
+entity applications_students {
+  * id : INTEGER
+  --
+  application_id : INTEGER
+  student_id : INTEGER
+  status_applications_student_id : INTEGER
+  notes : TEXT
+  created : DATETIME
+}
+
+' ==========================================
+' NIVEL 6: RESEÑAS
+' ==========================================
+
+entity applications_students_reviews {
+  * id : INTEGER
+  --
+  applications_students_id : INTEGER
+  points : INTEGER
+  enviroment : INTEGER
+  learning : INTEGER
+  work_load : INTEGER
+  title : VARCHAR(50)
+  comment : TEXT
   created : DATETIME
   updated : DATETIME
+  start : DATETIME
+  end : DATETIME
+  anonimous : BOOLEAN
 }
 
-entity "semesters" as semesters {
-  * id : INT
-  --
-  name : VARCHAR(30)
-}
-
-entity "applications" as applications {
-  * id : INT
-  --
-  title : VARCHAR(40)
-  description: TEXT
-  benefits: TEXT
-  functions: TEXT
-  vacancies: INT
-  created : DATETIME
-  published : DATETIME
-  email_notification: BOOLEAN
-  closed: DATETIME
-  salarry: DECIMAL(10,2)
-  is_draft: BOOLEAN
-  modality_id : INT
-  sementer_id: INT
-  district_id : INT
-  workday_id: INT
-  enterprise_id : INT
-}
-
-entity "applications_skills" as applications_skills {
-  * id : INT
-  --
-  application_id: INT
-  skill_id: INT
-}
-
-entity "workdays" as workdays {
-  * id : INT
-  --
-  name : VARCHAR(40)
-}
-
-entity "applications_carrers" as applications_carrers {
-  * id : INT
-  --
-  application_id: INT
-  carrer_id: INT
-}
-
-entity "modalities" as modalities {
-  * id : INT
-  --
-  name : VARCHAR(40)
-}
-
-entity "districts" as districts {
-  * id : INT
-  --
-  name : VARCHAR(40)
-}
-
-' =========================
+' ==========================================
 ' RELACIONES
-' =========================
+' ==========================================
 
 ' Carreras
 carrers ||--o{ students : "has"

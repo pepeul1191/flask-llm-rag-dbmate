@@ -1,0 +1,27 @@
+{
+  "inputs": [
+    "./schemas/postulaciones.puml"
+  ],
+  "db_types": ["sqlite"],
+  "modes": ["llm_only", "rag", "rag_validation"],
+
+  "generation_stages": [
+    "execute",
+    "build_retriever",
+    "retrieval_metrics",
+    "execution_metrics",
+    "nlg_metrics",
+    "faithfulness"
+  ],
+  "error_stages": ["inject_and_validate", "measure_detection"],
+
+  "error_types": ["drop_table", "drop_column", "change_type",
+                  "drop_pk", "drop_fk", "rename_table"],
+  "include_clean_baseline": true,
+
+  "benchmark_dir": "./benchmarks",
+  "retrieval_k": 10,
+
+  "output_dir": "./tmp/pipeline_results",
+  "save_individual_reports": true
+}

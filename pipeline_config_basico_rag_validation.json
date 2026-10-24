@@ -2,7 +2,7 @@
   "inputs": [
     "./schemas/postulaciones_v2.puml"
   ],
-  "db_types": ["sqlite"],
+  "db_types": ["postgres"],
   "modes": ["llm_only", "rag", "rag_validation"],
 
   "generation_stages": [

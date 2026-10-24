@@ -66,23 +66,45 @@ Responde SOLO con una palabra: EQUIVALENTES o DIFERENTES."""
 
 
 def compute_flex(generated_sql: str, gold_sql: str, chain) -> int:
-    """
-    FLEX=1 si el LLM juzga que ambas migraciones son semánticamente equivalentes.
-    `chain` es la cadena LangChain (CHAIN_PROMPT | llm | StrOutputParser).
-    """
-    try:
-        prompt = FLEX_PROMPT.format(gold=gold_sql, generated=generated_sql)
-        # CHAIN_PROMPT espera {"context": ..., "question": ...}
-        verdict = chain.invoke({
-            "context": "(sin contexto RAG, evaluación de equivalencia semántica)",
-            "question": prompt,
-        })
-    except Exception as e:
-        logger.error("FLEX invoke error: %s", e)
+    if chain is None:
         return 0
+    prompt = FLEX_PROMPT.format(gold=gold_sql, generated=generated_sql)
+
+    verdict = None
+    try:
+        verdict = chain.invoke({"input": prompt})
+    except Exception as e1:
+        try:
+            verdict = chain.invoke({
+                "context": "(sin contexto RAG)",
+                "question": prompt,
+            })
+        except Exception as e2:
+            logger.error("FLEX invoke error: %s | %s", e1, e2)
+            return 0
 
     text = (verdict or "").strip().upper()
-    return 1 if text.startswith("EQUIVALENTES") else 0
+
+    # Matcher robusto
+    positives = ("EQUIVALENTES", "EQUIVALENT", "SÍ", "SI", "YES", "TRUE", "1")
+    negatives = ("DIFERENTES", "DIFERENT", "NO", "FALSE", "0")
+
+    # Primero buscar negativos (más específicos)
+    for neg in negatives:
+        if text.startswith(neg):
+            return 0
+
+    # Luego buscar positivos
+    for pos in positives:
+        if text.startswith(pos):
+            return 1
+
+    # Si no matchea nada, buscar en el texto completo
+    if "EQUIVALENT" in text and "DIFERENT" not in text:
+        return 1
+
+    logger.warning("FLEX verdict no reconocido: %r", text[:100])
+    return 0
 
 
 def compute_execution_metrics(
