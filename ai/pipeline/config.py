@@ -88,7 +88,7 @@ class PipelineConfig:
     benchmark_dir: str = "./benchmarks"
 
     # K para Precision@K / Recall@K del retriever
-    retrieval_k: int = 10
+    retrieval_k: int = 5
 
     # ------------------------------------------------------------------ #
     # Salida                                                             #

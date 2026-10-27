@@ -241,8 +241,11 @@ def build_retriever_stage(ctx, config):
         chunks = split_documents(content, puml_file)
         vdb = create_vector_db(chunks, puml_file)
 
-    ctx["retriever"] = create_retriever(vdb, source_file=puml_file)
-
+    # 🔧 CAMBIO: garantizar al menos K=5 docs para calcular P@5/R@5/NDCG@5
+    retriever_k = max(5, config.retrieval_k)
+    ctx["retriever"] = create_retriever(
+        vdb, source_file=puml_file, k=retriever_k
+    )
 
 # ---------------------------------------------------------------------------
 # STAGES: métricas Flores
@@ -250,34 +253,26 @@ def build_retriever_stage(ctx, config):
 @gen_stage("retrieval_metrics")
 def retrieval_metrics_stage(ctx, config):
     if ctx["mode"] == "llm_only":
-        return  # no aplica, sin warning
-
+        return
     if not config.benchmark_dir:
         return
-
-    path = os.path.join(
-        config.benchmark_dir,
-        f"{_benchmark_base(ctx)}_retrieval.json"
-    )
+    path = os.path.join(config.benchmark_dir,
+                        f"{_benchmark_base(ctx)}_retrieval.json")
     if not os.path.exists(path):
         logger.warning("Sin benchmark de retrieval: %s", path)
         return
-
     with open(path, encoding="utf-8") as f:
         bench = json.load(f)
-
     retriever = ctx.get("retriever")
     if retriever is None:
         logger.warning("No hay retriever en ctx; se omite retrieval_metrics.")
         return
-
     try:
         ctx["retrieval_metrics"] = compute_retrieval_metrics(
             bench["queries"], retriever, k=config.retrieval_k
         )
     except Exception as e:
         logger.error("retrieval_metrics falló: %s", e)
-
 
 @gen_stage("execution_metrics")
 def execution_metrics_stage(ctx, config):

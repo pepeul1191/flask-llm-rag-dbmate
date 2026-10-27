@@ -5,6 +5,7 @@ import json
 import time
 import logging
 import datetime
+import inspect
 from ai import env
 
 from ai.paths import output_base, under_output
@@ -33,16 +34,29 @@ logger = logging.getLogger(__name__)
 
 VALID_MODES = ("llm_only", "rag", "rag_validation")
 
+# 🔧 CAMBIO: máximo de iteraciones del bucle de corrección en rag_validation.
+# Configurable por env var AI_MAX_CORRECTION_ITERS (default 3, igual que el paper).
+MAX_CORRECTION_ITERATIONS = int(os.getenv("AI_MAX_CORRECTION_ITERS", "3"))
+
+# 🔧 CAMBIO: detecta si migration_generator.py soporta feedback de errores.
+# Si no lo soporta, rag_validation degrada a una sola pasada (y lo avisa).
+_HAS_EXTRA_INSTRUCTIONS = (
+  "extra_instructions" in inspect.signature(
+    generate_sql_migrations_with_rag
+  ).parameters
+)
+
 _AI_TIMING = os.getenv("AI_TIMING", "0") == "1"
 
+
 def _timed(label, fn, *args, **kwargs):
-    if not _AI_TIMING:
-        return fn(*args, **kwargs)
-    t0 = time.perf_counter()
-    try:
-        return fn(*args, **kwargs)
-    finally:
-        print(f"⏱ [timing] {label}: {time.perf_counter()-t0:.3f}s")
+  if not _AI_TIMING:
+    return fn(*args, **kwargs)
+  t0 = time.perf_counter()
+  try:
+    return fn(*args, **kwargs)
+  finally:
+    print(f"⏱ [timing] {label}: {time.perf_counter()-t0:.3f}s")
 
 
 def _build_chain(mode: str, vector_db, puml_file: str):
@@ -51,8 +65,9 @@ def _build_chain(mode: str, vector_db, puml_file: str):
   retriever = create_retriever(vector_db, source_file=puml_file)
   return create_chain(retriever)
 
+
 def _generate_migrations(mode: str, chain, db_type: str, puml_file: str) -> str:
-  """Genera las migraciones según el modo."""
+  """Genera las migraciones según el modo (una sola pasada, sin corrección)."""
   if mode == "llm_only":
     return generate_sql_migrations_direct(chain, db_type, puml_file)
 
@@ -69,6 +84,85 @@ def _generate_migrations(mode: str, chain, db_type: str, puml_file: str) -> str:
   return complete
 
 
+# 🔧 CAMBIO: bucle de generación + validación + corrección (modo rag_validation).
+def _generate_with_correction(chain, db_type: str, puml_file: str,
+                              max_iter: int = MAX_CORRECTION_ITERATIONS):
+  """
+  Genera migraciones con bucle de corrección (modo rag_validation).
+
+  Flujo:
+    1. Genera SQL con RAG (igual que el modo 'rag').
+    2. Valida contra el PUML.
+    3. Si hay errores y quedan iteraciones, re-invoca al LLM pasándole el
+       reporte de errores como 'extra_instructions' y vuelve a validar.
+    4. Devuelve (sql_final, n_iter, report_final, metrics_final).
+
+  Si migration_generator.py no acepta 'extra_instructions', se ejecuta
+  una sola pasada (equivalente a 'rag') y se emite un warning.
+  """
+  # Primera pasada (idéntica a 'rag')
+  sql = _generate_migrations("rag", chain, db_type, puml_file)
+  if not sql or sql.startswith("Error:"):
+    return sql, 0, None, None
+
+  report, metrics = None, None
+
+  for i in range(max_iter):
+    try:
+      # Validación silenciosa: no imprime la tabla grande en cada iteración
+      report, metrics = _validate_structure(
+        puml_file, sql, db_type, verbose=False
+      )
+    except Exception as e:
+      logger.error(f"Error validando iteración {i}: {e}")
+      return sql, i, None, None
+
+    # Éxito: no hay nada que corregir
+    if report is None or report.is_valid:
+      if i > 0:
+        print(f"✅ Validación OK tras {i} iteración(es) de corrección")
+      return sql, i, report, metrics
+
+    # ¿Podemos pasar feedback al LLM?
+    if not _HAS_EXTRA_INSTRUCTIONS:
+      logger.warning(
+        "generate_sql_migrations_with_rag no acepta 'extra_instructions'. "
+        "El bucle de corrección queda desactivado para este run "
+        "(actualiza migration_generator.py para habilitarlo)."
+      )
+      return sql, i, report, metrics
+
+    # Reportar errores y re-generar
+    n_missing_tables = len(report.missing_tables)
+    n_missing_cols = sum(len(v) for v in report.missing_columns.values())
+    n_type = sum(len(v) for v in report.type_mismatches.values())
+    n_pk = len(report.pk_mismatches)
+    n_fk = len(report.fk_mismatches)
+    print(
+      f"🔄 Corrección {i+1}/{max_iter}: "
+      f"{n_missing_tables} tablas, {n_missing_cols} cols, "
+      f"{n_type} tipos, {n_pk} PKs, {n_fk} FKs"
+    )
+
+    sql = generate_sql_migrations_with_rag(
+      chain, db_type, puml_file,
+      extra_instructions=report.summary(),
+    )
+    if not sql or sql.startswith("Error:"):
+      return sql, i + 1, report, metrics
+
+  # Agotamos las iteraciones sin converger: devolver el último estado
+  try:
+    report, metrics = _validate_structure(puml_file, sql, db_type, verbose=False)
+  except Exception as e:
+    logger.error(f"Error en validación final: {e}")
+
+  if report is not None and not report.is_valid:
+    print(f"⚠️ No convergió en {max_iter} iteraciones (quedan errores)")
+
+  return sql, max_iter, report, metrics
+
+
 def _load_vector_db(puml_file: str):
   vector_db = check_existing_vector_db()
   if should_recreate_vector_db(puml_file, vector_db):
@@ -83,11 +177,15 @@ def _load_vector_db(puml_file: str):
     print("✅ Usando base de datos vectorial existente.")
   return vector_db
 
-def _validate_structure(puml_file: str, complete_migrations: str, db_type: str):
+
+# 🔧 CAMBIO: parámetro 'verbose' para no spamear en el bucle de corrección.
+def _validate_structure(puml_file: str, complete_migrations: str, db_type: str,
+                        verbose: bool = True):
   """Valida la estructura generada contra el modelo PUML esperado."""
-  print("\n" + "=" * 60)
-  print("VALIDACIÓN ESTRUCTURAL CONTRA EL MODELO PUML")
-  print("=" * 60)
+  if verbose:
+    print("\n" + "=" * 60)
+    print("VALIDACIÓN ESTRUCTURAL CONTRA EL MODELO PUML")
+    print("=" * 60)
 
   try:
     expected_schema = parse_puml_schema(puml_file)
@@ -102,28 +200,38 @@ def _validate_structure(puml_file: str, complete_migrations: str, db_type: str):
     return expected_schema, None
 
   report = validate_schema(expected_schema, generated_schema)
-  print(report.summary())
+
+  if verbose:
+    print(report.summary())
 
   metrics = compute_structural_metrics(report)
-  print("\n" + "-" * 60)
-  print("MÉTRICAS ESTRUCTURALES")
-  print("-" * 60)
-  for key, value in metrics.items():
-    print(f"  {key}: {value}")
+
+  if verbose:
+    print("\n" + "-" * 60)
+    print("MÉTRICAS ESTRUCTURALES")
+    print("-" * 60)
+    for key, value in metrics.items():
+      print(f"  {key}: {value}")
 
   return report, metrics
 
 
+# 🔧 CAMBIO: parámetro 'correction_iters' para persistirlo en metrics_*.json.
 def _persist_reports(puml_basename: str, mode: str, db_type: str,
-                     report, metrics, tables_dict) -> None:
+                     report, metrics, tables_dict,
+                     correction_iters: int = 0) -> None:
   """Guarda el reporte de validación y las métricas en JSON dentro de tmp/."""
-  # Si el pipeline nos pasó un run_id, compartimos timestamp
   run_id = os.getenv("AI_RUN_ID")
   if run_id:
     base = f"{run_id}_{puml_basename}_{db_type}_{mode}"
   else:
     ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     base = f"{puml_basename}_{db_type}_{mode}_{ts}"
+
+  # Añadir iteraciones de corrección a las métricas (útil para el paper)
+  if metrics is not None and correction_iters is not None:
+    metrics = dict(metrics)
+    metrics["correction_iterations"] = correction_iters
 
   if report is not None:
     report_file = under_output(f"validation_report_{base}.json")
@@ -176,11 +284,23 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
 
   # 3. Generar migraciones
   print(f"🔄 Generando migraciones SQL para {puml_file} (db={db_type}, mode={mode})...")
-  #complete_migrations = _generate_migrations(mode, chain, db_type, puml_file)
-  complete_migrations = _timed(
-    "llm_generation",
-    _generate_migrations, mode, chain, db_type, puml_file
-  )
+
+  # 🔧 CAMBIO: rama con/sin bucle de corrección
+  correction_iters = 0
+  report = None
+  metrics = None
+
+  if mode == "rag_validation":
+    complete_migrations, correction_iters, report, metrics = _timed(
+      "llm_generation_with_correction",
+      _generate_with_correction, chain, db_type, puml_file
+    )
+    print(f"✓ Generación con corrección completada en {correction_iters} iteración(es)")
+  else:
+    complete_migrations = _timed(
+      "llm_generation",
+      _generate_migrations, mode, chain, db_type, puml_file
+    )
 
   if not complete_migrations or complete_migrations.startswith("Error:"):
     print("❌ No se pudieron generar migraciones.")
@@ -212,14 +332,15 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
     print("-" * 80)
     resp.append(table.__dict__)
 
-  # 6. Validación estructural (solo en rag_validation)
-  report = None
-  metrics = None
-  # report, metrics = _validate_structure(puml_file, complete_migrations, db_type)
-  report, metrics = _timed(
-    "structural_validation",
-    _validate_structure, puml_file, complete_migrations, db_type
-  )
+  # 6. Validación estructural final para el reporte
+  #    - rag_validation: ya viene del bucle -> no repetir
+  #    - llm_only / rag: validar ahora
+  if report is None:
+    report, metrics = _timed(
+      "structural_validation",
+      _validate_structure, puml_file, complete_migrations, db_type
+    )
+
   if report is None:
     print("⚠️ No se pudo completar la validación estructural.")
   elif report.is_valid:
@@ -232,7 +353,10 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
                 os.path.splitext(os.path.basename(puml_file))[0]
   save_migration_files(tables_dict, puml_basename, db_type, complete_migrations)
 
-  _persist_reports(puml_basename, mode, db_type, report, metrics, tables_dict)
+  _persist_reports(
+    puml_basename, mode, db_type, report, metrics, tables_dict,
+    correction_iters=correction_iters,
+  )
 
   return resp, True
 
@@ -286,8 +410,8 @@ if __name__ == "__main__":
     for etype, m in result["per_error_type"].items():
       print(f"  {etype}: {m}")
   elif mode == "pipeline":
-    from ai.pipeline import run_from_config                                       
+    from ai.pipeline import run_from_config
     cfg_path = sys.argv[4] if len(sys.argv) > 4 else "pipeline_config.json"
     run_from_config(cfg_path)
   else:
-    execute(folder, db, mode=mode)                                                                                                                                                                      
+    execute(folder, db, mode=mode)

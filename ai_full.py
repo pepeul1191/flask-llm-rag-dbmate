@@ -1,6 +1,6 @@
 # ================================================================
 # Archivo generado automáticamente por merge_ai.sh
-# Fecha: 2026-10-26 21:54:54
+# Fecha: 2026-10-26 23:05:58
 # NO EDITAR MANUALMENTE - se regenera en cada ejecución
 # ================================================================
 
@@ -298,10 +298,11 @@ def compute_faithfulness(generated_sql: str, puml_file: str, db_type: str) -> di
 # ================================================================
 # ai/evaluation/retrieval_metrics.py
 """
-Precision@K, Recall@K, MAP, MRR, Top-1 Accuracy.
-Idénticas a las de Flores et al. (2025), adaptadas al retriever del PUML.
+Precision@K, Recall@K, MAP, MAP+, MRR, NDCG@K, Top-1.
+Replica la Tabla 6 del paper: MAP, MAP+, P@5, R@5, NDCG@5.
 """
 # [dedup] import logging
+import math
 from typing import List, Dict
 
 logger = logging.getLogger(__name__)
@@ -337,54 +338,87 @@ def _reciprocal_rank(retrieved: List[str], relevant: set) -> float:
     return 0.0
 
 
+def _ndcg_at_k(retrieved: List[str], relevant: set, k: int) -> float:
+    """NDCG@K con relevancia binaria."""
+    topk = retrieved[:k]
+    dcg = 0.0
+    for i, r in enumerate(topk, 1):
+        if r in relevant:
+            dcg += 1.0 / math.log2(i + 1)
+    n_rel = min(len(relevant), k)
+    idcg = sum(1.0 / math.log2(i + 1) for i in range(1, n_rel + 1))
+    return dcg / idcg if idcg > 0 else 0.0
+
+
 def compute_retrieval_metrics(
     queries: List[Dict],
     retriever,
-    k: int = 10,
+    k: int = 5,
 ) -> Dict:
     """
     queries: [{"query": "...", "relevant_chunks": ["chunk_3", "chunk_5"]}]
-    retriever: el de create_retriever() de ai.services.retrieval
+    retriever: create_retriever() de ai.services.retrieval
 
-    Devuelve agregados MAP, MRR, P@K, R@K, Top-1 y detalle por query.
+    Devuelve, además de las métricas con K principal:
+      - MAP+      : MAP calculado solo sobre queries con AP > 0
+      - P@5, R@5, NDCG@5 : fijas a K=5 para replicar la Tabla 6 del paper
     """
-    p_at_k, r_at_k, aps, rrs, top1 = [], [], [], [], []
+    p_at_k, r_at_k, aps, rrs, top1, ndcgs = [], [], [], [], [], []
+    p5, r5, n5 = [], [], []
     per_query = []
 
     for q in queries:
         docs = retriever.invoke(q["query"])
-        retrieved_ids = [
-            d.metadata.get("chunk_id") for d in docs
-        ][:k]
-        relevant = set(q["relevant_chunks"])
+        retrieved_ids = [d.metadata.get("chunk_id") for d in docs]
+        relevant = set(q.get("relevant_chunks", []))
 
         p = _precision_at_k(retrieved_ids, relevant, k)
         r = _recall_at_k(retrieved_ids, relevant, k)
         ap = _average_precision(retrieved_ids, relevant)
         rr = _reciprocal_rank(retrieved_ids, relevant)
+        ndcg = _ndcg_at_k(retrieved_ids, relevant, k)
         t1 = 1.0 if retrieved_ids and retrieved_ids[0] in relevant else 0.0
 
         p_at_k.append(p); r_at_k.append(r); aps.append(ap)
-        rrs.append(rr); top1.append(t1)
+        rrs.append(rr); top1.append(t1); ndcgs.append(ndcg)
+
+        # Métricas fijas a K=5 (Tabla 6 del paper)
+        p5.append(_precision_at_k(retrieved_ids, relevant, 5))
+        r5.append(_recall_at_k(retrieved_ids, relevant, 5))
+        n5.append(_ndcg_at_k(retrieved_ids, relevant, 5))
 
         per_query.append({
             "query": q["query"],
             "retrieved": retrieved_ids,
             "relevant": list(relevant),
             "P@K": round(p, 4), "R@K": round(r, 4),
-            "AP": round(ap, 4), "RR": round(rr, 4), "Top1": t1,
+            "AP": round(ap, 4), "RR": round(rr, 4),
+            "NDCG@K": round(ndcg, 4), "Top1": t1,
+            "P@5": round(p5[-1], 4),
+            "R@5": round(r5[-1], 4),
+            "NDCG@5": round(n5[-1], 4),
         })
 
     n = len(queries) or 1
+    positive_aps = [ap for ap in aps if ap > 0.0]
+
     return {
         "K": k,
         "n_queries": len(queries),
+        # Métricas a K principal
         "Precision@K": round(sum(p_at_k) / n, 4),
         "Recall@K":    round(sum(r_at_k) / n, 4),
         "MAP":         round(sum(aps) / n, 4),
+        "MAP+":        round(sum(positive_aps) / len(positive_aps), 4)
+                       if positive_aps else 0.0,
         "MRR":         round(sum(rrs) / n, 4),
+        "NDCG@K":      round(sum(ndcgs) / n, 4),
         "Top1":        round(sum(top1) / n, 4),
-        "per_query": per_query,
+        # Métricas fijas a K=5 (Tabla 6 del paper)
+        "P@5":         round(sum(p5) / n, 4),
+        "R@5":         round(sum(r5) / n, 4),
+        "NDCG@5":      round(sum(n5) / n, 4),
+        "per_query":   per_query,
     }
 
 # ================================================================
@@ -397,6 +431,7 @@ import json
 import time
 # [dedup] import logging
 import datetime
+import inspect
 from ai import env
 
 from ai.paths import output_base, under_output
@@ -425,16 +460,29 @@ logger = logging.getLogger(__name__)
 
 VALID_MODES = ("llm_only", "rag", "rag_validation")
 
+# 🔧 CAMBIO: máximo de iteraciones del bucle de corrección en rag_validation.
+# Configurable por env var AI_MAX_CORRECTION_ITERS (default 3, igual que el paper).
+MAX_CORRECTION_ITERATIONS = int(os.getenv("AI_MAX_CORRECTION_ITERS", "3"))
+
+# 🔧 CAMBIO: detecta si migration_generator.py soporta feedback de errores.
+# Si no lo soporta, rag_validation degrada a una sola pasada (y lo avisa).
+_HAS_EXTRA_INSTRUCTIONS = (
+  "extra_instructions" in inspect.signature(
+    generate_sql_migrations_with_rag
+  ).parameters
+)
+
 _AI_TIMING = os.getenv("AI_TIMING", "0") == "1"
 
+
 def _timed(label, fn, *args, **kwargs):
-    if not _AI_TIMING:
-        return fn(*args, **kwargs)
-    t0 = time.perf_counter()
-    try:
-        return fn(*args, **kwargs)
-    finally:
-        print(f"⏱ [timing] {label}: {time.perf_counter()-t0:.3f}s")
+  if not _AI_TIMING:
+    return fn(*args, **kwargs)
+  t0 = time.perf_counter()
+  try:
+    return fn(*args, **kwargs)
+  finally:
+    print(f"⏱ [timing] {label}: {time.perf_counter()-t0:.3f}s")
 
 
 def _build_chain(mode: str, vector_db, puml_file: str):
@@ -443,8 +491,9 @@ def _build_chain(mode: str, vector_db, puml_file: str):
   retriever = create_retriever(vector_db, source_file=puml_file)
   return create_chain(retriever)
 
+
 def _generate_migrations(mode: str, chain, db_type: str, puml_file: str) -> str:
-  """Genera las migraciones según el modo."""
+  """Genera las migraciones según el modo (una sola pasada, sin corrección)."""
   if mode == "llm_only":
     return generate_sql_migrations_direct(chain, db_type, puml_file)
 
@@ -461,6 +510,85 @@ def _generate_migrations(mode: str, chain, db_type: str, puml_file: str) -> str:
   return complete
 
 
+# 🔧 CAMBIO: bucle de generación + validación + corrección (modo rag_validation).
+def _generate_with_correction(chain, db_type: str, puml_file: str,
+                              max_iter: int = MAX_CORRECTION_ITERATIONS):
+  """
+  Genera migraciones con bucle de corrección (modo rag_validation).
+
+  Flujo:
+    1. Genera SQL con RAG (igual que el modo 'rag').
+    2. Valida contra el PUML.
+    3. Si hay errores y quedan iteraciones, re-invoca al LLM pasándole el
+       reporte de errores como 'extra_instructions' y vuelve a validar.
+    4. Devuelve (sql_final, n_iter, report_final, metrics_final).
+
+  Si migration_generator.py no acepta 'extra_instructions', se ejecuta
+  una sola pasada (equivalente a 'rag') y se emite un warning.
+  """
+  # Primera pasada (idéntica a 'rag')
+  sql = _generate_migrations("rag", chain, db_type, puml_file)
+  if not sql or sql.startswith("Error:"):
+    return sql, 0, None, None
+
+  report, metrics = None, None
+
+  for i in range(max_iter):
+    try:
+      # Validación silenciosa: no imprime la tabla grande en cada iteración
+      report, metrics = _validate_structure(
+        puml_file, sql, db_type, verbose=False
+      )
+    except Exception as e:
+      logger.error(f"Error validando iteración {i}: {e}")
+      return sql, i, None, None
+
+    # Éxito: no hay nada que corregir
+    if report is None or report.is_valid:
+      if i > 0:
+        print(f"✅ Validación OK tras {i} iteración(es) de corrección")
+      return sql, i, report, metrics
+
+    # ¿Podemos pasar feedback al LLM?
+    if not _HAS_EXTRA_INSTRUCTIONS:
+      logger.warning(
+        "generate_sql_migrations_with_rag no acepta 'extra_instructions'. "
+        "El bucle de corrección queda desactivado para este run "
+        "(actualiza migration_generator.py para habilitarlo)."
+      )
+      return sql, i, report, metrics
+
+    # Reportar errores y re-generar
+    n_missing_tables = len(report.missing_tables)
+    n_missing_cols = sum(len(v) for v in report.missing_columns.values())
+    n_type = sum(len(v) for v in report.type_mismatches.values())
+    n_pk = len(report.pk_mismatches)
+    n_fk = len(report.fk_mismatches)
+    print(
+      f"🔄 Corrección {i+1}/{max_iter}: "
+      f"{n_missing_tables} tablas, {n_missing_cols} cols, "
+      f"{n_type} tipos, {n_pk} PKs, {n_fk} FKs"
+    )
+
+    sql = generate_sql_migrations_with_rag(
+      chain, db_type, puml_file,
+      extra_instructions=report.summary(),
+    )
+    if not sql or sql.startswith("Error:"):
+      return sql, i + 1, report, metrics
+
+  # Agotamos las iteraciones sin converger: devolver el último estado
+  try:
+    report, metrics = _validate_structure(puml_file, sql, db_type, verbose=False)
+  except Exception as e:
+    logger.error(f"Error en validación final: {e}")
+
+  if report is not None and not report.is_valid:
+    print(f"⚠️ No convergió en {max_iter} iteraciones (quedan errores)")
+
+  return sql, max_iter, report, metrics
+
+
 def _load_vector_db(puml_file: str):
   vector_db = check_existing_vector_db()
   if should_recreate_vector_db(puml_file, vector_db):
@@ -475,11 +603,15 @@ def _load_vector_db(puml_file: str):
     print("✅ Usando base de datos vectorial existente.")
   return vector_db
 
-def _validate_structure(puml_file: str, complete_migrations: str, db_type: str):
+
+# 🔧 CAMBIO: parámetro 'verbose' para no spamear en el bucle de corrección.
+def _validate_structure(puml_file: str, complete_migrations: str, db_type: str,
+                        verbose: bool = True):
   """Valida la estructura generada contra el modelo PUML esperado."""
-  print("\n" + "=" * 60)
-  print("VALIDACIÓN ESTRUCTURAL CONTRA EL MODELO PUML")
-  print("=" * 60)
+  if verbose:
+    print("\n" + "=" * 60)
+    print("VALIDACIÓN ESTRUCTURAL CONTRA EL MODELO PUML")
+    print("=" * 60)
 
   try:
     expected_schema = parse_puml_schema(puml_file)
@@ -494,28 +626,38 @@ def _validate_structure(puml_file: str, complete_migrations: str, db_type: str):
     return expected_schema, None
 
   report = validate_schema(expected_schema, generated_schema)
-  print(report.summary())
+
+  if verbose:
+    print(report.summary())
 
   metrics = compute_structural_metrics(report)
-  print("\n" + "-" * 60)
-  print("MÉTRICAS ESTRUCTURALES")
-  print("-" * 60)
-  for key, value in metrics.items():
-    print(f"  {key}: {value}")
+
+  if verbose:
+    print("\n" + "-" * 60)
+    print("MÉTRICAS ESTRUCTURALES")
+    print("-" * 60)
+    for key, value in metrics.items():
+      print(f"  {key}: {value}")
 
   return report, metrics
 
 
+# 🔧 CAMBIO: parámetro 'correction_iters' para persistirlo en metrics_*.json.
 def _persist_reports(puml_basename: str, mode: str, db_type: str,
-                     report, metrics, tables_dict) -> None:
+                     report, metrics, tables_dict,
+                     correction_iters: int = 0) -> None:
   """Guarda el reporte de validación y las métricas en JSON dentro de tmp/."""
-  # Si el pipeline nos pasó un run_id, compartimos timestamp
   run_id = os.getenv("AI_RUN_ID")
   if run_id:
     base = f"{run_id}_{puml_basename}_{db_type}_{mode}"
   else:
     ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     base = f"{puml_basename}_{db_type}_{mode}_{ts}"
+
+  # Añadir iteraciones de corrección a las métricas (útil para el paper)
+  if metrics is not None and correction_iters is not None:
+    metrics = dict(metrics)
+    metrics["correction_iterations"] = correction_iters
 
   if report is not None:
     report_file = under_output(f"validation_report_{base}.json")
@@ -568,11 +710,23 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
 
   # 3. Generar migraciones
   print(f"🔄 Generando migraciones SQL para {puml_file} (db={db_type}, mode={mode})...")
-  #complete_migrations = _generate_migrations(mode, chain, db_type, puml_file)
-  complete_migrations = _timed(
-    "llm_generation",
-    _generate_migrations, mode, chain, db_type, puml_file
-  )
+
+  # 🔧 CAMBIO: rama con/sin bucle de corrección
+  correction_iters = 0
+  report = None
+  metrics = None
+
+  if mode == "rag_validation":
+    complete_migrations, correction_iters, report, metrics = _timed(
+      "llm_generation_with_correction",
+      _generate_with_correction, chain, db_type, puml_file
+    )
+    print(f"✓ Generación con corrección completada en {correction_iters} iteración(es)")
+  else:
+    complete_migrations = _timed(
+      "llm_generation",
+      _generate_migrations, mode, chain, db_type, puml_file
+    )
 
   if not complete_migrations or complete_migrations.startswith("Error:"):
     print("❌ No se pudieron generar migraciones.")
@@ -604,14 +758,15 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
     print("-" * 80)
     resp.append(table.__dict__)
 
-  # 6. Validación estructural (solo en rag_validation)
-  report = None
-  metrics = None
-  # report, metrics = _validate_structure(puml_file, complete_migrations, db_type)
-  report, metrics = _timed(
-    "structural_validation",
-    _validate_structure, puml_file, complete_migrations, db_type
-  )
+  # 6. Validación estructural final para el reporte
+  #    - rag_validation: ya viene del bucle -> no repetir
+  #    - llm_only / rag: validar ahora
+  if report is None:
+    report, metrics = _timed(
+      "structural_validation",
+      _validate_structure, puml_file, complete_migrations, db_type
+    )
+
   if report is None:
     print("⚠️ No se pudo completar la validación estructural.")
   elif report.is_valid:
@@ -624,7 +779,10 @@ def execute(folder_path: str, db_type: str, mode: str = "rag_validation"):
                 os.path.splitext(os.path.basename(puml_file))[0]
   save_migration_files(tables_dict, puml_basename, db_type, complete_migrations)
 
-  _persist_reports(puml_basename, mode, db_type, report, metrics, tables_dict)
+  _persist_reports(
+    puml_basename, mode, db_type, report, metrics, tables_dict,
+    correction_iters=correction_iters,
+  )
 
   return resp, True
 
@@ -678,11 +836,11 @@ if __name__ == "__main__":
     for etype, m in result["per_error_type"].items():
       print(f"  {etype}: {m}")
   elif mode == "pipeline":
-    from ai.pipeline import run_from_config                                       
+    from ai.pipeline import run_from_config
     cfg_path = sys.argv[4] if len(sys.argv) > 4 else "pipeline_config.json"
     run_from_config(cfg_path)
   else:
-    execute(folder, db, mode=mode)                                                                                                                                                                      
+    execute(folder, db, mode=mode)
 
 # ================================================================
 # Archivo: models/migration.py
@@ -865,7 +1023,7 @@ class PipelineConfig:
     benchmark_dir: str = "./benchmarks"
 
     # K para Precision@K / Recall@K del retriever
-    retrieval_k: int = 10
+    retrieval_k: int = 5
 
     # ------------------------------------------------------------------ #
     # Salida                                                             #
@@ -1345,8 +1503,11 @@ def build_retriever_stage(ctx, config):
         chunks = split_documents(content, puml_file)
         vdb = create_vector_db(chunks, puml_file)
 
-    ctx["retriever"] = create_retriever(vdb, source_file=puml_file)
-
+    # 🔧 CAMBIO: garantizar al menos K=5 docs para calcular P@5/R@5/NDCG@5
+    retriever_k = max(5, config.retrieval_k)
+    ctx["retriever"] = create_retriever(
+        vdb, source_file=puml_file, k=retriever_k
+    )
 
 # ---------------------------------------------------------------------------
 # STAGES: métricas Flores
@@ -1354,34 +1515,26 @@ def build_retriever_stage(ctx, config):
 @gen_stage("retrieval_metrics")
 def retrieval_metrics_stage(ctx, config):
     if ctx["mode"] == "llm_only":
-        return  # no aplica, sin warning
-
+        return
     if not config.benchmark_dir:
         return
-
-    path = os.path.join(
-        config.benchmark_dir,
-        f"{_benchmark_base(ctx)}_retrieval.json"
-    )
+    path = os.path.join(config.benchmark_dir,
+                        f"{_benchmark_base(ctx)}_retrieval.json")
     if not os.path.exists(path):
         logger.warning("Sin benchmark de retrieval: %s", path)
         return
-
     with open(path, encoding="utf-8") as f:
         bench = json.load(f)
-
     retriever = ctx.get("retriever")
     if retriever is None:
         logger.warning("No hay retriever en ctx; se omite retrieval_metrics.")
         return
-
     try:
         ctx["retrieval_metrics"] = compute_retrieval_metrics(
             bench["queries"], retriever, k=config.retrieval_k
         )
     except Exception as e:
         logger.error("retrieval_metrics falló: %s", e)
-
 
 @gen_stage("execution_metrics")
 def execution_metrics_stage(ctx, config):
@@ -2146,8 +2299,22 @@ from ai.paths import under_output
 logger = logging.getLogger(__name__)
 
 
-def generate_sql_migrations_with_rag(chain, db_type: str, puml_file: str) -> str:
-  """Genera migraciones usando la cadena RAG."""
+def generate_sql_migrations_with_rag(chain, db_type: str, puml_file: str,
+                                     extra_instructions: str = "") -> str:
+  """
+  Genera migraciones usando la cadena RAG.
+
+  Args:
+    chain: cadena RAG (retriever | prompt | llm | parser).
+    db_type: 'sqlite' | 'mysql' | 'postgres'.
+    puml_file: ruta al archivo .puml del modelo.
+    extra_instructions: feedback de errores de la iteración anterior
+      (usado por el bucle de corrección de rag_validation en ai/main.py).
+      Si está vacío, el comportamiento es idéntico al modo 'rag'.
+
+  Returns:
+    Texto con las sentencias SQL de migración, o "Error: ..." si falla.
+  """
   with open(puml_file, 'r', encoding='utf-8') as f:
     puml_content = f.read()
 
@@ -2200,6 +2367,17 @@ REQUISITOS TÉCNICOS:
 
 RESPONDE ÚNICAMENTE con las sentencias SQL en el formato especificado, sin explicaciones.
 """
+
+  # Feedback de errores para el bucle de corrección (rag_validation)
+  if extra_instructions:
+    query += (
+      f"\n\nERRORES DETECTADOS EN LA ITERACIÓN ANTERIOR:\n"
+      f"{extra_instructions}\n\n"
+      f"Corrige TODOS los errores listados y devuelve el SQL COMPLETO corregido "
+      f"(todas las tablas, no solo las modificadas). No omitas tablas que ya "
+      f"estaban correctas: la respuesta debe ser el script completo y válido."
+    )
+
   logger.info("Generating SQL migrations...")
   try:
     response = chain.invoke(query)
@@ -2352,7 +2530,6 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
     return
 
   run_id = os.getenv("AI_RUN_ID")
-  # Si el pipeline nos pasó un run_id, lo usamos para agrupar todo
   if run_id:
     complete_filename = under_output(
       f"complete_migrations_{run_id}_{puml_basename}_{db_type}.sql"
@@ -2360,8 +2537,7 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
     migrations_dir = under_output(
       f"migrations_{run_id}_{puml_basename}_{db_type}"
     )
-    # ts base estable por corrida (mismo para todas las tablas)
-    base_ts = run_id  # ya tiene formato YYYYMMDD_HHMMSS
+    base_ts = run_id
   else:
     complete_filename = under_output(
       f"complete_migrations_{puml_basename}_{db_type}.sql"
@@ -2386,7 +2562,6 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
   os.makedirs(migrations_dir, exist_ok=True)
 
   for key, table in tables_dict.items():
-    # Con run_id, ts es un prefijo estable; sin él, se le suma el índice
     if run_id:
       ts = f"{base_ts}_{key:02d}"
     else:
@@ -2395,6 +2570,7 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
     with open(filename, 'w', encoding='utf-8') as f:
       f.write(table.complete_block)
     print(f"✓ Migración {key} ({table.table_name}) guardada en: {filename}")
+
 
 def generate_sql_migrations_direct(chain, db_type: str, puml_file: str) -> str:
   """
@@ -2732,8 +2908,8 @@ def create_llm() -> ChatOllama:
   )
 
 
-def create_retriever(vector_db, source_file: str | None = None):
-    search_kwargs = {"k": 3}
+def create_retriever(vector_db, source_file: str | None = None, k: int = 5):
+    search_kwargs = {"k": k}
     if source_file:
         search_kwargs["filter"] = {"source_file": os.path.abspath(source_file)}
     base = vector_db.as_retriever(search_kwargs=search_kwargs)
@@ -2743,7 +2919,7 @@ def create_retriever(vector_db, source_file: str | None = None):
 
     def _smart_retriever(query):
         if isinstance(query, str) and len(query) > 500:
-            return base.invoke(query)   # query largo → retrieval directo
+            return base.invoke(query)
         llm = create_llm()
         mq = MultiQueryRetriever.from_llm(base, llm, prompt=QUERY_PROMPT)
         return mq.invoke(query)

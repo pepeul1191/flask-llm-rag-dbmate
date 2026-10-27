@@ -28,23 +28,11 @@ def create_llm() -> ChatOllama:
   )
 
 
-def create_retriever(vector_db, source_file: str | None = None):
-    search_kwargs = {"k": 3}
+def create_retriever(vector_db, source_file: str | None = None, k: int = 5):
+    search_kwargs = {"k": k}
     if source_file:
         search_kwargs["filter"] = {"source_file": os.path.abspath(source_file)}
-    base = vector_db.as_retriever(search_kwargs=search_kwargs)
-
-    # Solo activar MultiQuery si el query es "corto" (menos de 500 chars)
-    from langchain_core.runnables import RunnableLambda
-
-    def _smart_retriever(query):
-        if isinstance(query, str) and len(query) > 500:
-            return base.invoke(query)   # query largo → retrieval directo
-        llm = create_llm()
-        mq = MultiQueryRetriever.from_llm(base, llm, prompt=QUERY_PROMPT)
-        return mq.invoke(query)
-
-    return RunnableLambda(_smart_retriever)
+    return vector_db.as_retriever(search_kwargs=search_kwargs)
 
 
 def create_chain(retriever):

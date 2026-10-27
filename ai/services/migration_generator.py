@@ -13,8 +13,22 @@ from ai.paths import under_output
 logger = logging.getLogger(__name__)
 
 
-def generate_sql_migrations_with_rag(chain, db_type: str, puml_file: str) -> str:
-  """Genera migraciones usando la cadena RAG."""
+def generate_sql_migrations_with_rag(chain, db_type: str, puml_file: str,
+                                     extra_instructions: str = "") -> str:
+  """
+  Genera migraciones usando la cadena RAG.
+
+  Args:
+    chain: cadena RAG (retriever | prompt | llm | parser).
+    db_type: 'sqlite' | 'mysql' | 'postgres'.
+    puml_file: ruta al archivo .puml del modelo.
+    extra_instructions: feedback de errores de la iteración anterior
+      (usado por el bucle de corrección de rag_validation en ai/main.py).
+      Si está vacío, el comportamiento es idéntico al modo 'rag'.
+
+  Returns:
+    Texto con las sentencias SQL de migración, o "Error: ..." si falla.
+  """
   with open(puml_file, 'r', encoding='utf-8') as f:
     puml_content = f.read()
 
@@ -67,6 +81,17 @@ REQUISITOS TÉCNICOS:
 
 RESPONDE ÚNICAMENTE con las sentencias SQL en el formato especificado, sin explicaciones.
 """
+
+  # Feedback de errores para el bucle de corrección (rag_validation)
+  if extra_instructions:
+    query += (
+      f"\n\nERRORES DETECTADOS EN LA ITERACIÓN ANTERIOR:\n"
+      f"{extra_instructions}\n\n"
+      f"Corrige TODOS los errores listados y devuelve el SQL COMPLETO corregido "
+      f"(todas las tablas, no solo las modificadas). No omitas tablas que ya "
+      f"estaban correctas: la respuesta debe ser el script completo y válido."
+    )
+
   logger.info("Generating SQL migrations...")
   try:
     response = chain.invoke(query)
@@ -219,7 +244,6 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
     return
 
   run_id = os.getenv("AI_RUN_ID")
-  # Si el pipeline nos pasó un run_id, lo usamos para agrupar todo
   if run_id:
     complete_filename = under_output(
       f"complete_migrations_{run_id}_{puml_basename}_{db_type}.sql"
@@ -227,8 +251,7 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
     migrations_dir = under_output(
       f"migrations_{run_id}_{puml_basename}_{db_type}"
     )
-    # ts base estable por corrida (mismo para todas las tablas)
-    base_ts = run_id  # ya tiene formato YYYYMMDD_HHMMSS
+    base_ts = run_id
   else:
     complete_filename = under_output(
       f"complete_migrations_{puml_basename}_{db_type}.sql"
@@ -253,7 +276,6 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
   os.makedirs(migrations_dir, exist_ok=True)
 
   for key, table in tables_dict.items():
-    # Con run_id, ts es un prefijo estable; sin él, se le suma el índice
     if run_id:
       ts = f"{base_ts}_{key:02d}"
     else:
@@ -262,6 +284,7 @@ def save_migration_files(tables_dict, puml_basename, db_type, complete_migration
     with open(filename, 'w', encoding='utf-8') as f:
       f.write(table.complete_block)
     print(f"✓ Migración {key} ({table.table_name}) guardada en: {filename}")
+
 
 def generate_sql_migrations_direct(chain, db_type: str, puml_file: str) -> str:
   """
