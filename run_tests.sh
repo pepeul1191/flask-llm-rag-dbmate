@@ -24,7 +24,7 @@ DB_TYPE="${2:-sqlite}"
 BASE_CFG="${3:-pipeline_mysql.json}"
 
 # ---------- Modelo Ollama fijado por el script (NO se lee del .env) ----------
-OLLAMA_MODEL_SET="qwen2.5:3b"
+OLLAMA_MODEL_SET="phi3"
 export OLLAMA_MODEL="$OLLAMA_MODEL_SET"
 
 # ---------- Log con timestamp + motor de BD + modelo LLM ----------

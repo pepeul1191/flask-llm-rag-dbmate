@@ -1,20 +1,12 @@
-"""
-ARCHIVO GENERADO AUTOMÁTICAMENTE — NO EDITAR A MANO
-Fusión de los archivos .py de 'ai/'
-Excluidos: draft.py
-"""
+# ================================================================
+# Archivo generado automáticamente por merge_ai.sh
+# Fecha: 2026-10-26 21:54:54
+# NO EDITAR MANUALMENTE - se regenera en cada ejecución
+# ================================================================
 
-
-# ==========================================================================
-# ARCHIVO: __init__.py
-# ==========================================================================
-
-
-
-# ==========================================================================
-# ARCHIVO: env.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: env.py
+# ================================================================
 # ai/env.py
 """
 Carga .env y expone helpers de configuración.
@@ -43,16 +35,367 @@ def flores_enabled(metric: str) -> bool:
 def flores_export_enabled() -> bool:
     return os.getenv("AI_FLORES_EXPORT", "1") == "1"
 
-# ==========================================================================
-# ARCHIVO: main.py
-# ==========================================================================
+# ================================================================
+# Archivo: evaluation/migration_metrics.py
+# ================================================================
+# ai/evaluation/migration_metrics.py
+"""
+EX y FLEX adaptadas a migraciones SQL.
 
+- EX  (Execution Accuracy): la migración generada y la gold ejecutan lo mismo
+                             (mismo conjunto de tablas, columnas, tipos, PKs, FKs).
+- FLEX (False-Less Execution): un LLM juzga si la migración es semánticamente
+                             equivalente a la gold, aunque el texto difiera.
+"""
+import re
+import logging
+from typing import Dict
+from ai.services.puml_parser import parse_puml_schema
+from ai.services.sql_parser import parse_sql_schema
+
+logger = logging.getLogger(__name__)
+
+
+def _normalize_sql(sql: str) -> str:
+    sql = re.sub(r'--.*?$', '', sql, flags=re.MULTILINE)
+    sql = re.sub(r'\s+', ' ', sql)
+    return sql.strip().lower()
+
+
+def compute_ex(generated_sql: str, gold_sql: str, db_type: str) -> int:
+    """
+    EX=1 si generated y gold producen el mismo esquema (mismo conjunto de
+    tablas/columnas/tipos/PKs/FKs). Es la versión SQL del EX de Spider.
+    """
+    try:
+        gen_schema = parse_sql_schema(generated_sql, db_type)
+        gold_schema = parse_sql_schema(gold_sql, db_type)
+    except Exception as e:
+        logger.error("EX parse error: %s", e)
+        return 0
+
+    gen_sig = _schema_signature(gen_schema)
+    gold_sig = _schema_signature(gold_schema)
+    return 1 if gen_sig == gold_sig else 0
+
+
+def _schema_signature(schema) -> set:
+    """Firma estructural: (tabla, col, tipo, es_pk) + (tabla, fk_col, ref)."""
+    sig = set()
+    for tname, t in schema.tables.items():
+        for cname, c in t.columns.items():
+            sig.add((tname, cname, c.type, c.is_pk))
+        for fk in t.foreign_keys:
+            sig.add((tname, "FK", fk.column, fk.ref_table, fk.ref_column))
+    return sig
+
+
+FLEX_PROMPT = """Eres un experto en bases de datos.
+
+Compara estas dos migraciones SQL y decide si son SEMÁNTICAMENTE EQUIVALENTES
+(mismo esquema resultante: mismas tablas, columnas, tipos, PKs y FKs),
+aunque el texto no sea idéntico.
+
+MIGRACIÓN A (referencia):
+{gold}
+
+MIGRACIÓN B (candidata):
+{generated}
+
+Responde SOLO con una palabra: EQUIVALENTES o DIFERENTES."""
+
+
+def compute_flex(generated_sql: str, gold_sql: str, chain) -> int:
+    if chain is None:
+        return 0
+    prompt = FLEX_PROMPT.format(gold=gold_sql, generated=generated_sql)
+
+    verdict = None
+    try:
+        verdict = chain.invoke({"input": prompt})
+    except Exception as e1:
+        try:
+            verdict = chain.invoke({
+                "context": "(sin contexto RAG)",
+                "question": prompt,
+            })
+        except Exception as e2:
+            logger.error("FLEX invoke error: %s | %s", e1, e2)
+            return 0
+
+    text = (verdict or "").strip().upper()
+
+    # Matcher robusto
+    positives = ("EQUIVALENTES", "EQUIVALENT", "SÍ", "SI", "YES", "TRUE", "1")
+    negatives = ("DIFERENTES", "DIFERENT", "NO", "FALSE", "0")
+
+    # Primero buscar negativos (más específicos)
+    for neg in negatives:
+        if text.startswith(neg):
+            return 0
+
+    # Luego buscar positivos
+    for pos in positives:
+        if text.startswith(pos):
+            return 1
+
+    # Si no matchea nada, buscar en el texto completo
+    if "EQUIVALENT" in text and "DIFERENT" not in text:
+        return 1
+
+    logger.warning("FLEX verdict no reconocido: %r", text[:100])
+    return 0
+
+
+def compute_execution_metrics(
+    samples: list[Dict],
+    db_type: str,
+    chain=None,
+) -> Dict:
+    """
+    samples: [{"id": "...", "generated": "...", "gold": "..."}]
+    """
+    ex_scores, flex_scores = [], []
+    per_sample = []
+    for s in samples:
+        ex = compute_ex(s["generated"], s["gold"], db_type)
+        flex = compute_flex(s["generated"], s["gold"], chain) if chain else None
+        ex_scores.append(ex)
+        if flex is not None:
+            flex_scores.append(flex)
+        per_sample.append({
+            "id": s.get("id"),
+            "EX": ex,
+            "FLEX": flex,
+        })
+
+    n = len(samples) or 1
+    return {
+        "n_samples": len(samples),
+        "EX": round(sum(ex_scores) / n, 4),
+        "FLEX": round(sum(flex_scores) / n, 4) if flex_scores else None,
+        "per_sample": per_sample,
+    }
+
+# ================================================================
+# Archivo: evaluation/nlg_metrics.py
+# ================================================================
+"""
+BERTScore F1, BLEU, ROUGE (F1), comparando migración generada vs gold.
+"""
+# [dedup] import logging
+
+logger = logging.getLogger(__name__)
+
+
+def compute_nlg_metrics(generations: list[str], references: list[str]) -> dict:
+    """
+    Requiere:
+      pip install bert-score sacrebleu rouge-score
+    """
+    out = {}
+    try:
+        from bert_score import score as bscore
+        # Forzar CPU y modelo pequeño
+        P, R, F1 = bscore(
+            generations, references,
+            lang="en",
+            verbose=False,
+            device="cpu",                          # ← CPU en lugar de GPU
+            model_type="distilbert-base-uncased",  # ← modelo 6x más pequeño
+        )
+        out["BERTScore_F1"] = round(float(F1.mean()), 4)
+    except Exception as e:
+        logger.warning("BERTScore no disponible: %s", e)
+        out["BERTScore_F1"] = None
+
+    try:
+        from sacrebleu.metrics import BLEU
+        bleu = BLEU()
+        out["BLEU"] = round(bleu.corpus_score(generations, [references]).score / 100, 4)
+    except Exception as e:
+        logger.warning("BLEU no disponible: %s", e)
+        out["BLEU"] = None
+
+    try:
+        from rouge_score import rouge_scorer
+        scorer = rouge_scorer.RougeScorer(["rouge1", "rouge2", "rougeL"], use_stemmer=True)
+        r1, r2, rl = [], [], []
+        for g, r in zip(generations, references):
+            s = scorer.score(r, g)
+            r1.append(s["rouge1"].fmeasure)
+            r2.append(s["rouge2"].fmeasure)
+            rl.append(s["rougeL"].fmeasure)
+        n = len(generations) or 1
+        out["ROUGE-1_F1"] = round(sum(r1) / n, 4)
+        out["ROUGE-2_F1"] = round(sum(r2) / n, 4)
+        out["ROUGE-L_F1"] = round(sum(rl) / n, 4)
+    except Exception as e:
+        logger.warning("ROUGE no disponible: %s", e)
+        out["ROUGE-1_F1"] = out["ROUGE-2_F1"] = out["ROUGE-L_F1"] = None
+
+    return out
+
+# ================================================================
+# Archivo: evaluation/ragas_lite.py
+# ================================================================
+# ai/evaluation/ragas_lite.py
+"""
+Versión ligera de Faithfulness (RAGAS) sin instalar ragas.
+
+Faithfulness = |statements supported by context| / |statements in answer|
+
+Aproximación: descompone la migración generada en "unidades estructurales"
+(tabla, columna, tipo, PK, FK) y verifica cuántas aparecen en el PUML.
+Esto es una adaptación directa del Faithfulness de RAGAS al dominio de
+esquemas, coherente con el paper de Flores et al.
+"""
+# [dedup] import logging
+# [dedup] from ai.services.puml_parser import parse_puml_schema
+# [dedup] from ai.services.sql_parser import parse_sql_schema
+
+logger = logging.getLogger(__name__)
+
+
+def compute_faithfulness(generated_sql: str, puml_file: str, db_type: str) -> dict:
+    """
+    Cuenta cuántos elementos estructurales de la migración están respaldados
+    por el PUML (evidence). El resto se consideran "no soportados" = hallucination.
+    """
+    try:
+        expected = parse_puml_schema(puml_file)
+        generated = parse_sql_schema(generated_sql, db_type)
+    except Exception as e:
+        logger.error("Faithfulness parse error: %s", e)
+        return {"faithfulness": None, "supported": 0, "total": 0}
+
+    # Universo de "statements" = cada (tabla, col, tipo, is_pk) generado.
+    statements = []
+    for tname, t in generated.tables.items():
+        for cname, c in t.columns.items():
+            statements.append((tname, cname, c.type, c.is_pk))
+        for fk in t.foreign_keys:
+            statements.append((tname, "FK", fk.column, fk.ref_table))
+
+    # Universo de evidencia = lo mismo pero extraído del PUML.
+    evidence = set()
+    for tname, t in expected.tables.items():
+        for cname, c in t.columns.items():
+            evidence.add((tname, cname, c.type, c.is_pk))
+        for fk in t.foreign_keys:
+            evidence.add((tname, "FK", fk.column, fk.ref_table))
+
+    supported = sum(1 for s in statements if s in evidence)
+    total = len(statements)
+    return {
+        "faithfulness": round(supported / total, 4) if total else 0.0,
+        "supported": supported,
+        "total": total,
+    }
+
+# ================================================================
+# Archivo: evaluation/retrieval_metrics.py
+# ================================================================
+# ai/evaluation/retrieval_metrics.py
+"""
+Precision@K, Recall@K, MAP, MRR, Top-1 Accuracy.
+Idénticas a las de Flores et al. (2025), adaptadas al retriever del PUML.
+"""
+# [dedup] import logging
+from typing import List, Dict
+
+logger = logging.getLogger(__name__)
+
+
+def _precision_at_k(retrieved: List[str], relevant: set, k: int) -> float:
+    topk = retrieved[:k]
+    return sum(1 for r in topk if r in relevant) / k if k else 0.0
+
+
+def _recall_at_k(retrieved: List[str], relevant: set, k: int) -> float:
+    if not relevant:
+        return 0.0
+    topk = retrieved[:k]
+    return sum(1 for r in topk if r in relevant) / len(relevant)
+
+
+def _average_precision(retrieved: List[str], relevant: set) -> float:
+    if not relevant:
+        return 0.0
+    hits, precisions = 0, []
+    for i, r in enumerate(retrieved, 1):
+        if r in relevant:
+            hits += 1
+            precisions.append(hits / i)
+    return sum(precisions) / len(relevant) if precisions else 0.0
+
+
+def _reciprocal_rank(retrieved: List[str], relevant: set) -> float:
+    for i, r in enumerate(retrieved, 1):
+        if r in relevant:
+            return 1.0 / i
+    return 0.0
+
+
+def compute_retrieval_metrics(
+    queries: List[Dict],
+    retriever,
+    k: int = 10,
+) -> Dict:
+    """
+    queries: [{"query": "...", "relevant_chunks": ["chunk_3", "chunk_5"]}]
+    retriever: el de create_retriever() de ai.services.retrieval
+
+    Devuelve agregados MAP, MRR, P@K, R@K, Top-1 y detalle por query.
+    """
+    p_at_k, r_at_k, aps, rrs, top1 = [], [], [], [], []
+    per_query = []
+
+    for q in queries:
+        docs = retriever.invoke(q["query"])
+        retrieved_ids = [
+            d.metadata.get("chunk_id") for d in docs
+        ][:k]
+        relevant = set(q["relevant_chunks"])
+
+        p = _precision_at_k(retrieved_ids, relevant, k)
+        r = _recall_at_k(retrieved_ids, relevant, k)
+        ap = _average_precision(retrieved_ids, relevant)
+        rr = _reciprocal_rank(retrieved_ids, relevant)
+        t1 = 1.0 if retrieved_ids and retrieved_ids[0] in relevant else 0.0
+
+        p_at_k.append(p); r_at_k.append(r); aps.append(ap)
+        rrs.append(rr); top1.append(t1)
+
+        per_query.append({
+            "query": q["query"],
+            "retrieved": retrieved_ids,
+            "relevant": list(relevant),
+            "P@K": round(p, 4), "R@K": round(r, 4),
+            "AP": round(ap, 4), "RR": round(rr, 4), "Top1": t1,
+        })
+
+    n = len(queries) or 1
+    return {
+        "K": k,
+        "n_queries": len(queries),
+        "Precision@K": round(sum(p_at_k) / n, 4),
+        "Recall@K":    round(sum(r_at_k) / n, 4),
+        "MAP":         round(sum(aps) / n, 4),
+        "MRR":         round(sum(rrs) / n, 4),
+        "Top1":        round(sum(top1) / n, 4),
+        "per_query": per_query,
+    }
+
+# ================================================================
+# Archivo: main.py
+# ================================================================
 #!/usr/bin/env python
-import os
+# [dedup] import os
 import sys
 import json
 import time
-import logging
+# [dedup] import logging
 import datetime
 from ai import env
 
@@ -72,8 +415,8 @@ from ai.services.migration_generator import (
   save_migration_files
 )
 from ai.services.fallback import generate_direct_migrations
-from ai.services.puml_parser import parse_puml_schema
-from ai.services.sql_parser import parse_sql_schema
+# [dedup] from ai.services.puml_parser import parse_puml_schema
+# [dedup] from ai.services.sql_parser import parse_sql_schema
 from ai.services.structural_validator import validate_schema
 from ai.services.evaluation import compute_structural_metrics
 
@@ -341,422 +684,9 @@ if __name__ == "__main__":
   else:
     execute(folder, db, mode=mode)                                                                                                                                                                      
 
-# ==========================================================================
-# ARCHIVO: paths.py
-# ==========================================================================
-
-# ai/paths.py
-import os
-
-DEFAULT_OUTPUT_DIR = "./tmp"
-
-
-def output_base() -> str:
-    """
-    Devuelve el directorio base donde se escriben todos los artefactos.
-    Se controla con la variable de entorno APP_OUTPUT_DIR.
-    Por defecto: ./tmp (relativo al cwd desde donde se ejecuta).
-    """
-    base = os.environ.get("APP_OUTPUT_DIR", DEFAULT_OUTPUT_DIR)
-    os.makedirs(base, exist_ok=True)
-    return base
-
-
-def under_output(*parts: str) -> str:
-    """Une el base con los fragmentos dados, creando la carpeta si hace falta."""
-    path = os.path.join(output_base(), *parts)
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    return path
-
-# ==========================================================================
-# ARCHIVO: evaluation/__init__.py
-# ==========================================================================
-
-
-
-# ==========================================================================
-# ARCHIVO: evaluation/migration_metrics.py
-# ==========================================================================
-
-# ai/evaluation/migration_metrics.py
-"""
-EX y FLEX adaptadas a migraciones SQL.
-
-- EX  (Execution Accuracy): la migración generada y la gold ejecutan lo mismo
-                             (mismo conjunto de tablas, columnas, tipos, PKs, FKs).
-- FLEX (False-Less Execution): un LLM juzga si la migración es semánticamente
-                             equivalente a la gold, aunque el texto difiera.
-"""
-import re
-import logging
-from typing import Dict
-from ai.services.puml_parser import parse_puml_schema
-from ai.services.sql_parser import parse_sql_schema
-
-logger = logging.getLogger(__name__)
-
-
-def _normalize_sql(sql: str) -> str:
-    sql = re.sub(r'--.*?$', '', sql, flags=re.MULTILINE)
-    sql = re.sub(r'\s+', ' ', sql)
-    return sql.strip().lower()
-
-
-def compute_ex(generated_sql: str, gold_sql: str, db_type: str) -> int:
-    """
-    EX=1 si generated y gold producen el mismo esquema (mismo conjunto de
-    tablas/columnas/tipos/PKs/FKs). Es la versión SQL del EX de Spider.
-    """
-    try:
-        gen_schema = parse_sql_schema(generated_sql, db_type)
-        gold_schema = parse_sql_schema(gold_sql, db_type)
-    except Exception as e:
-        logger.error("EX parse error: %s", e)
-        return 0
-
-    gen_sig = _schema_signature(gen_schema)
-    gold_sig = _schema_signature(gold_schema)
-    return 1 if gen_sig == gold_sig else 0
-
-
-def _schema_signature(schema) -> set:
-    """Firma estructural: (tabla, col, tipo, es_pk) + (tabla, fk_col, ref)."""
-    sig = set()
-    for tname, t in schema.tables.items():
-        for cname, c in t.columns.items():
-            sig.add((tname, cname, c.type, c.is_pk))
-        for fk in t.foreign_keys:
-            sig.add((tname, "FK", fk.column, fk.ref_table, fk.ref_column))
-    return sig
-
-
-FLEX_PROMPT = """Eres un experto en bases de datos.
-
-Compara estas dos migraciones SQL y decide si son SEMÁNTICAMENTE EQUIVALENTES
-(mismo esquema resultante: mismas tablas, columnas, tipos, PKs y FKs),
-aunque el texto no sea idéntico.
-
-MIGRACIÓN A (referencia):
-{gold}
-
-MIGRACIÓN B (candidata):
-{generated}
-
-Responde SOLO con una palabra: EQUIVALENTES o DIFERENTES."""
-
-
-def compute_flex(generated_sql: str, gold_sql: str, chain) -> int:
-    if chain is None:
-        return 0
-    prompt = FLEX_PROMPT.format(gold=gold_sql, generated=generated_sql)
-
-    verdict = None
-    try:
-        verdict = chain.invoke({"input": prompt})
-    except Exception as e1:
-        try:
-            verdict = chain.invoke({
-                "context": "(sin contexto RAG)",
-                "question": prompt,
-            })
-        except Exception as e2:
-            logger.error("FLEX invoke error: %s | %s", e1, e2)
-            return 0
-
-    text = (verdict or "").strip().upper()
-
-    # Matcher robusto
-    positives = ("EQUIVALENTES", "EQUIVALENT", "SÍ", "SI", "YES", "TRUE", "1")
-    negatives = ("DIFERENTES", "DIFERENT", "NO", "FALSE", "0")
-
-    # Primero buscar negativos (más específicos)
-    for neg in negatives:
-        if text.startswith(neg):
-            return 0
-
-    # Luego buscar positivos
-    for pos in positives:
-        if text.startswith(pos):
-            return 1
-
-    # Si no matchea nada, buscar en el texto completo
-    if "EQUIVALENT" in text and "DIFERENT" not in text:
-        return 1
-
-    logger.warning("FLEX verdict no reconocido: %r", text[:100])
-    return 0
-
-
-def compute_execution_metrics(
-    samples: list[Dict],
-    db_type: str,
-    chain=None,
-) -> Dict:
-    """
-    samples: [{"id": "...", "generated": "...", "gold": "..."}]
-    """
-    ex_scores, flex_scores = [], []
-    per_sample = []
-    for s in samples:
-        ex = compute_ex(s["generated"], s["gold"], db_type)
-        flex = compute_flex(s["generated"], s["gold"], chain) if chain else None
-        ex_scores.append(ex)
-        if flex is not None:
-            flex_scores.append(flex)
-        per_sample.append({
-            "id": s.get("id"),
-            "EX": ex,
-            "FLEX": flex,
-        })
-
-    n = len(samples) or 1
-    return {
-        "n_samples": len(samples),
-        "EX": round(sum(ex_scores) / n, 4),
-        "FLEX": round(sum(flex_scores) / n, 4) if flex_scores else None,
-        "per_sample": per_sample,
-    }
-
-# ==========================================================================
-# ARCHIVO: evaluation/nlg_metrics.py
-# ==========================================================================
-
-"""
-BERTScore F1, BLEU, ROUGE (F1), comparando migración generada vs gold.
-"""
-import logging
-
-logger = logging.getLogger(__name__)
-
-
-def compute_nlg_metrics(generations: list[str], references: list[str]) -> dict:
-    """
-    Requiere:
-      pip install bert-score sacrebleu rouge-score
-    """
-    out = {}
-    try:
-        from bert_score import score as bscore
-        # Forzar CPU y modelo pequeño
-        P, R, F1 = bscore(
-            generations, references,
-            lang="en",
-            verbose=False,
-            device="cpu",                          # ← CPU en lugar de GPU
-            model_type="distilbert-base-uncased",  # ← modelo 6x más pequeño
-        )
-        out["BERTScore_F1"] = round(float(F1.mean()), 4)
-    except Exception as e:
-        logger.warning("BERTScore no disponible: %s", e)
-        out["BERTScore_F1"] = None
-
-    try:
-        from sacrebleu.metrics import BLEU
-        bleu = BLEU()
-        out["BLEU"] = round(bleu.corpus_score(generations, [references]).score / 100, 4)
-    except Exception as e:
-        logger.warning("BLEU no disponible: %s", e)
-        out["BLEU"] = None
-
-    try:
-        from rouge_score import rouge_scorer
-        scorer = rouge_scorer.RougeScorer(["rouge1", "rouge2", "rougeL"], use_stemmer=True)
-        r1, r2, rl = [], [], []
-        for g, r in zip(generations, references):
-            s = scorer.score(r, g)
-            r1.append(s["rouge1"].fmeasure)
-            r2.append(s["rouge2"].fmeasure)
-            rl.append(s["rougeL"].fmeasure)
-        n = len(generations) or 1
-        out["ROUGE-1_F1"] = round(sum(r1) / n, 4)
-        out["ROUGE-2_F1"] = round(sum(r2) / n, 4)
-        out["ROUGE-L_F1"] = round(sum(rl) / n, 4)
-    except Exception as e:
-        logger.warning("ROUGE no disponible: %s", e)
-        out["ROUGE-1_F1"] = out["ROUGE-2_F1"] = out["ROUGE-L_F1"] = None
-
-    return out
-
-# ==========================================================================
-# ARCHIVO: evaluation/ragas_lite.py
-# ==========================================================================
-
-# ai/evaluation/ragas_lite.py
-"""
-Versión ligera de Faithfulness (RAGAS) sin instalar ragas.
-
-Faithfulness = |statements supported by context| / |statements in answer|
-
-Aproximación: descompone la migración generada en "unidades estructurales"
-(tabla, columna, tipo, PK, FK) y verifica cuántas aparecen en el PUML.
-Esto es una adaptación directa del Faithfulness de RAGAS al dominio de
-esquemas, coherente con el paper de Flores et al.
-"""
-import logging
-from ai.services.puml_parser import parse_puml_schema
-from ai.services.sql_parser import parse_sql_schema
-
-logger = logging.getLogger(__name__)
-
-
-def compute_faithfulness(generated_sql: str, puml_file: str, db_type: str) -> dict:
-    """
-    Cuenta cuántos elementos estructurales de la migración están respaldados
-    por el PUML (evidence). El resto se consideran "no soportados" = hallucination.
-    """
-    try:
-        expected = parse_puml_schema(puml_file)
-        generated = parse_sql_schema(generated_sql, db_type)
-    except Exception as e:
-        logger.error("Faithfulness parse error: %s", e)
-        return {"faithfulness": None, "supported": 0, "total": 0}
-
-    # Universo de "statements" = cada (tabla, col, tipo, is_pk) generado.
-    statements = []
-    for tname, t in generated.tables.items():
-        for cname, c in t.columns.items():
-            statements.append((tname, cname, c.type, c.is_pk))
-        for fk in t.foreign_keys:
-            statements.append((tname, "FK", fk.column, fk.ref_table))
-
-    # Universo de evidencia = lo mismo pero extraído del PUML.
-    evidence = set()
-    for tname, t in expected.tables.items():
-        for cname, c in t.columns.items():
-            evidence.add((tname, cname, c.type, c.is_pk))
-        for fk in t.foreign_keys:
-            evidence.add((tname, "FK", fk.column, fk.ref_table))
-
-    supported = sum(1 for s in statements if s in evidence)
-    total = len(statements)
-    return {
-        "faithfulness": round(supported / total, 4) if total else 0.0,
-        "supported": supported,
-        "total": total,
-    }
-
-# ==========================================================================
-# ARCHIVO: evaluation/retrieval_metrics.py
-# ==========================================================================
-
-# ai/evaluation/retrieval_metrics.py
-"""
-Precision@K, Recall@K, MAP, MRR, Top-1 Accuracy.
-Idénticas a las de Flores et al. (2025), adaptadas al retriever del PUML.
-"""
-import logging
-from typing import List, Dict
-
-logger = logging.getLogger(__name__)
-
-
-def _precision_at_k(retrieved: List[str], relevant: set, k: int) -> float:
-    topk = retrieved[:k]
-    return sum(1 for r in topk if r in relevant) / k if k else 0.0
-
-
-def _recall_at_k(retrieved: List[str], relevant: set, k: int) -> float:
-    if not relevant:
-        return 0.0
-    topk = retrieved[:k]
-    return sum(1 for r in topk if r in relevant) / len(relevant)
-
-
-def _average_precision(retrieved: List[str], relevant: set) -> float:
-    if not relevant:
-        return 0.0
-    hits, precisions = 0, []
-    for i, r in enumerate(retrieved, 1):
-        if r in relevant:
-            hits += 1
-            precisions.append(hits / i)
-    return sum(precisions) / len(relevant) if precisions else 0.0
-
-
-def _reciprocal_rank(retrieved: List[str], relevant: set) -> float:
-    for i, r in enumerate(retrieved, 1):
-        if r in relevant:
-            return 1.0 / i
-    return 0.0
-
-
-def compute_retrieval_metrics(
-    queries: List[Dict],
-    retriever,
-    k: int = 10,
-) -> Dict:
-    """
-    queries: [{"query": "...", "relevant_chunks": ["chunk_3", "chunk_5"]}]
-    retriever: el de create_retriever() de ai.services.retrieval
-
-    Devuelve agregados MAP, MRR, P@K, R@K, Top-1 y detalle por query.
-    """
-    p_at_k, r_at_k, aps, rrs, top1 = [], [], [], [], []
-    per_query = []
-
-    for q in queries:
-        docs = retriever.invoke(q["query"])
-        retrieved_ids = [
-            d.metadata.get("chunk_id") for d in docs
-        ][:k]
-        relevant = set(q["relevant_chunks"])
-
-        p = _precision_at_k(retrieved_ids, relevant, k)
-        r = _recall_at_k(retrieved_ids, relevant, k)
-        ap = _average_precision(retrieved_ids, relevant)
-        rr = _reciprocal_rank(retrieved_ids, relevant)
-        t1 = 1.0 if retrieved_ids and retrieved_ids[0] in relevant else 0.0
-
-        p_at_k.append(p); r_at_k.append(r); aps.append(ap)
-        rrs.append(rr); top1.append(t1)
-
-        per_query.append({
-            "query": q["query"],
-            "retrieved": retrieved_ids,
-            "relevant": list(relevant),
-            "P@K": round(p, 4), "R@K": round(r, 4),
-            "AP": round(ap, 4), "RR": round(rr, 4), "Top1": t1,
-        })
-
-    n = len(queries) or 1
-    return {
-        "K": k,
-        "n_queries": len(queries),
-        "Precision@K": round(sum(p_at_k) / n, 4),
-        "Recall@K":    round(sum(r_at_k) / n, 4),
-        "MAP":         round(sum(aps) / n, 4),
-        "MRR":         round(sum(rrs) / n, 4),
-        "Top1":        round(sum(top1) / n, 4),
-        "per_query": per_query,
-    }
-
-# ==========================================================================
-# ARCHIVO: models/__init__.py
-# ==========================================================================
-
-# ai/models/__init__.py
-from .migration import TableMigration
-from .schema import (
-  ColumnSchema,
-  ForeignKeySchema,
-  TableSchema,
-  SchemaModel
-)
-
-__all__ = [
-  "TableMigration",
-  "ColumnSchema",
-  "ForeignKeySchema",
-  "TableSchema",
-  "SchemaModel"
-]
-
-# ==========================================================================
-# ARCHIVO: models/migration.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: models/migration.py
+# ================================================================
 # ai/models/migration.py
 from dataclasses import dataclass
 
@@ -770,10 +700,9 @@ class TableMigration:
   complete_block: str  # bloque completo con -- migrate:up/down
   index: int = 0   # orden de aparición
 
-# ==========================================================================
-# ARCHIVO: models/schema.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: models/schema.py
+# ================================================================
 # ai/models/schema.py
 from dataclasses import dataclass, field
 
@@ -815,27 +744,37 @@ class SchemaModel:
   def add_table(self, table: TableSchema) -> None:
     self.tables[table.name.lower()] = table
 
-# ==========================================================================
-# ARCHIVO: pipeline/__init__.py
-# ==========================================================================
+# ================================================================
+# Archivo: paths.py
+# ================================================================
+# ai/paths.py
+# [dedup] import os
 
-# ai/pipeline/__init__.py
-from .config import PipelineConfig
-from .runner import run_from_config, run_generation, run_error_detection
-from .tests_api import run_structural_validation_tests
+DEFAULT_OUTPUT_DIR = "./tmp"
 
-__all__ = [
-    "PipelineConfig",
-    "run_from_config",
-    "run_generation",
-    "run_error_detection",
-    "run_structural_validation_tests",
-]
 
-# ==========================================================================
-# ARCHIVO: pipeline/config.py
-# ==========================================================================
+def output_base() -> str:
+    """
+    Devuelve el directorio base donde se escriben todos los artefactos.
+    Se controla con la variable de entorno APP_OUTPUT_DIR.
+    Por defecto: ./tmp (relativo al cwd desde donde se ejecuta).
+    """
+    base = os.environ.get("APP_OUTPUT_DIR", DEFAULT_OUTPUT_DIR)
+    os.makedirs(base, exist_ok=True)
+    return base
 
+
+def under_output(*parts: str) -> str:
+    """Une el base con los fragmentos dados, creando la carpeta si hace falta."""
+    path = os.path.join(output_base(), *parts)
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    return path
+
+# ================================================================
+# Archivo: pipeline/config.py
+# ================================================================
 # ai/pipeline/config.py
 """
 Configuración única del pipeline.
@@ -851,7 +790,7 @@ Acepta "inputs" o "folder_paths" en el JSON. Cada entrada de `inputs` puede ser:
 """
 
 from dataclasses import dataclass, field, asdict
-import json
+# [dedup] import json
 from typing import List
 
 
@@ -888,8 +827,10 @@ class PipelineConfig:
     # Fase 1: generación + validación + métricas tipo Flores et al.
     generation_stages: List[str] = field(default_factory=lambda: [
         "execute",
+        "build_retriever",
         # Los siguientes requieren benchmarks en benchmark_dir.
         # Si no existen, el stage se salta silenciosamente.
+        "build_retriever",
         "retrieval_metrics",
         "execution_metrics",
         "nlg_metrics",
@@ -1001,10 +942,9 @@ class PipelineConfig:
         ]
         return "\n".join(lines)
 
-# ==========================================================================
-# ARCHIVO: pipeline/flores_export.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: pipeline/flores_export.py
+# ================================================================
 # ai/pipeline/flores_export.py
 """
 Exporta métricas tipo Flores et al. (Tables 11-16) en un JSON por corrida:
@@ -1018,12 +958,12 @@ Consolida:
   - faithfulness (RAGAS-lite)                            [Table 16]
   - timings (por stage + total)                          [Table 18]
 """
-import os
-import json
-import datetime
+# [dedup] import os
+# [dedup] import json
+# [dedup] import datetime
 from typing import Any
 
-from ai import env
+# [dedup] from ai import env
 
 
 def _flores_bundle_for_item(item: dict, structural: dict | None) -> dict:
@@ -1046,7 +986,7 @@ def _flores_bundle_for_item(item: dict, structural: dict | None) -> dict:
 
     # Filtrar solo si el .env explícitamente desactiva algo.
     # Por defecto (sin .env) se incluyen todas.
-    import os
+# [dedup]     import os
     filtered = {}
     for k, v in bundle.items():
         if k in ("structural", "timings"):
@@ -1159,10 +1099,9 @@ def _aggregate_by_mode(runs: list[dict]) -> dict[str, dict[str, Any]]:
         }
     return out
 
-# ==========================================================================
-# ARCHIVO: pipeline/runner.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: pipeline/runner.py
+# ================================================================
 # ai/pipeline/runner.py
 """
 Pipeline construido ENCIMA de main.execute.
@@ -1173,24 +1112,24 @@ Reglas de oro:
   * Los stages de error-detection usan parse_puml_schema + inject_errors + validate_schema.
   * Los imports de main son diferidos para evitar ciclos al arrancar Flask.
 """
-import os
-import json
+# [dedup] import os
+# [dedup] import json
 import copy
 import glob
-import logging
+# [dedup] import logging
 import shutil
 import tempfile
-import datetime
+# [dedup] import datetime
 from itertools import product
 from typing import Dict, Callable
 from contextlib import contextmanager
 from pathlib import Path
 
-from ai import env
+# [dedup] from ai import env
 from ai.services.retrieval import MODEL_NAME as LLM_MODEL_NAME
 from ai.pipeline.timing import TimingCollector
-from ai.services.puml_parser import parse_puml_schema
-from ai.services.structural_validator import validate_schema
+# [dedup] from ai.services.puml_parser import parse_puml_schema
+# [dedup] from ai.services.structural_validator import validate_schema
 from ai.services.evaluation import inject_errors
 
 from ai.evaluation.retrieval_metrics import compute_retrieval_metrics
@@ -1234,7 +1173,6 @@ def _add_run_metadata(item: dict, run_id: str, phase: str) -> dict:
 
 
 def _benchmark_base(ctx) -> str:
-    """Nombre base para benchmarks: 'basico', 'innova', ... (no 'modelo')."""
     original = ctx.get("input_path") or ctx["puml_file"]
     return os.path.splitext(os.path.basename(original))[0]
 
@@ -1384,11 +1322,11 @@ def build_retriever_stage(ctx, config):
         return
 
     from ai.services.retrieval import create_retriever
-    from ai.services.vector_store import (
+# [dedup]     from ai.services.vector_store import (
         check_existing_vector_db, create_vector_db,
         should_recreate_vector_db, clear_vector_db,
     )
-    from ai.services.ingestion import ingest_puml, split_documents
+# [dedup]     from ai.services.ingestion import ingest_puml, split_documents
 
     puml_file = ctx["puml_file"]
 
@@ -1762,10 +1700,9 @@ def run_from_config(config_path: str) -> None:
     print(f"  run_id: {err['run_id']}")
     print(f"  summary: {err['summary_path']}")
 
-# ==========================================================================
-# ARCHIVO: pipeline/tests_api.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: pipeline/tests_api.py
+# ================================================================
 # ai/pipeline/test_api.py
 """
 API pública para los tests del Reviewer 1.
@@ -1773,10 +1710,10 @@ API pública para los tests del Reviewer 1.
 Función independiente: run_structural_validation_tests(...)
 Pero por dentro usa el mismo PipelineConfig + PipelineRunner.
 """
-import os
+# [dedup] import os
 from typing import Optional, Sequence
 
-from .config import PipelineConfig
+# [dedup] from .config import PipelineConfig
 from .runner import run_error_detection
 
 
@@ -1823,14 +1760,13 @@ def run_structural_validation_tests(
         "summary_path": result["summary_path"],
     }
 
-# ==========================================================================
-# ARCHIVO: pipeline/timing.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: pipeline/timing.py
+# ================================================================
 # ai/pipeline/timing.py
-import time
+# [dedup] import time
 import statistics
-from contextlib import contextmanager
+# [dedup] from contextlib import contextmanager
 from typing import Dict, Any
 
 
@@ -1875,19 +1811,9 @@ def _stats(samples: list[float]) -> Dict[str, float]:
         out["seconds_p95"] = round(sorted(samples)[k], 3)
     return out
 
-# ==========================================================================
-# ARCHIVO: prompts/__init__.py
-# ==========================================================================
-
-# ai/prompts/__init__.py
-from .templates import QUERY_PROMPT, CHAIN_PROMPT
-
-__all__ = ["QUERY_PROMPT", "CHAIN_PROMPT"]
-
-# ==========================================================================
-# ARCHIVO: prompts/templates.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: prompts/templates.py
+# ================================================================
 # ai/prompts/templates.py
 from langchain.prompts import PromptTemplate, ChatPromptTemplate
 
@@ -1919,77 +1845,11 @@ INSTRUCCIONES para la pregunta: {question}
 
 CHAIN_PROMPT = ChatPromptTemplate.from_template(template=CHAIN_TEMPLATE)
 
-# ==========================================================================
-# ARCHIVO: services/__init__.py
-# ==========================================================================
-
-# ai/services/__init__.py
-from .vector_store import (
-  check_existing_vector_db,
-  should_recreate_vector_db,
-  create_vector_db,
-  load_vector_db,
-  clear_vector_db,
-  get_puml_file_hash
-)
-from .ingestion import ingest_puml, split_documents
-from .retrieval import create_retriever, create_chain, create_direct_chain
-from .migration_generator import (
-  generate_sql_migrations_with_rag,
-  generate_sql_migrations_direct,
-  parse_migration_blocks,
-  validate_entity_count,
-  enforce_original_names,
-  save_migration_files,
-  extract_table_name
-)
-from .fallback import generate_direct_migrations, map_puml_to_sql
-from .puml_parser import parse_puml_schema
-from .sql_parser import parse_sql_schema
-from .structural_validator import validate_schema, ValidationReport
-from .evaluation import compute_structural_metrics, inject_errors
-
-__all__ = [
-  # vector store
-  "check_existing_vector_db",
-  "should_recreate_vector_db",
-  "create_vector_db",
-  "load_vector_db",
-  "clear_vector_db",
-  "get_puml_file_hash",
-  # ingestion
-  "ingest_puml",
-  "split_documents",
-  # retrieval
-  "create_retriever",
-  "create_chain",
-  "create_direct_chain",
-  # migration generator
-  "generate_sql_migrations_with_rag",
-  "generate_sql_migrations_direct",
-  "parse_migration_blocks",
-  "validate_entity_count",
-  "enforce_original_names",
-  "save_migration_files",
-  "extract_table_name",
-  # fallback
-  "generate_direct_migrations",
-  "map_puml_to_sql",
-  # nuevos
-  "parse_puml_schema",
-  "parse_sql_schema",
-  "validate_schema",
-  "ValidationReport",
-  "compute_structural_metrics",
-  "inject_errors",
-]
-
-# ==========================================================================
-# ARCHIVO: services/evaluation.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: services/evaluation.py
+# ================================================================
 # ai/services/evaluation.py
-import logging
+# [dedup] import logging
 from ai.services.structural_validator import ValidationReport
 
 logger = logging.getLogger(__name__)
@@ -2010,7 +1870,8 @@ def compute_structural_metrics(report: ValidationReport) -> dict:
   col_acc = _safe_div(s.get('matched_columns', 0), s.get('expected_columns', 0))
   type_acc = _safe_div(s.get('matched_types', 0), s.get('expected_types', 0))
   pk_acc = _safe_div(s.get('matched_pks', 0), s.get('expected_pks', 0))
-  fk_acc = _safe_div(s.get('matched_fks', 0), s.get('expected_fks', 0))
+  fk_acc = _safe_div(s.get('matched_fks', 0), s.get('expected_fks', 0)) \
+         if s.get('expected_fks', 0) else None
 
   # Full-schema: sólo correcto si las 5 anteriores son 1.0
   full_schema = 1.0 if all([
@@ -2078,7 +1939,7 @@ def inject_errors(schema, error_types: list[str]):
   Devuelve una copia del SchemaModel con errores inyectados.
   Útil para medir falsos negativos del validador (Reviewer 1).
   """
-  import copy
+# [dedup]   import copy
   mutated = copy.deepcopy(schema)
 
   for etype in error_types:
@@ -2113,13 +1974,12 @@ def inject_errors(schema, error_types: list[str]):
 
   return mutated
 
-# ==========================================================================
-# ARCHIVO: services/fallback.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: services/fallback.py
+# ================================================================
 # ai/services/fallback.py
-import re
-import logging
+# [dedup] import re
+# [dedup] import logging
 
 logger = logging.getLogger(__name__)
 
@@ -2181,15 +2041,14 @@ def generate_direct_migrations(puml_file: str, db_type: str) -> str:
     logger.error(f"Error in direct migration generation: {e}")
     return ""
 
-# ==========================================================================
-# ARCHIVO: services/ingestion.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: services/ingestion.py
+# ================================================================
 # ai/services/ingestion.py
-import os
-import re
+# [dedup] import os
+# [dedup] import re
 import hashlib
-import logging
+# [dedup] import logging
 from langchain_core.documents import Document
 
 logger = logging.getLogger(__name__)
@@ -2215,7 +2074,7 @@ def split_documents(content: str, puml_path: str):
   chunks = []
 
   # 1. Entidades
-  entity_pattern = r'(entity\s+\w+\s*\{[^}]+\})'
+  entity_pattern = r'(entity\s+"?[A-Za-z_]\w*"?\s*(?:as\s+\w+)?\s*\{[^}]+\})'
   entities = re.findall(entity_pattern, content, re.IGNORECASE | re.DOTALL)
   if entities:
     logger.info("Found %d entities.", len(entities))
@@ -2269,17 +2128,16 @@ def split_documents(content: str, puml_path: str):
   logger.info("PUML content split into %d chunks.", len(chunks))
   return chunks
 
-# ==========================================================================
-# ARCHIVO: services/migration_generator.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: services/migration_generator.py
+# ================================================================
 # ai/services/migration_generator.py
-import os
-import re
-import json
-import shutil
-import logging
-import datetime
+# [dedup] import os
+# [dedup] import re
+# [dedup] import json
+# [dedup] import shutil
+# [dedup] import logging
+# [dedup] import datetime
 from typing import Dict, List, Tuple
 from ..models.migration import TableMigration
 from .fallback import generate_direct_migrations
@@ -2596,14 +2454,13 @@ RESPONDE ÚNICAMENTE con las sentencias SQL en el formato especificado, sin expl
     logger.error(f"Error generating migrations (direct): {e}")
     return f"Error: {e}"
 
-# ==========================================================================
-# ARCHIVO: services/puml_parser.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: services/puml_parser.py
+# ================================================================
 # ai/services/puml_parser.py
-import os
-import re
-import logging
+# [dedup] import os
+# [dedup] import re
+# [dedup] import logging
 from ai.models.schema import (
   ColumnSchema,
   ForeignKeySchema,
@@ -2732,8 +2589,8 @@ def _parse_relationships(content: str) -> list[tuple[str, str, str, str]]:
 
 
 def _card_is_many(card: str) -> bool:
-  """Detecta si la cardinalidad implica 'muchos' (lleva llave)."""
-  return '{' in card
+  """Detecta si la cardinalidad implica 'muchos' (acepta '{' o '}')."""
+  return '{' in card or '}' in card
 
 
 def _apply_relationships(
@@ -2842,12 +2699,11 @@ def parse_puml_schema(puml_file: str) -> SchemaModel:
   )
   return schema
 
-# ==========================================================================
-# ARCHIVO: services/retrieval.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: services/retrieval.py
+# ================================================================
 # ai/services/retrieval.py
-import os
+# [dedup] import os
 from langchain_ollama import ChatOllama
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain_core.output_parsers import StrOutputParser
@@ -2916,14 +2772,14 @@ def create_flex_chain():
     tmpl = ChatPromptTemplate.from_template("{input}")
     return tmpl | llm | StrOutputParser()
 
-# ==========================================================================
-# ARCHIVO: services/sql_parser.py
-# ==========================================================================
 
+# ================================================================
+# Archivo: services/sql_parser.py
+# ================================================================
 # ai/services/sql_parser.py
-import re
-import logging
-from ai.models.schema import (
+# [dedup] import re
+# [dedup] import logging
+# [dedup] from ai.models.schema import (
   ColumnSchema,
   ForeignKeySchema,
   TableSchema,
@@ -3161,13 +3017,12 @@ def parse_sql_schema(sql_text: str, db_type: str = 'sqlite') -> SchemaModel:
   logger.info("SQL parsed: %d tables", len(schema.tables))
   return schema
 
-# ==========================================================================
-# ARCHIVO: services/structural_validator.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: services/structural_validator.py
+# ================================================================
 # ai/services/structural_validator.py
-import logging
-from dataclasses import dataclass, field
+# [dedup] import logging
+# [dedup] from dataclasses import dataclass, field
 from ai.models.schema import SchemaModel
 
 logger = logging.getLogger(__name__)
@@ -3387,16 +3242,15 @@ def validate_schema(expected: SchemaModel, generated: SchemaModel) -> Validation
   logger.info("Structural validation finished. Valid=%s", report.is_valid)
   return report
 
-# ==========================================================================
-# ARCHIVO: services/vector_store.py
-# ==========================================================================
-
+# ================================================================
+# Archivo: services/vector_store.py
+# ================================================================
 # ai/services/vector_store.py
-import os
-import json
-import shutil
-import hashlib
-import logging
+# [dedup] import os
+# [dedup] import json
+# [dedup] import shutil
+# [dedup] import hashlib
+# [dedup] import logging
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
 
@@ -3406,7 +3260,7 @@ PERSIST_DIRECTORY = "./chroma_db"
 META_FILE = os.path.join(PERSIST_DIRECTORY, "meta.json")
 
 from ai.paths import output_base
-import os
+# [dedup] import os
 
 PERSIST_DIRECTORY = os.path.join(output_base(), "chroma_db")
 META_FILE = os.path.join(PERSIST_DIRECTORY, "meta.json")
@@ -3601,3 +3455,4 @@ def load_vector_db():
   except Exception as e:
     logger.error("Error loading vector DB: %s", e)
     return None
+
