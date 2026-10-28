@@ -2,13 +2,13 @@
 !theme plain
 
 entity customers {
-  * customer_id : INTEGER
+  * id : INTEGER
   --
-  * company_name : VARCHAR(40)
-  * contact_name : VARCHAR(30)
-  * contact_title : VARCHAR(30)
-  * address : VARCHAR(60)
-  * city : VARCHAR(15)
+  company_name : VARCHAR(40)
+  contact_name : VARCHAR(30)
+  contact_title : VARCHAR(30)
+  address : VARCHAR(60)
+  city : VARCHAR(15)
   region : VARCHAR(15)
   postal_code : VARCHAR(10)
   country : VARCHAR(15)
@@ -17,33 +17,33 @@ entity customers {
 }
 
 entity employees {
-  * employee_id : INTEGER
+  * id : INTEGER
   --
-  * last_name : VARCHAR(20)
-  * first_name : VARCHAR(10)
-  * title : VARCHAR(30)
-  * title_of_courtesy : VARCHAR(25)
-  * birth_date : DATE
-  * hire_date : DATE
-  * address : VARCHAR(60)
-  * city : VARCHAR(15)
+  last_name : VARCHAR(20)
+  first_name : VARCHAR(10)
+  title : VARCHAR(30)
+  title_of_courtesy : VARCHAR(25)
+  birth_date : DATE
+  hire_date : DATE
+  address : VARCHAR(60)
+  city : VARCHAR(15)
   region : VARCHAR(15)
   postal_code : VARCHAR(10)
   country : VARCHAR(15)
   home_phone : VARCHAR(24)
   extension : VARCHAR(4)
   notes : TEXT
-  reports_to : INTEGER
+  reports_to_id : INTEGER
 }
 
 entity suppliers {
-  * supplier_id : INTEGER
+  * id : INTEGER
   --
-  * company_name : VARCHAR(40)
-  * contact_name : VARCHAR(30)
-  * contact_title : VARCHAR(30)
-  * address : VARCHAR(60)
-  * city : VARCHAR(15)
+  company_name : VARCHAR(40)
+  contact_name : VARCHAR(30)
+  contact_title : VARCHAR(30)
+  address : VARCHAR(60)
+  city : VARCHAR(15)
   region : VARCHAR(15)
   postal_code : VARCHAR(10)
   country : VARCHAR(15)
@@ -53,17 +53,17 @@ entity suppliers {
 }
 
 entity categories {
-  * category_id : INTEGER
+  * id : INTEGER
   --
-  * category_name : VARCHAR(15)
+  category_name : VARCHAR(15)
   description : TEXT
   picture : BLOB
 }
 
 entity products {
-  * product_id : INTEGER
+  * id : INTEGER
   --
-  * product_name : VARCHAR(40)
+  product_name : VARCHAR(40)
   supplier_id : INTEGER
   category_id : INTEGER
   quantity_per_unit : VARCHAR(20)
@@ -75,22 +75,21 @@ entity products {
 }
 
 entity shippers {
-  * shipper_id : INTEGER
+  * id : INTEGER
   --
-  * company_name : VARCHAR(40)
-  * phone : VARCHAR(24)
+  company_name : VARCHAR(40)
+  phone : VARCHAR(24)
 }
 
 entity orders {
-  * order_id : INTEGER
+  * id : INTEGER
   --
   customer_id : INTEGER
   employee_id : INTEGER
-  shipper_id: INTEGER
+  shipper_id : INTEGER
   order_date : DATETIME
   required_date : DATETIME
   shipped_date : DATETIME
-  ship_via : INTEGER
   freight : DECIMAL
   ship_name : VARCHAR(40)
   ship_address : VARCHAR(60)
@@ -101,26 +100,29 @@ entity orders {
 }
 
 entity order_details {
-  * order_id : INTEGER
-  * product_id : INTEGER
+  * id : INTEGER
   --
+  order_id : INTEGER
+  product_id : INTEGER
   unit_price : DECIMAL
   quantity : SMALLINT
   discount : FLOAT
 }
 
-' Relaciones
+' =============================================
+' Relaciones — Rails notation
+' Patrón: `parent ||--o{ child : fk_column`
+' =============================================
 
-customers }|--|| orders : customer_id
-employees }|--|| orders : employee_id
-employees }|--|| employees : reports_to
+customers  ||--o{ orders        : customer_id
+employees  ||--o{ orders        : employee_id
+employees  ||--o{ employees     : reports_to_id
+shippers   ||--o{ orders        : shipper_id
 
-suppliers }|--|| products : supplier_id
-categories }|--|| products : category_id
+suppliers  ||--o{ products      : supplier_id
+categories ||--o{ products      : category_id
 
-shippers }|--|| orders : ship_via
-
-orders }|--|| order_details : order_id
-products }|--|| order_details : product_id
+orders     ||--o{ order_details : order_id
+products   ||--o{ order_details : product_id
 
 @enduml

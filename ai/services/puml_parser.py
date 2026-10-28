@@ -21,6 +21,11 @@ PUML_TYPE_ALIASES = {
   'integer': 'int',
   'long': 'int',
   'bigint': 'int',
+  'smallint': 'int',
+  'tinyint': 'int',
+  'mediumint': 'int',
+  'serial': 'int',
+  'bigserial': 'int',
   'float': 'float',
   'double': 'float',
   'real': 'float',
@@ -33,7 +38,9 @@ PUML_TYPE_ALIASES = {
   'timestamp': 'datetime',
   'time': 'time',
   'uuid': 'uuid',
-  'blob': 'blob'
+  'blob': 'blob',
+  'binary': 'blob',
+  'varbinary': 'blob',
 }
 
 
@@ -56,77 +63,96 @@ def _strip_visibility(token: str) -> str:
 
 
 def _parse_entity_attributes(body: str) -> list[ColumnSchema]:
-  """Extrae columnas del cuerpo de un entity."""
-  columns: list[ColumnSchema] = []
-  for raw_line in body.splitlines():
-    line = raw_line.strip()
-    if not line:
-      continue
-    if line.startswith('--') or line.startswith('..'):
-      continue
-    if line.startswith("'"):
-      continue
-    # Formato: [visibilidad][*]nombre [: tipo] [<<PK>>] [{PK}]
-    line = line.rstrip(',')
-    if ':' in line:
-      name_part, type_part = line.split(':', 1)
-    else:
-      name_part, type_part = line, ''
-
-    is_pk = bool(
-      re.search(r'<<\s*PK\s*>>', type_part, re.IGNORECASE)
-      or re.search(r'\{\s*PK\s*\}', type_part, re.IGNORECASE)
-      or re.search(r'<<\s*id\s*>>', type_part, re.IGNORECASE)
-    )
-    raw_type = re.sub(r'(<<[^>]*>>|\{[^}]*\})', '', type_part).strip()
-    clean_name = _strip_visibility(name_part)
-    name = clean_name.split()[0] if clean_name.split() else ''
-    name = name.split('(')[0].strip()
-    if not name:
-      continue
-
-    normalized_type = _normalize_puml_type(raw_type)
-    if name.lower() == 'id' and not is_pk:
-      is_pk = True
-
-    columns.append(ColumnSchema(
-      name=name,
-      type=normalized_type,
-      is_pk=is_pk,
-      is_nullable=not is_pk
-    ))
-  return columns
+    """Extrae columnas del cuerpo de un entity."""
+    columns: list[ColumnSchema] = []
+    
+    # 🔧 NUEVO: detectar la posición del separador '--'
+    # Convención PlantUML: todo lo anterior al '--' son claves primarias
+    lines = body.splitlines()
+    try:
+        separator_idx = next(i for i, l in enumerate(lines) if l.strip() == '--')
+    except StopIteration:
+        separator_idx = -1  # no hay separador
+    
+    for idx, raw_line in enumerate(lines):
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line == '--':
+            continue
+        if line.startswith('--') or line.startswith('..'):
+            continue
+        if line.startswith("'"):
+            continue
+        
+        line = line.rstrip(',')
+        if ':' in line:
+            name_part, type_part = line.split(':', 1)
+        else:
+            name_part, type_part = line, ''
+        
+        # 🔧 MODIFICADO: PK si está antes del separador, o por marcador, o si se llama 'id'
+        is_pk = (
+            (separator_idx >= 0 and idx < separator_idx)  # antes del '--'
+            or bool(re.search(r'<<\s*PK\s*>>', type_part, re.IGNORECASE))
+            or bool(re.search(r'\{\s*PK\s*\}', type_part, re.IGNORECASE))
+            or bool(re.search(r'<<\s*id\s*>>', type_part, re.IGNORECASE))
+        )
+        
+        raw_type = re.sub(r'(<<[^>]*>>|\{[^}]*\})', '', type_part).strip()
+        clean_name = _strip_visibility(name_part)
+        name = clean_name.split()[0] if clean_name.split() else ''
+        name = name.split('(')[0].strip()
+        if not name:
+            continue
+        
+        normalized_type = _normalize_puml_type(raw_type)
+        if name.lower() == 'id' and not is_pk:
+            is_pk = True
+        
+        columns.append(ColumnSchema(
+            name=name,
+            type=normalized_type,
+            is_pk=is_pk,
+            is_nullable=not is_pk
+        ))
+    return columns
 
 
 def _infer_fk_column(ref_table: str) -> str:
   """Convención: <tabla_referenciada>_id en minúsculas."""
   return f"{ref_table.lower()}_id"
 
-def _find_existing_fk(table: TableSchema, ref_table: str) -> str | None:
-    """Busca una columna existente que parezca FK hacia ref_table."""
+def _find_existing_fk(table: TableSchema, ref_table: str,
+                      label: str | None = None) -> str | None:
+    # 1. Label tiene prioridad (nombre exacto de la columna FK)
+    if label:
+        clean = label.lower()
+        if clean in table.columns:
+            return clean
+    # 2. Convención <table>_id / <singular>_id
     ref = ref_table.lower()
-    singular = ref[:-1] if ref.endswith('s') else ref
-    candidates = [f"{ref}_id", f"{singular}_id"]
-    for cand in candidates:
+    if ref.endswith('ies'):
+        singular = ref[:-3] + 'y'
+    elif ref.endswith('s'):
+        singular = ref[:-1]
+    else:
+        singular = ref
+    for cand in (f"{ref}_id", f"{singular}_id"):
         if cand in table.columns:
             return cand
     return None
 
-def _parse_relationships(content: str) -> list[tuple[str, str, str, str]]:
-  """
-  Devuelve lista de tuplas (left_table, left_card, right_card, right_table).
-  La cardinalidad usa la notación estándar de PlantUML.
-  """
+def _parse_relationships(content: str) -> list[tuple[str, str, str, str, str]]:
+  """Devuelve (left, lcard, rcard, right, label)."""
   pattern = re.compile(
     r'([A-Za-z_]\w*)\s+(["\|o\{\}]+)\s*--\s*(["\|o\{\}]+)\s+([A-Za-z_]\w*)'
-    r'(?:\s*:\s*[^\n]+)?',
+    r'(?:\s*:\s*([^\n]+))?',
     re.IGNORECASE
   )
-  results = []
-  for m in pattern.finditer(content):
-    left, lcard, rcard, right = m.groups()
-    results.append((left, lcard, rcard, right))
-  return results
+  return [(m.group(1), m.group(2), m.group(3), m.group(4),
+            (m.group(5) or "").strip().strip('"').strip("'"))
+          for m in pattern.finditer(content)]
 
 
 def _card_is_many(card: str) -> bool:
@@ -134,35 +160,21 @@ def _card_is_many(card: str) -> bool:
   return '{' in card or '}' in card
 
 
-def _apply_relationships(
-  schema: SchemaModel,
-  relationships: list[tuple[str, str, str, str]]
-) -> None:
-  """Añade FKs inferidas a las tablas del lado 'muchos'."""
-  for left, lcard, rcard, right in relationships:
-    left_table = schema.table(left)
-    right_table = schema.table(right)
-    if left_table is None or right_table is None:
-      continue
-
-    if _card_is_many(rcard) and not _card_is_many(lcard):
-        existing = _find_existing_fk(right_table, left_table.name)
-        fk_col = existing or _infer_fk_column(left_table.name)
-        _ensure_fk_column(right_table, fk_col, left_table.name)
-        right_table.foreign_keys.append(ForeignKeySchema(
-            column=fk_col,
-            ref_table=left_table.name,
-            ref_column=_primary_key_name(left_table)
-        ))
-    elif _card_is_many(lcard) and not _card_is_many(rcard):
-        existing = _find_existing_fk(left_table, right_table.name)
-        fk_col = existing or _infer_fk_column(right_table.name)
-        _ensure_fk_column(left_table, fk_col, right_table.name)
-        left_table.foreign_keys.append(ForeignKeySchema(
-            column=fk_col,
-            ref_table=right_table.name,
-            ref_column=_primary_key_name(right_table)
-        ))
+def _apply_relationships(schema, relationships):
+    for left, lcard, rcard, right, label in relationships:
+        lt, rt = schema.table(left), schema.table(right)
+        if not lt or not rt:
+            continue
+        if _card_is_many(rcard) and not _card_is_many(lcard):
+            fk = _find_existing_fk(rt, lt.name, label) or _infer_fk_column(lt.name)
+            _ensure_fk_column(rt, fk, lt.name)
+            rt.foreign_keys.append(ForeignKeySchema(
+                column=fk, ref_table=lt.name, ref_column=_primary_key_name(lt)))
+        elif _card_is_many(lcard) and not _card_is_many(rcard):
+            fk = _find_existing_fk(lt, rt.name, label) or _infer_fk_column(rt.name)
+            _ensure_fk_column(lt, fk, rt.name)
+            lt.foreign_keys.append(ForeignKeySchema(
+                column=fk, ref_table=rt.name, ref_column=_primary_key_name(rt)))
 
 
 def _primary_key_name(table: TableSchema) -> str:

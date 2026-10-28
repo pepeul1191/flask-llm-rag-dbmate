@@ -88,6 +88,8 @@ def _normalize_sql_type(raw: str) -> str:
     'float': 'float',
     'double': 'float',
     'double precision': 'float',
+    'tinyint': 'int',           # 🔧 NUEVO
+    'mediumint': 'int',         # 🔧 NUEVO
     'real': 'float',
     'decimal': 'float',
     'numeric': 'float',
@@ -99,6 +101,8 @@ def _normalize_sql_type(raw: str) -> str:
     'time': 'time',
     'uuid': 'uuid',
     'blob': 'blob',
+    'binary': 'blob',           # 🔧 NUEVO
+    'varbinary': 'blob',        # 🔧 NUEVO
   }
   return aliases.get(t, t)
 

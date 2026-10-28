@@ -13,34 +13,64 @@ from ai.paths import under_output
 logger = logging.getLogger(__name__)
 
 
-def generate_sql_migrations_with_rag(chain, db_type: str, puml_file: str,
-                                     extra_instructions: str = "") -> str:
-  """
-  Genera migraciones usando la cadena RAG.
+# --------------------------------------------------------------------------- #
+# Helper: extrae relaciones explícitas del PUML (🔧 FIX 2)
+# --------------------------------------------------------------------------- #
+def _extract_relationships_summary(puml_content: str) -> str:
+    """
+    Devuelve un bloque legible con las relaciones del PUML.
+    Cada línea incluye el nombre de la columna FK entre paréntesis para que
+    el LLM sepa exactamente qué columna usar.
 
-  Args:
-    chain: cadena RAG (retriever | prompt | llm | parser).
-    db_type: 'sqlite' | 'mysql' | 'postgres'.
-    puml_file: ruta al archivo .puml del modelo.
-    extra_instructions: feedback de errores de la iteración anterior
-      (usado por el bucle de corrección de rag_validation en ai/main.py).
-      Si está vacío, el comportamiento es idéntico al modo 'rag'.
+    Formato de salida:
+        - customers -- orders (FK column: customer_id)
+        - employees -- employees (FK column: reports_to_id)
+    """
+    rel_pattern = re.compile(
+        r'([A-Za-z_]\w*)\s+(["\|o\{\}]+)\s*--\s*(["\|o\{\}]+)\s+([A-Za-z_]\w*)'
+        r'(?:\s*:\s*([^\n]+))?',
+        re.IGNORECASE,
+    )
+    lines = []
+    for m in rel_pattern.finditer(puml_content):
+        left, lcard, rcard, right = m.group(1), m.group(2), m.group(3), m.group(4)
+        label = (m.group(5) or "").strip().strip('"').strip("'")
 
-  Returns:
-    Texto con las sentencias SQL de migración, o "Error: ..." si falla.
-  """
-  with open(puml_file, 'r', encoding='utf-8') as f:
-    puml_content = f.read()
+        # Identificar el lado "muchos" (el que tiene `{`)
+        many_side = None
+        if '{' in rcard:
+            many_side = right
+        elif '{' in lcard:
+            many_side = left
 
-  entity_pattern = r'entity\s+(\w+)\s*\{([^}]+)\}'
-  entities = re.findall(entity_pattern, puml_content, re.IGNORECASE | re.DOTALL)
-  entity_info = []
-  for entity_name, entity_content in entities:
-    attributes = re.findall(r'\s*(\w+)\s*:\s*([^\n]+)', entity_content)
-    entity_info.append(f"Entidad: {entity_name}, Atributos: {attributes}")
-  entities_summary = "\n".join(entity_info)
+        suffix = f" (FK column: {label})" if label else ""
+        arrow = f" --[many: {many_side}]--> " if many_side else " -- "
+        lines.append(f"- {left}{arrow}{right}{suffix}")
 
-  query = f"""
+    return "\n".join(lines) if lines else "(no relationships declared)"
+
+
+# --------------------------------------------------------------------------- #
+# Helper: extrae la lista de entidades (para el prompt)
+# --------------------------------------------------------------------------- #
+def _extract_entities_summary(puml_content: str) -> str:
+    entity_pattern = r'entity\s+(\w+)\s*\{([^}]+)\}'
+    entities = re.findall(entity_pattern, puml_content, re.IGNORECASE | re.DOTALL)
+    lines = []
+    for entity_name, entity_content in entities:
+        attributes = re.findall(r'\s*\*?\s*(\w+)\s*:\s*([^\n]+)', entity_content)
+        lines.append(f"Entidad: {entity_name}, Atributos: {attributes}")
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- #
+# Prompt builder (compartido por RAG y direct) (🔧 FIX 2)
+# --------------------------------------------------------------------------- #
+def _build_prompt(puml_file: str, db_type: str,
+                  entities_summary: str,
+                  relationships_summary: str,
+                  extra_instructions: str = "") -> str:
+    query = f"""
 ANÁLISIS DE DIAGRAMA UML Y GENERACIÓN DE MIGRACIONES SQL
 
 ARCHIVO: {puml_file}
@@ -48,6 +78,17 @@ TIPO DE BASE DE DATOS: {db_type.upper()}
 
 ENTIDADES ENCONTRADAS EN EL DIAGRAMA:
 {entities_summary}
+
+RELACIONES EXPLÍCITAS DEL DIAGRAMA:
+{relationships_summary}
+
+REGLAS CRÍTICAS PARA FOREIGN KEYS:
+1. Por CADA relación de la lista anterior, añade una FOREIGN KEY en la tabla
+   del lado "muchos" (la que aparece después de "--[many: X]-->").
+2. La columna FK es el texto entre paréntesis `(FK column: X)`.
+3. Si la columna FK NO existe en la tabla, créala con ese nombre exacto.
+4. Si la relación es self-reference (misma tabla), apunta a `id` de la misma tabla.
+5. Usa el nombre de columna indicado; NO inventes uno distinto.
 
 INSTRUCCIONES ESPECÍFICAS:
 
@@ -61,285 +102,299 @@ FORMATO REQUERIDO para CADA tabla:
 -- migrate:up
 
 CREATE TABLE nombre_tabla (
-  id TIPO_PRIMARY_KEY,
+  id INTEGER PRIMARY KEY,
   columna1 TIPO_DATO,
   columna2 TIPO_DATO,
-  PRIMARY KEY (id),
-  FOREIGN KEY (columna_relacionada) REFERENCES tabla_relacionada(id)
+  FOREIGN KEY (columna_fk) REFERENCES tabla_padre(id)
 );
 
 -- migrate:down
 
-DROP TABLE nombre_tabla;
+DROP TABLE IF EXISTS nombre_tabla;
 
 REQUISITOS TÉCNICOS:
 - Para {db_type.upper()}, usa tipos de datos apropiados
-- Incluye PRIMARY KEY autoincremental para cada tabla
-- Incluye FOREIGN KEYS basadas en las relaciones del diagrama
+- Cada tabla tiene `id INTEGER PRIMARY KEY` como clave primaria
+- Incluye TODAS las FOREIGN KEYS deducidas de las relaciones listadas
 - Mantén los nombres ORIGINALES en inglés (NO traduzcas)
 - Genera EXACTAMENTE una migración por cada entidad encontrada
 
 RESPONDE ÚNICAMENTE con las sentencias SQL en el formato especificado, sin explicaciones.
 """
 
-  # Feedback de errores para el bucle de corrección (rag_validation)
-  if extra_instructions:
-    query += (
-      f"\n\nERRORES DETECTADOS EN LA ITERACIÓN ANTERIOR:\n"
-      f"{extra_instructions}\n\n"
-      f"Corrige TODOS los errores listados y devuelve el SQL COMPLETO corregido "
-      f"(todas las tablas, no solo las modificadas). No omitas tablas que ya "
-      f"estaban correctas: la respuesta debe ser el script completo y válido."
+    if extra_instructions:
+        query += (
+            f"\n\nERRORES DETECTADOS EN LA ITERACIÓN ANTERIOR:\n"
+            f"{extra_instructions}\n\n"
+            f"Corrige TODOS los errores listados y devuelve el SQL COMPLETO "
+            f"corregido (todas las tablas, no solo las modificadas). No omitas "
+            f"tablas que ya estaban correctas: la respuesta debe ser el script "
+            f"completo y válido. Asegúrate de incluir TODAS las FOREIGN KEYS "
+            f"declaradas en las relaciones del diagrama."
+        )
+
+    return query
+
+
+# --------------------------------------------------------------------------- #
+# Generación con RAG (🔧 FIX 2: pasa relaciones al prompt)
+# --------------------------------------------------------------------------- #
+def generate_sql_migrations_with_rag(chain, db_type: str, puml_file: str,
+                                     extra_instructions: str = "") -> str:
+    """
+    Genera migraciones usando la cadena RAG.
+
+    Args:
+      chain: cadena RAG (retriever | prompt | llm | parser).
+      db_type: 'sqlite' | 'mysql' | 'postgres'.
+      puml_file: ruta al archivo .puml.
+      extra_instructions: feedback de errores de la iteración anterior
+        (usado por el bucle de corrección de rag_validation en ai/main.py).
+    """
+    with open(puml_file, 'r', encoding='utf-8') as f:
+        puml_content = f.read()
+
+    entities_summary = _extract_entities_summary(puml_content)
+    relationships_summary = _extract_relationships_summary(puml_content)
+
+    query = _build_prompt(
+        puml_file=puml_file,
+        db_type=db_type,
+        entities_summary=entities_summary,
+        relationships_summary=relationships_summary,
+        extra_instructions=extra_instructions,
     )
 
-  logger.info("Generating SQL migrations...")
-  try:
-    response = chain.invoke(query)
-    return response
-  except Exception as e:
-    logger.error(f"Error generating migrations: {e}")
-    return f"Error: {e}"
+    logger.info("Generating SQL migrations (RAG)...")
+    try:
+        response = chain.invoke(query)
+        return response
+    except Exception as e:
+        logger.error(f"Error generating migrations: {e}")
+        return f"Error: {e}"
 
 
+# --------------------------------------------------------------------------- #
+# Generación directa, sin RAG (🔧 FIX 2: también pasa relaciones)
+# --------------------------------------------------------------------------- #
+def generate_sql_migrations_direct(chain, db_type: str, puml_file: str) -> str:
+    """
+    Igual que generate_sql_migrations_with_rag pero sin retriever.
+    Se usa en el modo llm_only para la comparación pedida por el Reviewer 1.
+    """
+    with open(puml_file, 'r', encoding='utf-8') as f:
+        puml_content = f.read()
+
+    entities_summary = _extract_entities_summary(puml_content)
+    relationships_summary = _extract_relationships_summary(puml_content)
+
+    query = _build_prompt(
+        puml_file=puml_file,
+        db_type=db_type,
+        entities_summary=entities_summary,
+        relationships_summary=relationships_summary,
+    )
+
+    logger.info("Generating SQL migrations (direct, no RAG)...")
+    try:
+        response = chain.invoke({"context": "(sin contexto RAG)", "question": query})
+        return response
+    except Exception as e:
+        logger.error(f"Error generating migrations (direct): {e}")
+        return f"Error: {e}"
+
+
+# --------------------------------------------------------------------------- #
+# Parseo y organización (sin cambios)
+# --------------------------------------------------------------------------- #
 def extract_table_name(sql_statement: str) -> str | None:
-  """Extrae el nombre de la tabla de una sentencia SQL."""
-  patterns = [
-    r'CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`?([^\s`(;]+)`?',
-    r'CREATE TABLE\s+(?:IF NOT EXISTS\s+)?([^\s(;]+)',
-    r'DROP TABLE\s+(?:IF EXISTS\s+)?`?([^\s`;]+)`?',
-  ]
-  for pattern in patterns:
-    match = re.search(pattern, sql_statement, re.IGNORECASE)
-    if match:
-      return match.group(1).strip()
-  return None
+    """Extrae el nombre de la tabla de una sentencia SQL."""
+    patterns = [
+        r'CREATE TABLE\s+(?:IF NOT EXISTS\s+)?`?([^\s`(;]+)`?',
+        r'CREATE TABLE\s+(?:IF NOT EXISTS\s+)?([^\s(;]+)',
+        r'DROP TABLE\s+(?:IF EXISTS\s+)?`?([^\s`;]+)`?',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, sql_statement, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    return None
 
 
 def parse_migration_blocks(complete_migrations: str) -> Dict[int, TableMigration]:
-  """Parsea el texto de migraciones en un diccionario de TableMigration."""
-  if complete_migrations.startswith("Error:") or "No puedo cumplir" in complete_migrations:
-    logger.error(f"Model refused to generate migrations: {complete_migrations}")
-    return {}
+    """Parsea el texto de migraciones en un diccionario de TableMigration."""
+    if complete_migrations.startswith("Error:") or "No puedo cumplir" in complete_migrations:
+        logger.error(f"Model refused to generate migrations: {complete_migrations}")
+        return {}
 
-  patterns = [
-    r'--\s*migrate:up\s*(CREATE TABLE[^;]+;)\s*--\s*migrate:down\s*(DROP TABLE[^;]+;)',
-    r'(CREATE TABLE[^;]+;)',
-  ]
+    patterns = [
+        r'--\s*migrate:up\s*(CREATE TABLE[^;]+;)\s*--\s*migrate:down\s*(DROP TABLE[^;]+;)',
+        r'(CREATE TABLE[^;]+;)',
+    ]
 
-  tables = {}
-  seen_tables = set()
+    tables = {}
+    seen_tables = set()
 
-  for pattern in patterns:
-    matches = re.findall(pattern, complete_migrations, re.IGNORECASE | re.DOTALL)
-    if matches:
-      logger.info(f"Found {len(matches)} matches using pattern")
-      for i, match in enumerate(matches, len(tables) + 1):
-        if isinstance(match, tuple):
-          create_stmt, drop_stmt = match
-        else:
-          create_stmt = match
-          table_name = extract_table_name(create_stmt)
-          drop_stmt = f"DROP TABLE IF EXISTS {table_name};" if table_name else "DROP TABLE unknown_table;"
+    for pattern in patterns:
+        matches = re.findall(pattern, complete_migrations, re.IGNORECASE | re.DOTALL)
+        if matches:
+            logger.info(f"Found {len(matches)} matches using pattern")
+            for i, match in enumerate(matches, len(tables) + 1):
+                if isinstance(match, tuple):
+                    create_stmt, drop_stmt = match
+                else:
+                    create_stmt = match
+                    table_name = extract_table_name(create_stmt)
+                    drop_stmt = (
+                        f"DROP TABLE IF EXISTS {table_name};"
+                        if table_name else "DROP TABLE unknown_table;"
+                    )
 
-        table_name = extract_table_name(create_stmt)
-        if table_name and table_name in seen_tables:
-          logger.info(f"Skipping duplicate table: {table_name}")
-          continue
-        seen_tables.add(table_name)
+                table_name = extract_table_name(create_stmt)
+                if table_name and table_name in seen_tables:
+                    logger.info(f"Skipping duplicate table: {table_name}")
+                    continue
+                seen_tables.add(table_name)
 
-        clean_create = re.sub(r'\s+', ' ', create_stmt.strip())
-        clean_drop = re.sub(r'\s+', ' ', drop_stmt.strip())
-        complete_block = f"-- migrate:up\n\n{create_stmt.strip()}\n\n-- migrate:down\n\n{drop_stmt.strip()}"
+                clean_create = re.sub(r'\s+', ' ', create_stmt.strip())
+                clean_drop = re.sub(r'\s+', ' ', drop_stmt.strip())
+                complete_block = (
+                    f"-- migrate:up\n\n{create_stmt.strip()}\n\n"
+                    f"-- migrate:down\n\n{drop_stmt.strip()}"
+                )
 
-        tables[i] = TableMigration(
-          table_name=table_name,
-          up=clean_create,
-          down=clean_drop,
-          complete_block=complete_block,
-          index=i
-        )
-  logger.info(f"Se encontraron {len(tables)} tablas únicas.")
-  return tables
-
-
-def validate_entity_count(puml_file: str, tables_dict: Dict[int, TableMigration]) -> Tuple[int, int]:
-  """Valida que el número de entidades coincida con el de tablas generadas."""
-  try:
-    with open(puml_file, 'r', encoding='utf-8') as f:
-      content = f.read()
-    entity_pattern = r'entity\s+(\w+)'
-    entities = re.findall(entity_pattern, content, re.IGNORECASE)
-    expected = len(entities)
-    actual = len(tables_dict)
-    logger.info(f"Expected entities: {expected}, Generated tables: {actual}")
-    if expected != actual:
-      print(f"⚠️  ADVERTENCIA: Se esperaban {expected} tablas pero se generaron {actual}")
-      generated = [t.table_name for t in tables_dict.values() if t.table_name]
-      missing = set(entities) - set(generated)
-      if missing:
-        print(f"📋 Entidades faltantes: {', '.join(missing)}")
-      if generated:
-        print(f"📋 Tablas generadas: {', '.join(generated)}")
-    return expected, actual
-  except Exception as e:
-    logger.error(f"Error validating entity count: {e}")
-    return 0, len(tables_dict)
+                tables[i] = TableMigration(
+                    table_name=table_name,
+                    up=clean_create,
+                    down=clean_drop,
+                    complete_block=complete_block,
+                    index=i,
+                )
+    logger.info(f"Se encontraron {len(tables)} tablas únicas.")
+    return tables
 
 
-def enforce_original_names(puml_file: str, tables_dict: Dict[int, TableMigration]) -> Dict[int, TableMigration]:
-  """Corrige los nombres de tabla para que coincidan exactamente con las entidades del PUML."""
-  try:
-    with open(puml_file, 'r', encoding='utf-8') as f:
-      content = f.read()
-    entity_pattern = r'entity\s+(\w+)'
-    original_entities = re.findall(entity_pattern, content, re.IGNORECASE)
+def validate_entity_count(puml_file: str,
+                          tables_dict: Dict[int, TableMigration]) -> Tuple[int, int]:
+    """Valida que el número de entidades coincida con el de tablas generadas."""
+    try:
+        with open(puml_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        entity_pattern = r'entity\s+(\w+)'
+        entities = re.findall(entity_pattern, content, re.IGNORECASE)
+        expected = len(entities)
+        actual = len(tables_dict)
+        logger.info(f"Expected entities: {expected}, Generated tables: {actual}")
+        if expected != actual:
+            print(f"⚠️  ADVERTENCIA: Se esperaban {expected} tablas pero se generaron {actual}")
+            generated = [t.table_name for t in tables_dict.values() if t.table_name]
+            missing = set(entities) - set(generated)
+            if missing:
+                print(f"📋 Entidades faltantes: {', '.join(missing)}")
+            if generated:
+                print(f"📋 Tablas generadas: {', '.join(generated)}")
+        return expected, actual
+    except Exception as e:
+        logger.error(f"Error validating entity count: {e}")
+        return 0, len(tables_dict)
 
-    corrected = {}
-    for key, table in tables_dict.items():
-      current = table.table_name
-      matching = None
-      for entity in original_entities:
-        if entity.lower() == current.lower():
-          matching = entity
-          break
-      if matching and matching != current:
-        corrected_up = re.sub(
-          f'TABLE\\s+{re.escape(current)}',
-          f'TABLE {matching}',
-          table.up,
-          flags=re.IGNORECASE
-        )
-        corrected_down = re.sub(
-          f'TABLE\\s+{re.escape(current)}',
-          f'TABLE {matching}',
-          table.down,
-          flags=re.IGNORECASE
-        )
-        corrected_block = re.sub(
-          f'TABLE\\s+{re.escape(current)}',
-          f'TABLE {matching}',
-          table.complete_block,
-          flags=re.IGNORECASE
-        )
-        corrected[key] = TableMigration(
-          table_name=matching,
-          up=corrected_up,
-          down=corrected_down,
-          complete_block=corrected_block,
-          index=table.index
-        )
-        print(f"✓ Corregido: '{current}' -> '{matching}'")
-      else:
-        corrected[key] = table
-    return corrected
-  except Exception as e:
-    logger.error(f"Error enforcing original names: {e}")
-    return tables_dict
+
+def enforce_original_names(puml_file: str,
+                           tables_dict: Dict[int, TableMigration]) -> Dict[int, TableMigration]:
+    """Corrige los nombres de tabla para que coincidan exactamente con las entidades del PUML."""
+    try:
+        with open(puml_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        entity_pattern = r'entity\s+(\w+)'
+        original_entities = re.findall(entity_pattern, content, re.IGNORECASE)
+
+        corrected = {}
+        for key, table in tables_dict.items():
+            current = table.table_name
+            matching = None
+            for entity in original_entities:
+                if entity.lower() == current.lower():
+                    matching = entity
+                    break
+            if matching and matching != current:
+                corrected_up = re.sub(
+                    f'TABLE\\s+{re.escape(current)}',
+                    f'TABLE {matching}',
+                    table.up,
+                    flags=re.IGNORECASE,
+                )
+                corrected_down = re.sub(
+                    f'TABLE\\s+{re.escape(current)}',
+                    f'TABLE {matching}',
+                    table.down,
+                    flags=re.IGNORECASE,
+                )
+                corrected_block = re.sub(
+                    f'TABLE\\s+{re.escape(current)}',
+                    f'TABLE {matching}',
+                    table.complete_block,
+                    flags=re.IGNORECASE,
+                )
+                corrected[key] = TableMigration(
+                    table_name=matching,
+                    up=corrected_up,
+                    down=corrected_down,
+                    complete_block=corrected_block,
+                    index=table.index,
+                )
+                print(f"✓ Corregido: '{current}' -> '{matching}'")
+            else:
+                corrected[key] = table
+        return corrected
+    except Exception as e:
+        logger.error(f"Error enforcing original names: {e}")
+        return tables_dict
 
 
 def save_migration_files(tables_dict, puml_basename, db_type, complete_migrations):
-  """Guarda las migraciones en tmp/ (archivo completo + carpeta por tabla)."""
-  if not tables_dict:
-    print("❌ No hay migraciones para guardar.")
-    return
+    """Guarda las migraciones en tmp/ (archivo completo + carpeta por tabla)."""
+    if not tables_dict:
+        print("❌ No hay migraciones para guardar.")
+        return
 
-  run_id = os.getenv("AI_RUN_ID")
-  if run_id:
-    complete_filename = under_output(
-      f"complete_migrations_{run_id}_{puml_basename}_{db_type}.sql"
-    )
-    migrations_dir = under_output(
-      f"migrations_{run_id}_{puml_basename}_{db_type}"
-    )
-    base_ts = run_id
-  else:
-    complete_filename = under_output(
-      f"complete_migrations_{puml_basename}_{db_type}.sql"
-    )
-    migrations_dir = under_output(
-      f"migrations_{puml_basename}_{db_type}"
-    )
-    base_ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
-  with open(complete_filename, 'w', encoding='utf-8') as f:
-    f.write(f"-- Migraciones generadas desde: {puml_basename}.puml\n")
-    f.write(f"-- Tipo de base de datos: {db_type}\n")
+    run_id = os.getenv("AI_RUN_ID")
     if run_id:
-      f.write(f"-- Run ID: {run_id}\n")
-    f.write(f"-- Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-    f.write(f"-- Total de tablas: {len(tables_dict)}\n\n")
-    f.write(complete_migrations)
-  print(f"✓ Migraciones completas guardadas en: {complete_filename}")
-
-  if os.path.exists(migrations_dir):
-    shutil.rmtree(migrations_dir)
-  os.makedirs(migrations_dir, exist_ok=True)
-
-  for key, table in tables_dict.items():
-    if run_id:
-      ts = f"{base_ts}_{key:02d}"
+        complete_filename = under_output(
+            f"complete_migrations_{run_id}_{puml_basename}_{db_type}.sql"
+        )
+        migrations_dir = under_output(
+            f"migrations_{run_id}_{puml_basename}_{db_type}"
+        )
+        base_ts = run_id
     else:
-      ts = str(int(base_ts) + key)
-    filename = os.path.join(migrations_dir, f"{ts}_create_{table.table_name}.sql")
-    with open(filename, 'w', encoding='utf-8') as f:
-      f.write(table.complete_block)
-    print(f"✓ Migración {key} ({table.table_name}) guardada en: {filename}")
+        complete_filename = under_output(
+            f"complete_migrations_{puml_basename}_{db_type}.sql"
+        )
+        migrations_dir = under_output(
+            f"migrations_{puml_basename}_{db_type}"
+        )
+        base_ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
+    with open(complete_filename, 'w', encoding='utf-8') as f:
+        f.write(f"-- Migraciones generadas desde: {puml_basename}.puml\n")
+        f.write(f"-- Tipo de base de datos: {db_type}\n")
+        if run_id:
+            f.write(f"-- Run ID: {run_id}\n")
+        f.write(f"-- Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"-- Total de tablas: {len(tables_dict)}\n\n")
+        f.write(complete_migrations)
+    print(f"✓ Migraciones completas guardadas en: {complete_filename}")
 
-def generate_sql_migrations_direct(chain, db_type: str, puml_file: str) -> str:
-  """
-  Igual que generate_sql_migrations_with_rag pero sin retriever.
-  Se usa en el modo llm_only para la comparación pedida por el Reviewer 1.
-  """
-  with open(puml_file, 'r', encoding='utf-8') as f:
-    puml_content = f.read()
+    if os.path.exists(migrations_dir):
+        shutil.rmtree(migrations_dir)
+    os.makedirs(migrations_dir, exist_ok=True)
 
-  entity_pattern = r'entity\s+(\w+)\s*\{([^}]+)\}'
-  entities = re.findall(entity_pattern, puml_content, re.IGNORECASE | re.DOTALL)
-  entity_info = []
-  for entity_name, entity_content in entities:
-    attributes = re.findall(r'\s*(\w+)\s*:\s*([^\n]+)', entity_content)
-    entity_info.append(f"Entidad: {entity_name}, Atributos: {attributes}")
-  entities_summary = "\n".join(entity_info)
-
-  query = f"""
-ANÁLISIS DE DIAGRAMA UML Y GENERACIÓN DE MIGRACIONES SQL
-
-ARCHIVO: {puml_file}
-TIPO DE BASE DE DATOS: {db_type.upper()}
-
-ENTIDADES ENCONTRADAS EN EL DIAGRAMA:
-{entities_summary}
-
-INSTRUCCIONES ESPECÍFICAS:
-
-1. ANALIZA cada entidad del diagrama UML y conviértela en una sentencia CREATE TABLE
-2. USA el formato EXACTO de migración que se muestra a continuación
-3. PRESERVA los nombres ORIGINALES de las entidades y atributos
-4. GENERA código SQL VÁLIDO para {db_type.upper()}
-
-FORMATO REQUERIDO para CADA tabla:
-
--- migrate:up
-
-CREATE TABLE nombre_tabla (
-  id TIPO_PRIMARY_KEY,
-  columna1 TIPO_DATO,
-  columna2 TIPO_DATO,
-  PRIMARY KEY (id),
-  FOREIGN KEY (columna_relacionada) REFERENCES tabla_relacionada(id)
-);
-
--- migrate:down
-
-DROP TABLE nombre_tabla;
-
-RESPONDE ÚNICAMENTE con las sentencias SQL en el formato especificado, sin explicaciones.
-"""
-  logger.info("Generating SQL migrations (direct, no RAG)...")
-  try:
-    response = chain.invoke({"context": "(sin contexto RAG)", "question": query})
-    return response
-  except Exception as e:
-    logger.error(f"Error generating migrations (direct): {e}")
-    return f"Error: {e}"
+    for key, table in tables_dict.items():
+        if run_id:
+            ts = f"{base_ts}_{key:02d}"
+        else:
+            ts = str(int(base_ts) + key)
+        filename = os.path.join(migrations_dir, f"{ts}_create_{table.table_name}.sql")
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(table.complete_block)
+        print(f"✓ Migración {key} ({table.table_name}) guardada en: {filename}")
