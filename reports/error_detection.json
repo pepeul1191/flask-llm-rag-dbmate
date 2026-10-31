@@ -1,0 +1,1681 @@
+{
+  "per_schema": {
+    "basico": {
+      "drop_table": 1.0,
+      "drop_column": 1.0,
+      "change_type": 1.0,
+      "drop_pk": 1.0,
+      "drop_fk": 1.0,
+      "rename_table": 1.0,
+      "clean_FP": 0,
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "biblio": {
+      "drop_table": 1.0,
+      "drop_column": 1.0,
+      "change_type": 1.0,
+      "drop_pk": 1.0,
+      "drop_fk": 1.0,
+      "rename_table": 1.0,
+      "clean_FP": 0,
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "innova": {
+      "drop_table": 1.0,
+      "drop_column": 1.0,
+      "change_type": 1.0,
+      "drop_pk": 1.0,
+      "drop_fk": 1.0,
+      "rename_table": 1.0,
+      "clean_FP": 0,
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "northwind": {
+      "drop_table": 1.0,
+      "drop_column": 1.0,
+      "change_type": 1.0,
+      "drop_pk": 1.0,
+      "drop_fk": 1.0,
+      "rename_table": 1.0,
+      "clean_FP": 0,
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "postulaciones": {
+      "drop_table": 1.0,
+      "drop_column": 1.0,
+      "change_type": 1.0,
+      "drop_pk": 1.0,
+      "drop_fk": 1.0,
+      "rename_table": 1.0,
+      "clean_FP": 0,
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    }
+  },
+  "raw": {
+    "basico": {
+      "run_id": "20261030_215446_llama3.2_errors",
+      "input": "/tmp/pipeline_puml_c3qzjskc",
+      "puml": "modelo.puml",
+      "db_type": "sqlite",
+      "per_error_type": {
+        "clean": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_column": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "change_type": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_pk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_fk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "rename_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        }
+      },
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "samples": [
+        {
+          "error_type": "clean",
+          "detected": false,
+          "report_dict": {
+            "is_valid": true,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 34,
+              "matched_columns": 34,
+              "expected_types": 34,
+              "matched_types": 34,
+              "expected_pks": 6,
+              "matched_pks": 6,
+              "expected_fks": 7,
+              "matched_fks": 7
+            }
+          }
+        },
+        {
+          "error_type": "drop_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "users"
+            ],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 5,
+              "matched_tables": 5,
+              "expected_columns": 25,
+              "generated_columns": 25,
+              "matched_columns": 25,
+              "expected_types": 25,
+              "matched_types": 25,
+              "expected_pks": 5,
+              "matched_pks": 5,
+              "expected_fks": 7,
+              "matched_fks": 7
+            }
+          }
+        },
+        {
+          "error_type": "drop_column",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {
+              "users": [
+                "username"
+              ]
+            },
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 33,
+              "matched_columns": 33,
+              "expected_types": 33,
+              "matched_types": 33,
+              "expected_pks": 6,
+              "matched_pks": 6,
+              "expected_fks": 7,
+              "matched_fks": 7
+            }
+          }
+        },
+        {
+          "error_type": "change_type",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {
+              "users": [
+                {
+                  "column": "id",
+                  "expected": "int",
+                  "generated": "blob"
+                }
+              ]
+            },
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 34,
+              "matched_columns": 34,
+              "expected_types": 34,
+              "matched_types": 33,
+              "expected_pks": 6,
+              "matched_pks": 6,
+              "expected_fks": 7,
+              "matched_fks": 7
+            }
+          }
+        },
+        {
+          "error_type": "drop_pk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [
+              {
+                "table": "users",
+                "expected": [
+                  "id"
+                ],
+                "generated": []
+              }
+            ],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 34,
+              "matched_columns": 34,
+              "expected_types": 34,
+              "matched_types": 34,
+              "expected_pks": 6,
+              "matched_pks": 5,
+              "expected_fks": 7,
+              "matched_fks": 7
+            }
+          }
+        },
+        {
+          "error_type": "drop_fk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [
+              {
+                "table": "roles",
+                "diffs": [
+                  {
+                    "missing": [
+                      "system_id",
+                      "systems",
+                      "id"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 6,
+              "expected_columns": 34,
+              "generated_columns": 34,
+              "matched_columns": 34,
+              "expected_types": 34,
+              "matched_types": 34,
+              "expected_pks": 6,
+              "matched_pks": 6,
+              "expected_fks": 7,
+              "matched_fks": 6
+            }
+          }
+        },
+        {
+          "error_type": "rename_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "users"
+            ],
+            "extra_tables": [
+              "users_x"
+            ],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 6,
+              "generated_tables": 6,
+              "matched_tables": 5,
+              "expected_columns": 25,
+              "generated_columns": 25,
+              "matched_columns": 25,
+              "expected_types": 25,
+              "matched_types": 25,
+              "expected_pks": 5,
+              "matched_pks": 5,
+              "expected_fks": 7,
+              "matched_fks": 7
+            }
+          }
+        }
+      ],
+      "timings": {
+        "inject_and_validate": {
+          "seconds_mean": 0.004,
+          "seconds_total": 0.004,
+          "n_runs": 1
+        },
+        "measure_detection": {
+          "seconds_mean": 0.0,
+          "seconds_total": 0.0,
+          "n_runs": 1
+        },
+        "__total__": {
+          "seconds": 0.004
+        }
+      },
+      "summary_path": null
+    },
+    "biblio": {
+      "run_id": "20261030_215446_llama3.2_errors",
+      "input": "/tmp/pipeline_puml_d9m0a5ys",
+      "puml": "modelo.puml",
+      "db_type": "sqlite",
+      "per_error_type": {
+        "clean": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_column": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "change_type": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_pk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_fk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "rename_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        }
+      },
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "samples": [
+        {
+          "error_type": "clean",
+          "detected": false,
+          "report_dict": {
+            "is_valid": true,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 10,
+              "generated_tables": 10,
+              "matched_tables": 10,
+              "expected_columns": 51,
+              "generated_columns": 51,
+              "matched_columns": 51,
+              "expected_types": 51,
+              "matched_types": 51,
+              "expected_pks": 10,
+              "matched_pks": 10,
+              "expected_fks": 9,
+              "matched_fks": 9
+            }
+          }
+        },
+        {
+          "error_type": "drop_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "users"
+            ],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 10,
+              "generated_tables": 9,
+              "matched_tables": 9,
+              "expected_columns": 40,
+              "generated_columns": 40,
+              "matched_columns": 40,
+              "expected_types": 40,
+              "matched_types": 40,
+              "expected_pks": 9,
+              "matched_pks": 9,
+              "expected_fks": 8,
+              "matched_fks": 8
+            }
+          }
+        },
+        {
+          "error_type": "drop_column",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {
+              "users": [
+                "username"
+              ]
+            },
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 10,
+              "generated_tables": 10,
+              "matched_tables": 10,
+              "expected_columns": 51,
+              "generated_columns": 50,
+              "matched_columns": 50,
+              "expected_types": 50,
+              "matched_types": 50,
+              "expected_pks": 10,
+              "matched_pks": 10,
+              "expected_fks": 9,
+              "matched_fks": 9
+            }
+          }
+        },
+        {
+          "error_type": "change_type",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {
+              "users": [
+                {
+                  "column": "id",
+                  "expected": "int",
+                  "generated": "blob"
+                }
+              ]
+            },
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 10,
+              "generated_tables": 10,
+              "matched_tables": 10,
+              "expected_columns": 51,
+              "generated_columns": 51,
+              "matched_columns": 51,
+              "expected_types": 51,
+              "matched_types": 50,
+              "expected_pks": 10,
+              "matched_pks": 10,
+              "expected_fks": 9,
+              "matched_fks": 9
+            }
+          }
+        },
+        {
+          "error_type": "drop_pk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [
+              {
+                "table": "users",
+                "expected": [
+                  "id"
+                ],
+                "generated": []
+              }
+            ],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 10,
+              "generated_tables": 10,
+              "matched_tables": 10,
+              "expected_columns": 51,
+              "generated_columns": 51,
+              "matched_columns": 51,
+              "expected_types": 51,
+              "matched_types": 51,
+              "expected_pks": 10,
+              "matched_pks": 9,
+              "expected_fks": 9,
+              "matched_fks": 9
+            }
+          }
+        },
+        {
+          "error_type": "drop_fk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [
+              {
+                "table": "users",
+                "diffs": [
+                  {
+                    "missing": [
+                      "country_id",
+                      "countries",
+                      "id"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 10,
+              "generated_tables": 10,
+              "matched_tables": 10,
+              "expected_columns": 51,
+              "generated_columns": 51,
+              "matched_columns": 51,
+              "expected_types": 51,
+              "matched_types": 51,
+              "expected_pks": 10,
+              "matched_pks": 10,
+              "expected_fks": 9,
+              "matched_fks": 8
+            }
+          }
+        },
+        {
+          "error_type": "rename_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "users"
+            ],
+            "extra_tables": [
+              "users_x"
+            ],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 10,
+              "generated_tables": 10,
+              "matched_tables": 9,
+              "expected_columns": 40,
+              "generated_columns": 40,
+              "matched_columns": 40,
+              "expected_types": 40,
+              "matched_types": 40,
+              "expected_pks": 9,
+              "matched_pks": 9,
+              "expected_fks": 8,
+              "matched_fks": 8
+            }
+          }
+        }
+      ],
+      "timings": {
+        "inject_and_validate": {
+          "seconds_mean": 0.004,
+          "seconds_total": 0.004,
+          "n_runs": 1
+        },
+        "measure_detection": {
+          "seconds_mean": 0.0,
+          "seconds_total": 0.0,
+          "n_runs": 1
+        },
+        "__total__": {
+          "seconds": 0.004
+        }
+      },
+      "summary_path": null
+    },
+    "innova": {
+      "run_id": "20261030_215446_llama3.2_errors",
+      "input": "/tmp/pipeline_puml_bxurj8b7",
+      "puml": "modelo.puml",
+      "db_type": "sqlite",
+      "per_error_type": {
+        "clean": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_column": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "change_type": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_pk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_fk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "rename_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        }
+      },
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "samples": [
+        {
+          "error_type": "clean",
+          "detected": false,
+          "report_dict": {
+            "is_valid": true,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 19,
+              "generated_tables": 19,
+              "matched_tables": 19,
+              "expected_columns": 78,
+              "generated_columns": 78,
+              "matched_columns": 78,
+              "expected_types": 78,
+              "matched_types": 78,
+              "expected_pks": 19,
+              "matched_pks": 19,
+              "expected_fks": 10,
+              "matched_fks": 10
+            }
+          }
+        },
+        {
+          "error_type": "drop_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "document_types"
+            ],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 19,
+              "generated_tables": 18,
+              "matched_tables": 18,
+              "expected_columns": 76,
+              "generated_columns": 76,
+              "matched_columns": 76,
+              "expected_types": 76,
+              "matched_types": 76,
+              "expected_pks": 18,
+              "matched_pks": 18,
+              "expected_fks": 10,
+              "matched_fks": 10
+            }
+          }
+        },
+        {
+          "error_type": "drop_column",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {
+              "document_types": [
+                "name"
+              ]
+            },
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 19,
+              "generated_tables": 19,
+              "matched_tables": 19,
+              "expected_columns": 78,
+              "generated_columns": 77,
+              "matched_columns": 77,
+              "expected_types": 77,
+              "matched_types": 77,
+              "expected_pks": 19,
+              "matched_pks": 19,
+              "expected_fks": 10,
+              "matched_fks": 10
+            }
+          }
+        },
+        {
+          "error_type": "change_type",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {
+              "document_types": [
+                {
+                  "column": "id",
+                  "expected": "int",
+                  "generated": "blob"
+                }
+              ]
+            },
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 19,
+              "generated_tables": 19,
+              "matched_tables": 19,
+              "expected_columns": 78,
+              "generated_columns": 78,
+              "matched_columns": 78,
+              "expected_types": 78,
+              "matched_types": 77,
+              "expected_pks": 19,
+              "matched_pks": 19,
+              "expected_fks": 10,
+              "matched_fks": 10
+            }
+          }
+        },
+        {
+          "error_type": "drop_pk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [
+              {
+                "table": "document_types",
+                "expected": [
+                  "id"
+                ],
+                "generated": []
+              }
+            ],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 19,
+              "generated_tables": 19,
+              "matched_tables": 19,
+              "expected_columns": 78,
+              "generated_columns": 78,
+              "matched_columns": 78,
+              "expected_types": 78,
+              "matched_types": 78,
+              "expected_pks": 19,
+              "matched_pks": 18,
+              "expected_fks": 10,
+              "matched_fks": 10
+            }
+          }
+        },
+        {
+          "error_type": "drop_fk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [
+              {
+                "table": "carreres",
+                "diffs": [
+                  {
+                    "missing": [
+                      "carrere_grade_id",
+                      "carrere_grades",
+                      "id"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 19,
+              "generated_tables": 19,
+              "matched_tables": 19,
+              "expected_columns": 78,
+              "generated_columns": 78,
+              "matched_columns": 78,
+              "expected_types": 78,
+              "matched_types": 78,
+              "expected_pks": 19,
+              "matched_pks": 19,
+              "expected_fks": 10,
+              "matched_fks": 9
+            }
+          }
+        },
+        {
+          "error_type": "rename_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "document_types"
+            ],
+            "extra_tables": [
+              "document_types_x"
+            ],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 19,
+              "generated_tables": 19,
+              "matched_tables": 18,
+              "expected_columns": 76,
+              "generated_columns": 76,
+              "matched_columns": 76,
+              "expected_types": 76,
+              "matched_types": 76,
+              "expected_pks": 18,
+              "matched_pks": 18,
+              "expected_fks": 10,
+              "matched_fks": 10
+            }
+          }
+        }
+      ],
+      "timings": {
+        "inject_and_validate": {
+          "seconds_mean": 0.012,
+          "seconds_total": 0.012,
+          "n_runs": 1
+        },
+        "measure_detection": {
+          "seconds_mean": 0.0,
+          "seconds_total": 0.0,
+          "n_runs": 1
+        },
+        "__total__": {
+          "seconds": 0.012
+        }
+      },
+      "summary_path": null
+    },
+    "northwind": {
+      "run_id": "20261030_215446_llama3.2_errors",
+      "input": "/tmp/pipeline_puml_0cui4o9f",
+      "puml": "modelo.puml",
+      "db_type": "sqlite",
+      "per_error_type": {
+        "clean": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_column": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "change_type": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_pk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_fk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "rename_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        }
+      },
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "samples": [
+        {
+          "error_type": "clean",
+          "detected": false,
+          "report_dict": {
+            "is_valid": true,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 8,
+              "generated_tables": 8,
+              "matched_tables": 8,
+              "expected_columns": 76,
+              "generated_columns": 76,
+              "matched_columns": 76,
+              "expected_types": 76,
+              "matched_types": 76,
+              "expected_pks": 8,
+              "matched_pks": 8,
+              "expected_fks": 8,
+              "matched_fks": 8
+            }
+          }
+        },
+        {
+          "error_type": "drop_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "customers"
+            ],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 8,
+              "generated_tables": 7,
+              "matched_tables": 7,
+              "expected_columns": 65,
+              "generated_columns": 65,
+              "matched_columns": 65,
+              "expected_types": 65,
+              "matched_types": 65,
+              "expected_pks": 7,
+              "matched_pks": 7,
+              "expected_fks": 8,
+              "matched_fks": 8
+            }
+          }
+        },
+        {
+          "error_type": "drop_column",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {
+              "customers": [
+                "company_name"
+              ]
+            },
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 8,
+              "generated_tables": 8,
+              "matched_tables": 8,
+              "expected_columns": 76,
+              "generated_columns": 75,
+              "matched_columns": 75,
+              "expected_types": 75,
+              "matched_types": 75,
+              "expected_pks": 8,
+              "matched_pks": 8,
+              "expected_fks": 8,
+              "matched_fks": 8
+            }
+          }
+        },
+        {
+          "error_type": "change_type",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {
+              "customers": [
+                {
+                  "column": "id",
+                  "expected": "int",
+                  "generated": "blob"
+                }
+              ]
+            },
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 8,
+              "generated_tables": 8,
+              "matched_tables": 8,
+              "expected_columns": 76,
+              "generated_columns": 76,
+              "matched_columns": 76,
+              "expected_types": 76,
+              "matched_types": 75,
+              "expected_pks": 8,
+              "matched_pks": 8,
+              "expected_fks": 8,
+              "matched_fks": 8
+            }
+          }
+        },
+        {
+          "error_type": "drop_pk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [
+              {
+                "table": "customers",
+                "expected": [
+                  "id"
+                ],
+                "generated": []
+              }
+            ],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 8,
+              "generated_tables": 8,
+              "matched_tables": 8,
+              "expected_columns": 76,
+              "generated_columns": 76,
+              "matched_columns": 76,
+              "expected_types": 76,
+              "matched_types": 76,
+              "expected_pks": 8,
+              "matched_pks": 7,
+              "expected_fks": 8,
+              "matched_fks": 8
+            }
+          }
+        },
+        {
+          "error_type": "drop_fk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [
+              {
+                "table": "employees",
+                "diffs": [
+                  {
+                    "missing": [
+                      "reports_to_id",
+                      "employees",
+                      "id"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 8,
+              "generated_tables": 8,
+              "matched_tables": 8,
+              "expected_columns": 76,
+              "generated_columns": 76,
+              "matched_columns": 76,
+              "expected_types": 76,
+              "matched_types": 76,
+              "expected_pks": 8,
+              "matched_pks": 8,
+              "expected_fks": 8,
+              "matched_fks": 7
+            }
+          }
+        },
+        {
+          "error_type": "rename_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "customers"
+            ],
+            "extra_tables": [
+              "customers_x"
+            ],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 8,
+              "generated_tables": 8,
+              "matched_tables": 7,
+              "expected_columns": 65,
+              "generated_columns": 65,
+              "matched_columns": 65,
+              "expected_types": 65,
+              "matched_types": 65,
+              "expected_pks": 7,
+              "matched_pks": 7,
+              "expected_fks": 8,
+              "matched_fks": 8
+            }
+          }
+        }
+      ],
+      "timings": {
+        "inject_and_validate": {
+          "seconds_mean": 0.006,
+          "seconds_total": 0.006,
+          "n_runs": 1
+        },
+        "measure_detection": {
+          "seconds_mean": 0.0,
+          "seconds_total": 0.0,
+          "n_runs": 1
+        },
+        "__total__": {
+          "seconds": 0.006
+        }
+      },
+      "summary_path": null
+    },
+    "postulaciones": {
+      "run_id": "20261030_215446_llama3.2_errors",
+      "input": "/tmp/pipeline_puml_viql8lfp",
+      "puml": "modelo.puml",
+      "db_type": "sqlite",
+      "per_error_type": {
+        "clean": {
+          "TP": 0,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_column": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "change_type": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_pk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "drop_fk": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        },
+        "rename_table": {
+          "TP": 1,
+          "FN": 0,
+          "FP": 0,
+          "skipped": 0
+        }
+      },
+      "aggregate": {
+        "TP": 6,
+        "FN": 0,
+        "FP": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "samples": [
+        {
+          "error_type": "clean",
+          "detected": false,
+          "report_dict": {
+            "is_valid": true,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 22,
+              "generated_tables": 22,
+              "matched_tables": 22,
+              "expected_columns": 119,
+              "generated_columns": 119,
+              "matched_columns": 119,
+              "expected_types": 119,
+              "matched_types": 119,
+              "expected_pks": 22,
+              "matched_pks": 22,
+              "expected_fks": 27,
+              "matched_fks": 27
+            }
+          }
+        },
+        {
+          "error_type": "drop_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "carrers"
+            ],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 22,
+              "generated_tables": 21,
+              "matched_tables": 21,
+              "expected_columns": 117,
+              "generated_columns": 117,
+              "matched_columns": 117,
+              "expected_types": 117,
+              "matched_types": 117,
+              "expected_pks": 21,
+              "matched_pks": 21,
+              "expected_fks": 27,
+              "matched_fks": 27
+            }
+          }
+        },
+        {
+          "error_type": "drop_column",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {
+              "carrers": [
+                "name"
+              ]
+            },
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 22,
+              "generated_tables": 22,
+              "matched_tables": 22,
+              "expected_columns": 119,
+              "generated_columns": 118,
+              "matched_columns": 118,
+              "expected_types": 118,
+              "matched_types": 118,
+              "expected_pks": 22,
+              "matched_pks": 22,
+              "expected_fks": 27,
+              "matched_fks": 27
+            }
+          }
+        },
+        {
+          "error_type": "change_type",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {
+              "carrers": [
+                {
+                  "column": "id",
+                  "expected": "int",
+                  "generated": "blob"
+                }
+              ]
+            },
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 22,
+              "generated_tables": 22,
+              "matched_tables": 22,
+              "expected_columns": 119,
+              "generated_columns": 119,
+              "matched_columns": 119,
+              "expected_types": 119,
+              "matched_types": 118,
+              "expected_pks": 22,
+              "matched_pks": 22,
+              "expected_fks": 27,
+              "matched_fks": 27
+            }
+          }
+        },
+        {
+          "error_type": "drop_pk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [
+              {
+                "table": "carrers",
+                "expected": [
+                  "id"
+                ],
+                "generated": []
+              }
+            ],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 22,
+              "generated_tables": 22,
+              "matched_tables": 22,
+              "expected_columns": 119,
+              "generated_columns": 119,
+              "matched_columns": 119,
+              "expected_types": 119,
+              "matched_types": 119,
+              "expected_pks": 22,
+              "matched_pks": 21,
+              "expected_fks": 27,
+              "matched_fks": 27
+            }
+          }
+        },
+        {
+          "error_type": "drop_fk",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [],
+            "extra_tables": [],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [
+              {
+                "table": "users",
+                "diffs": [
+                  {
+                    "missing": [
+                      "profile_id",
+                      "profiles",
+                      "id"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 22,
+              "generated_tables": 22,
+              "matched_tables": 22,
+              "expected_columns": 119,
+              "generated_columns": 119,
+              "matched_columns": 119,
+              "expected_types": 119,
+              "matched_types": 119,
+              "expected_pks": 22,
+              "matched_pks": 22,
+              "expected_fks": 27,
+              "matched_fks": 26
+            }
+          }
+        },
+        {
+          "error_type": "rename_table",
+          "detected": true,
+          "report_dict": {
+            "is_valid": false,
+            "missing_tables": [
+              "carrers"
+            ],
+            "extra_tables": [
+              "carrers_x"
+            ],
+            "missing_columns": {},
+            "extra_columns": {},
+            "type_mismatches": {},
+            "pk_mismatches": [],
+            "fk_mismatches": [],
+            "nullability_mismatches": {},
+            "stats": {
+              "expected_tables": 22,
+              "generated_tables": 22,
+              "matched_tables": 21,
+              "expected_columns": 117,
+              "generated_columns": 117,
+              "matched_columns": 117,
+              "expected_types": 117,
+              "matched_types": 117,
+              "expected_pks": 21,
+              "matched_pks": 21,
+              "expected_fks": 27,
+              "matched_fks": 27
+            }
+          }
+        }
+      ],
+      "timings": {
+        "inject_and_validate": {
+          "seconds_mean": 0.01,
+          "seconds_total": 0.01,
+          "n_runs": 1
+        },
+        "measure_detection": {
+          "seconds_mean": 0.0,
+          "seconds_total": 0.0,
+          "n_runs": 1
+        },
+        "__total__": {
+          "seconds": 0.01
+        }
+      },
+      "summary_path": null
+    }
+  }
+}

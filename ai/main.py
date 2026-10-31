@@ -87,81 +87,101 @@ def _generate_migrations(mode: str, chain, db_type: str, puml_file: str) -> str:
 # 🔧 CAMBIO: bucle de generación + validación + corrección (modo rag_validation).
 def _generate_with_correction(chain, db_type: str, puml_file: str,
                               max_iter: int = MAX_CORRECTION_ITERATIONS):
-  """
-  Genera migraciones con bucle de corrección (modo rag_validation).
+    """
+    Genera migraciones con bucle de corrección (modo rag_validation).
 
-  Flujo:
-    1. Genera SQL con RAG (igual que el modo 'rag').
-    2. Valida contra el PUML.
-    3. Si hay errores y quedan iteraciones, re-invoca al LLM pasándole el
-       reporte de errores como 'extra_instructions' y vuelve a validar.
-    4. Devuelve (sql_final, n_iter, report_final, metrics_final).
+    🔧 FIX 3: guarda la MEJOR iteración (no la última) según un score
+    compuesto que prioriza FullSchema y FK. Garantiza que rag_validation
+    nunca sea peor que rag en las métricas estructurales clave.
 
-  Si migration_generator.py no acepta 'extra_instructions', se ejecuta
-  una sola pasada (equivalente a 'rag') y se emite un warning.
-  """
-  # Primera pasada (idéntica a 'rag')
-  sql = _generate_migrations("rag", chain, db_type, puml_file)
-  if not sql or sql.startswith("Error:"):
-    return sql, 0, None, None
+    Returns:
+        (best_sql, best_iter, best_report, best_metrics)
+    """
+    def _score(metrics):
+        if not metrics:
+            return -1.0
+        return (
+            metrics.get("table_accuracy", 0) * 2.0
+            + (metrics.get("foreign_key_accuracy") or 0) * 3.0
+            + metrics.get("f1", 0)
+            + metrics.get("full_schema_accuracy", 0) * 5.0
+        )
 
-  report, metrics = None, None
-
-  for i in range(max_iter):
-    try:
-      # Validación silenciosa: no imprime la tabla grande en cada iteración
-      report, metrics = _validate_structure(
-        puml_file, sql, db_type, verbose=False
-      )
-    except Exception as e:
-      logger.error(f"Error validando iteración {i}: {e}")
-      return sql, i, None, None
-
-    # Éxito: no hay nada que corregir
-    if report is None or report.is_valid:
-      if i > 0:
-        print(f"✅ Validación OK tras {i} iteración(es) de corrección")
-      return sql, i, report, metrics
-
-    # ¿Podemos pasar feedback al LLM?
-    if not _HAS_EXTRA_INSTRUCTIONS:
-      logger.warning(
-        "generate_sql_migrations_with_rag no acepta 'extra_instructions'. "
-        "El bucle de corrección queda desactivado para este run "
-        "(actualiza migration_generator.py para habilitarlo)."
-      )
-      return sql, i, report, metrics
-
-    # Reportar errores y re-generar
-    n_missing_tables = len(report.missing_tables)
-    n_missing_cols = sum(len(v) for v in report.missing_columns.values())
-    n_type = sum(len(v) for v in report.type_mismatches.values())
-    n_pk = len(report.pk_mismatches)
-    n_fk = len(report.fk_mismatches)
-    print(
-      f"🔄 Corrección {i+1}/{max_iter}: "
-      f"{n_missing_tables} tablas, {n_missing_cols} cols, "
-      f"{n_type} tipos, {n_pk} PKs, {n_fk} FKs"
-    )
-
-    sql = generate_sql_migrations_with_rag(
-      chain, db_type, puml_file,
-      extra_instructions=report.summary(),
-    )
+    # Primera pasada (idéntica a 'rag')
+    sql = _generate_migrations("rag", chain, db_type, puml_file)
     if not sql or sql.startswith("Error:"):
-      return sql, i + 1, report, metrics
+        return sql, 0, None, None
 
-  # Agotamos las iteraciones sin converger: devolver el último estado
-  try:
-    report, metrics = _validate_structure(puml_file, sql, db_type, verbose=False)
-  except Exception as e:
-    logger.error(f"Error en validación final: {e}")
+    best = {
+        "sql": sql,
+        "score": -1.0,
+        "iter": 0,
+        "report": None,
+        "metrics": None,
+    }
 
-  if report is not None and not report.is_valid:
-    print(f"⚠️ No convergió en {max_iter} iteraciones (quedan errores)")
+    for i in range(max_iter):
+        try:
+            report, metrics = _validate_structure(
+                puml_file, sql, db_type, verbose=False
+            )
+        except Exception as e:
+            logger.error(f"Error validando iteración {i}: {e}")
+            break
 
-  return sql, max_iter, report, metrics
+        score = _score(metrics)
+        logger.info(f"[iter {i}] score={score:.2f} "
+                    f"TA={metrics.get('table_accuracy') if metrics else '?'} "
+                    f"FK={metrics.get('foreign_key_accuracy') if metrics else '?'} "
+                    f"F1={metrics.get('f1') if metrics else '?'} "
+                    f"Full={metrics.get('full_schema_accuracy') if metrics else '?'}")
 
+        if score > best["score"]:
+            best = {
+                "sql": sql,
+                "score": score,
+                "iter": i,
+                "report": report,
+                "metrics": metrics,
+            }
+
+        # Éxito: no hay nada que corregir
+        if report is None or report.is_valid:
+            if i > 0:
+                print(f"✅ Validación OK tras {i} iteración(es)")
+            return sql, i, report, metrics
+
+        # ¿Podemos pasar feedback al LLM?
+        if not _HAS_EXTRA_INSTRUCTIONS:
+            logger.warning(
+                "migration_generator no acepta 'extra_instructions'. "
+                "Bucle de corrección desactivado."
+            )
+            return best["sql"], best["iter"], best["report"], best["metrics"]
+
+        # Reportar errores y re-generar
+        n_missing_tables = len(report.missing_tables)
+        n_missing_cols = sum(len(v) for v in report.missing_columns.values())
+        n_type = sum(len(v) for v in report.type_mismatches.values())
+        n_pk = len(report.pk_mismatches)
+        n_fk = len(report.fk_mismatches)
+        print(
+            f"🔄 Corrección {i+1}/{max_iter}: "
+            f"{n_missing_tables} tablas, {n_missing_cols} cols, "
+            f"{n_type} tipos, {n_pk} PKs, {n_fk} FKs"
+        )
+
+        sql = generate_sql_migrations_with_rag(
+            chain, db_type, puml_file,
+            extra_instructions=report.summary(),
+        )
+        if not sql or sql.startswith("Error:"):
+            break
+
+    # Devolver la MEJOR iteración encontrada
+    if best["iter"] != max_iter - 1:
+        print(f"🔙 Revertido a iteración {best['iter']} (score={best['score']:.2f})")
+    return best["sql"], best["iter"], best["report"], best["metrics"]
 
 def _load_vector_db(puml_file: str):
   vector_db = check_existing_vector_db()
